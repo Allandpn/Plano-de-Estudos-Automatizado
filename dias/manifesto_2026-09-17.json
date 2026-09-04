@@ -1,0 +1,15 @@
+{
+    "titulo": "Qui 17/09 — DW, Data Mart/Lake/Lakehouse, OLTP x OLAP, Modelagem Dimensional",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-07-prof-prof-diego-carvalho-e-renato-da-c.pdf",
+            "paginas": "60-76",
+            "rotulo": "Aula 07 - BI e DW (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-08-prof-diego-carvalho-e-emannuelle-gouve.pdf",
+            "paginas": "70-75,76-92",
+            "rotulo": "Aula 08 - Modelagem Multidimensional (Mapa Mental + Resumo)"
+        }
+    ]
+}

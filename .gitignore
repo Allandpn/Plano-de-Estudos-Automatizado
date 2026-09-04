@@ -1,0 +1,19 @@
+# Índice regenerável (grande — rode indice/indexador.py pra recriar)
+indice/indice.db
+indice/indexacao_log.txt
+
+# PDFs mesclados regeneráveis (rode dias/montar_dia.py com os manifestos)
+dias/*.pdf
+
+# Biblioteca de apostilas — link local, aponta pra fora do repo, recriar em cada máquina
+apostilas/
+
+# Python
+__pycache__/
+*.pyc
+
+# Estado interno do Claude Code
+.claude/
+
+# Scratch
+*.tmp

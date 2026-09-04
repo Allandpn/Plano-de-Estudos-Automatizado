@@ -1,0 +1,45 @@
+{
+    "titulo": "Qua 16/09 — Transações, Índices, Views, os 4 SGBDs, NoSQL/MongoDB",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/49 - Especialidade TI - Banco de Dados/curso-220905-aula-04-2326-completo.pdf",
+            "paginas": "3-50",
+            "rotulo": "Transações, Concorrência e Recuperação (dedicada)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/02 - Banco de Dados para Concursos/aula 04.pdf",
+            "paginas": "3-40",
+            "rotulo": "Otimização/Planos de Execução + Índices B-tree/Hash"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/02 - Banco de Dados para Concursos/aula 05.pdf",
+            "paginas": "40-54",
+            "rotulo": "Views (incl. Materializadas)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/02 - Banco de Dados para Concursos/aula 07.pdf",
+            "paginas": "3-29",
+            "rotulo": "MySQL 8.4"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/02 - Banco de Dados para Concursos/aula 08.pdf",
+            "paginas": "3-24",
+            "rotulo": "PostgreSQL"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/02 - Banco de Dados para Concursos/aula 09.pdf",
+            "paginas": "3-28",
+            "rotulo": "SQL Server"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/02 - Banco de Dados para Concursos/aula 18.pdf",
+            "paginas": "3-48",
+            "rotulo": "NoSQL x Relacional + MongoDB"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/01 - Banco de Dados/Aula 22.pdf",
+            "paginas": "29-34",
+            "rotulo": "T-SQL — reforço window functions/SQL Server"
+        }
+    ]
+}

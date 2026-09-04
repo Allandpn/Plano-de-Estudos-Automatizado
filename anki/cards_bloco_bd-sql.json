@@ -1,0 +1,31 @@
+[
+  {"tipo": "cloze", "texto": "As propriedades {{c1::ACID}} de uma transação são: {{c1::Atomicidade}}, {{c1::Consistência}}, {{c1::Isolamento}} e {{c1::Durabilidade}}.", "tags": "sql-bd transacoes"},
+  {"tipo": "basic_reversed", "frente": "ACID", "verso": "Atomicidade, Consistência, Isolamento, Durabilidade (propriedades de uma transação)", "tags": "sql-bd transacoes"},
+  {"tipo": "basic", "frente": "Quando usar concorrência pessimista em vez de otimista?", "verso": "Quando conflitos entre transações são frequentes/prováveis — a pessimista usa bloqueios pra evitar o conflito antes que aconteça; a otimista assume que conflitos são raros e só verifica no commit.", "tags": "sql-bd transacoes"},
+  {"tipo": "cloze", "texto": "{{c1::Deadlock}} ocorre quando duas ou mais transações ficam esperando indefinidamente por um recurso bloqueado pela outra.", "tags": "sql-bd transacoes"},
+
+  {"tipo": "basic", "frente": "Quando usar EXISTS em vez de IN numa subconsulta?", "verso": "Quando a subconsulta pode retornar muitas linhas e você só precisa checar existência — EXISTS para no primeiro match (mais eficiente), enquanto IN materializa a lista inteira.", "tags": "sql-bd sql"},
+  {"tipo": "basic", "frente": "Quando usar uma CTE (WITH) em vez de uma subconsulta comum?", "verso": "Quando a mesma subconsulta precisa ser referenciada várias vezes na query, ou quando a lógica é complexa e se beneficia de nomear passos intermediários — melhora legibilidade sem duplicar código.", "tags": "sql-bd sql"},
+  {"tipo": "cloze", "texto": "{{c1::CTE}} (Common Table Expression) é definida com a cláusula {{c1::WITH}} e cria uma tabela temporária nomeada, válida só durante a execução da consulta principal.", "tags": "sql-bd sql"},
+  {"tipo": "basic", "frente": "Quando usar window function (OVER/PARTITION BY) em vez de GROUP BY?", "verso": "Quando você precisa de um cálculo agregado (soma, rank, média) mas ainda quer manter todas as linhas originais no resultado — GROUP BY colapsa as linhas em grupos, window function não.", "tags": "sql-bd sql"},
+  {"tipo": "cloze", "texto": "Na sintaxe de window function, {{c1::PARTITION BY}} divide os dados em grupos lógicos independentes, e {{c1::ORDER BY}} (dentro do OVER) define a ordem de cálculo dentro de cada partição.", "tags": "sql-bd sql"},
+  {"tipo": "basic_reversed", "frente": "DDL", "verso": "Data Definition Language — CREATE, ALTER, DROP, TRUNCATE (define estruturas)", "tags": "sql-bd sql"},
+  {"tipo": "basic_reversed", "frente": "DML", "verso": "Data Manipulation Language — SELECT, INSERT, UPDATE, DELETE (manipula dados)", "tags": "sql-bd sql"},
+  {"tipo": "basic_reversed", "frente": "DCL", "verso": "Data Control Language — GRANT, REVOKE (controla permissões de acesso)", "tags": "sql-bd sql"},
+  {"tipo": "basic_reversed", "frente": "TCL", "verso": "Transaction Control Language — COMMIT, ROLLBACK, SAVEPOINT (controla transações)", "tags": "sql-bd sql"},
+  {"tipo": "basic", "frente": "Quando usar INNER JOIN em vez de LEFT JOIN?", "verso": "Quando você só quer registros que têm correspondência em ambas as tabelas — LEFT JOIN traz todos os registros da tabela da esquerda mesmo sem correspondência na direita (com NULL nos campos não encontrados).", "tags": "sql-bd sql"},
+
+  {"tipo": "basic", "frente": "Quando usar view materializada em vez de view comum?", "verso": "Quando a consulta subjacente é pesada/lenta e os dados não precisam estar sempre 100% atualizados — a materializada armazena fisicamente o resultado (mais rápida de ler, mas precisa ser atualizada/refresh periodicamente); a comum reexecuta a query toda vez.", "tags": "sql-bd views"},
+  {"tipo": "basic", "frente": "Quando usar índice B-tree em vez de índice hash?", "verso": "Quando a consulta envolve buscas por intervalo (range, ex: BETWEEN, >, <) ou ordenação — B-tree mantém a ordem e suporta isso; hash só é eficiente pra igualdade exata (=).", "tags": "sql-bd indices"},
+
+  {"tipo": "cloze", "texto": "Na normalização, a {{c1::1FN}} (Primeira Forma Normal) exige que todos os atributos sejam atômicos (sem grupos repetitivos ou valores multivalorados).", "tags": "sql-bd modelagem"},
+  {"tipo": "cloze", "texto": "A {{c1::2FN}} exige estar na 1FN e eliminar dependências parciais (atributos não-chave que dependem só de parte de uma chave composta).", "tags": "sql-bd modelagem"},
+  {"tipo": "cloze", "texto": "A {{c1::3FN}} exige estar na 2FN e eliminar dependências transitivas (atributos não-chave que dependem de outros atributos não-chave, não diretamente da chave).", "tags": "sql-bd modelagem"},
+  {"tipo": "basic_reversed", "frente": "MER", "verso": "Modelo Entidade-Relacionamento — representação conceitual das entidades, atributos e relacionamentos de um domínio", "tags": "sql-bd modelagem"},
+
+  {"tipo": "basic", "frente": "Quando escolher um banco NoSQL em vez de um relacional?", "verso": "Quando o volume/velocidade de dados é muito alto e o esquema é flexível/muda com frequência (ex: dados semiestruturados), priorizando escalabilidade horizontal sobre garantias fortes de consistência transacional (ACID completo).", "tags": "sql-bd nosql"},
+  {"tipo": "cloze", "texto": "O teorema {{c1::CAP}} diz que um sistema distribuído só pode garantir 2 de 3 propriedades simultaneamente: {{c1::Consistência}}, {{c1::Disponibilidade}} (Availability) e {{c1::Tolerância a Partição}}.", "tags": "sql-bd nosql"},
+  {"tipo": "basic_reversed", "frente": "MongoDB", "verso": "Banco NoSQL orientado a documentos (JSON/BSON) — schema flexível, coleções em vez de tabelas", "tags": "sql-bd nosql"},
+
+  {"tipo": "basic", "frente": "Quando usar MySQL em vez de PostgreSQL, segundo as diferenças típicas cobradas em prova?", "verso": "MySQL é tradicionalmente mais simples/rápido pra leitura em aplicações web de alto volume (OLTP simples); PostgreSQL tem suporte mais robusto a tipos de dados avançados, extensibilidade e conformidade SQL/ACID mais rigorosa — a escolha depende do requisito específico da questão, não existe resposta universal.", "tags": "sql-bd sgbd"}
+]

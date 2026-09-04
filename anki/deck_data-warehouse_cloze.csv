@@ -1,0 +1,8 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Trilha 1 - Dados::Data-Warehouse
+#tags column:3
+{{c1::Lakehouse}} combina a flexibilidade de armazenamento de um {{c1::Data Lake}} com os recursos de governança e performance analítica de um {{c1::Data Warehouse}}.		data-warehouse dw
+Na modelagem dimensional, a {{c1::tabela fato}} guarda as métricas/medidas numéricas do negócio, e as {{c1::tabelas dimensão}} guardam os atributos descritivos usados pra filtrar e agrupar essas métricas.		data-warehouse modelagem
+O {{c1::Apache Hadoop}} é um framework de processamento distribuído de Big Data baseado no modelo {{c1::MapReduce}}, com armazenamento no {{c1::HDFS}} (Hadoop Distributed File System).		data-warehouse big-data hadoop
+O {{c1::Spark Streaming}} processa dados em tempo real usando o modelo de {{c1::micro-lotes}} (micro-batch), diferente de um streaming evento-a-evento puro.		data-warehouse spark

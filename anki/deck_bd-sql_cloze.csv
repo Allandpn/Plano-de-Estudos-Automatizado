@@ -1,0 +1,12 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Trilha 1 - Dados::SQL-BD
+#tags column:3
+As propriedades {{c1::ACID}} de uma transação são: {{c1::Atomicidade}}, {{c1::Consistência}}, {{c1::Isolamento}} e {{c1::Durabilidade}}.		sql-bd transacoes
+{{c1::Deadlock}} ocorre quando duas ou mais transações ficam esperando indefinidamente por um recurso bloqueado pela outra.		sql-bd transacoes
+{{c1::CTE}} (Common Table Expression) é definida com a cláusula {{c1::WITH}} e cria uma tabela temporária nomeada, válida só durante a execução da consulta principal.		sql-bd sql
+Na sintaxe de window function, {{c1::PARTITION BY}} divide os dados em grupos lógicos independentes, e {{c1::ORDER BY}} (dentro do OVER) define a ordem de cálculo dentro de cada partição.		sql-bd sql
+Na normalização, a {{c1::1FN}} (Primeira Forma Normal) exige que todos os atributos sejam atômicos (sem grupos repetitivos ou valores multivalorados).		sql-bd modelagem
+A {{c1::2FN}} exige estar na 1FN e eliminar dependências parciais (atributos não-chave que dependem só de parte de uma chave composta).		sql-bd modelagem
+A {{c1::3FN}} exige estar na 2FN e eliminar dependências transitivas (atributos não-chave que dependem de outros atributos não-chave, não diretamente da chave).		sql-bd modelagem
+O teorema {{c1::CAP}} diz que um sistema distribuído só pode garantir 2 de 3 propriedades simultaneamente: {{c1::Consistência}}, {{c1::Disponibilidade}} (Availability) e {{c1::Tolerância a Partição}}.		sql-bd nosql

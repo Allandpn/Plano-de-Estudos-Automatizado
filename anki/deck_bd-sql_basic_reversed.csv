@@ -1,0 +1,11 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 1 - Dados::SQL-BD
+#tags column:3
+ACID	Atomicidade, Consistência, Isolamento, Durabilidade (propriedades de uma transação)	sql-bd transacoes
+DDL	Data Definition Language — CREATE, ALTER, DROP, TRUNCATE (define estruturas)	sql-bd sql
+DML	Data Manipulation Language — SELECT, INSERT, UPDATE, DELETE (manipula dados)	sql-bd sql
+DCL	Data Control Language — GRANT, REVOKE (controla permissões de acesso)	sql-bd sql
+TCL	Transaction Control Language — COMMIT, ROLLBACK, SAVEPOINT (controla transações)	sql-bd sql
+MER	Modelo Entidade-Relacionamento — representação conceitual das entidades, atributos e relacionamentos de um domínio	sql-bd modelagem
+MongoDB	Banco NoSQL orientado a documentos (JSON/BSON) — schema flexível, coleções em vez de tabelas	sql-bd nosql

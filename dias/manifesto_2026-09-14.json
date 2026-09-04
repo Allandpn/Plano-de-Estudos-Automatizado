@@ -1,0 +1,25 @@
+{
+    "titulo": "Seg 14/09 — Fundamentos, Modelagem Conceitual/Relacional, Normalização",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-02-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "55-58,59-63",
+            "rotulo": "Aula 02 - Banco de Dados (Mapa Mental + Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-03-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "41-43,44-52",
+            "rotulo": "Aula 03 - Modelagem Conceitual/MER (Mapa Mental + Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-04-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "58-60,61-66",
+            "rotulo": "Aula 04 - Modelagem Relacional/Chaves (Mapa Mental + Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-05-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "24-27",
+            "rotulo": "Aula 05 - Normalização (Resumo + Mapa Mental)"
+        }
+    ]
+}

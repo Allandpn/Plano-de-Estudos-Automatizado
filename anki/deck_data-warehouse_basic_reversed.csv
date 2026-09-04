@@ -1,0 +1,7 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 1 - Dados::Data-Warehouse
+#tags column:3
+OLTP	Online Transaction Processing — sistemas de transações do dia a dia (muitas escritas curtas, ex: sistema de vendas)	data-warehouse dw
+OLAP	Online Analytical Processing — sistemas analíticos (consultas complexas sobre grandes volumes, ex: DW)	data-warehouse dw
+RDD	Resilient Distributed Dataset — estrutura de dados imutável e distribuída do Spark, unidade básica de processamento	data-warehouse spark

@@ -1,0 +1,15 @@
+{
+    "titulo": "Sex 18/09 — Big Data, Pipelines Batch/Streaming, Processamento Distribuído, Hadoop",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-11-prof-diego-carvalho-e-emannuelle-gouve.pdf",
+            "paginas": "40,41-47",
+            "rotulo": "Aula 11 - Big Data (Mapa Mental + Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-12-prof-prof-diego-carvalho-e-renato-da-c.pdf",
+            "paginas": "42-55",
+            "rotulo": "Aula 12 - Big Data 100% Hadoop (Resumo)"
+        }
+    ]
+}

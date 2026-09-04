@@ -1,0 +1,13 @@
+#separator:tab
+#notetype:Basic
+#deck:SEFAZ SC::Trilha 1 - Dados::SQL-BD
+#tags column:3
+Quando usar concorrência pessimista em vez de otimista?	Quando conflitos entre transações são frequentes/prováveis — a pessimista usa bloqueios pra evitar o conflito antes que aconteça; a otimista assume que conflitos são raros e só verifica no commit.	sql-bd transacoes
+Quando usar EXISTS em vez de IN numa subconsulta?	Quando a subconsulta pode retornar muitas linhas e você só precisa checar existência — EXISTS para no primeiro match (mais eficiente), enquanto IN materializa a lista inteira.	sql-bd sql
+Quando usar uma CTE (WITH) em vez de uma subconsulta comum?	Quando a mesma subconsulta precisa ser referenciada várias vezes na query, ou quando a lógica é complexa e se beneficia de nomear passos intermediários — melhora legibilidade sem duplicar código.	sql-bd sql
+Quando usar window function (OVER/PARTITION BY) em vez de GROUP BY?	Quando você precisa de um cálculo agregado (soma, rank, média) mas ainda quer manter todas as linhas originais no resultado — GROUP BY colapsa as linhas em grupos, window function não.	sql-bd sql
+Quando usar INNER JOIN em vez de LEFT JOIN?	Quando você só quer registros que têm correspondência em ambas as tabelas — LEFT JOIN traz todos os registros da tabela da esquerda mesmo sem correspondência na direita (com NULL nos campos não encontrados).	sql-bd sql
+Quando usar view materializada em vez de view comum?	Quando a consulta subjacente é pesada/lenta e os dados não precisam estar sempre 100% atualizados — a materializada armazena fisicamente o resultado (mais rápida de ler, mas precisa ser atualizada/refresh periodicamente); a comum reexecuta a query toda vez.	sql-bd views
+Quando usar índice B-tree em vez de índice hash?	Quando a consulta envolve buscas por intervalo (range, ex: BETWEEN, >, <) ou ordenação — B-tree mantém a ordem e suporta isso; hash só é eficiente pra igualdade exata (=).	sql-bd indices
+Quando escolher um banco NoSQL em vez de um relacional?	Quando o volume/velocidade de dados é muito alto e o esquema é flexível/muda com frequência (ex: dados semiestruturados), priorizando escalabilidade horizontal sobre garantias fortes de consistência transacional (ACID completo).	sql-bd nosql
+Quando usar MySQL em vez de PostgreSQL, segundo as diferenças típicas cobradas em prova?	MySQL é tradicionalmente mais simples/rápido pra leitura em aplicações web de alto volume (OLTP simples); PostgreSQL tem suporte mais robusto a tipos de dados avançados, extensibilidade e conformidade SQL/ACID mais rigorosa — a escolha depende do requisito específico da questão, não existe resposta universal.	sql-bd sgbd
