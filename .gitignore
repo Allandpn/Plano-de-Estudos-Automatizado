@@ -1,6 +1,5 @@
 # Índice regenerável (grande — rode indice/indexador.py pra recriar)
 indice/indice.db
-indice/indexacao_log.txt
 
 # PDFs mesclados regeneráveis (rode dias/montar_dia.py com os manifestos)
 dias/*.pdf
