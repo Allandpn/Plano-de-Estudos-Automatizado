@@ -5,6 +5,14 @@ calcular_orcamento.py — Orçamento determinístico de tempo/ordem por edital.
 Uso:
     python calcular_orcamento.py --edital SEFAZ-SC-2026 --dias 60 --minutos-dia 120
     python calcular_orcamento.py --edital SEFAZ-SC-2026 --dias 60 --minutos-dia 120 --minutos-pagina 5
+    python calcular_orcamento.py --edital SEFAZ-SC-2026 --dias 60 --blocos-por-dia 2
+
+--blocos-por-dia é uma forma alternativa de informar --minutos-dia, direto na unidade que
+o SGE usa (bloco de conteúdo, ~45-75min, default 60 — ver
+docs/arquitetura-integracao-planejamento-sge.md, seção 6): minutos_dia = blocos_por_dia *
+minutos_por_bloco. É só conveniência de entrada pra este script — o resultado (tempo
+disponível/necessário, ordem) não muda, e "blocos por dia" nunca é exportado nem comunicado
+ao SGE (uso interno deste estágio do pipeline, ver seção 6 do documento acima).
 
 O que faz:
     Pra cada assunto já registrado em canonico.db (via canonizar_assuntos.py --adicionar)
@@ -33,6 +41,7 @@ import sys
 
 PESO_PRIORIDADE = {"ALTO": 0, "MEDIO": 1, "NAO_DETERMINADO": 2, "BAIXO": 3}
 MINUTOS_PAGINA_PADRAO = 4
+MINUTOS_POR_BLOCO_PADRAO = 60
 
 
 def conectar_db(caminho_db):
@@ -124,14 +133,22 @@ def main():
     ap.add_argument("--db", default="canonico.db", help="Caminho do banco SQLite (padrão: canonico.db)")
     ap.add_argument("--edital", required=True, help="Edital a calcular")
     ap.add_argument("--dias", type=int, required=True, help="Dias disponíveis até a prova")
-    ap.add_argument("--minutos-dia", type=int, required=True, help="Minutos de estudo por dia")
+    grupo_ritmo = ap.add_mutually_exclusive_group(required=True)
+    grupo_ritmo.add_argument("--minutos-dia", type=int, help="Minutos de estudo por dia")
+    grupo_ritmo.add_argument("--blocos-por-dia", type=float,
+                              help="Blocos de conteúdo por dia (alternativa a --minutos-dia, "
+                                   "ver docstring)")
+    ap.add_argument("--minutos-por-bloco", type=int, default=MINUTOS_POR_BLOCO_PADRAO,
+                     help=f"Minutos por bloco, só usado com --blocos-por-dia (padrão: {MINUTOS_POR_BLOCO_PADRAO})")
     ap.add_argument("--minutos-pagina", type=float, default=MINUTOS_PAGINA_PADRAO,
                      help=f"Minutos estimados de leitura por página (padrão: {MINUTOS_PAGINA_PADRAO})")
     args = ap.parse_args()
 
+    minutos_dia = args.minutos_dia if args.minutos_dia is not None else args.blocos_por_dia * args.minutos_por_bloco
+
     conn = conectar_db(args.db)
     try:
-        resultado = calcular(conn, args.edital, args.dias, args.minutos_dia, args.minutos_pagina)
+        resultado = calcular(conn, args.edital, args.dias, minutos_dia, args.minutos_pagina)
     except ValueError as e:
         print(f"Erro: {e}", file=sys.stderr)
         sys.exit(1)

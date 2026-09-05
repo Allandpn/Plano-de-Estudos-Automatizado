@@ -12,12 +12,20 @@ Formato de saída (ver docs/arquitetura-integracao-planejamento-sge.md, seção 
 canonizar_assuntos.py) — o import no SGE é sempre upsert por esse uuid, nunca
 "criar quando vazio".
 
+`referencia_material` sai como string JSON com a lista ordenada de pedaços de leitura
+(ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min) quando o assunto
+passou por dias/montar_bloco.py + canonizar_assuntos.py --adicionar-pedacos. Assuntos
+sem pedaços registrados (ex: SEFAZ SC, que usa o fluxo por dia) mantêm o texto livre
+gravado em --adicionar-lote (ou vazio). O SGE só armazena/exibe esse campo, nunca
+interpreta (ver docs/requisitos-sge-integracao.md, seção 3).
+
 Rode calcular_orcamento.py antes, pra popular `ordem` — exportar sem isso ainda funciona,
 mas o CSV sai com ordem vazia e um aviso é impresso.
 """
 
 import argparse
 import csv
+import json
 import sqlite3
 import sys
 from pathlib import Path
@@ -33,7 +41,7 @@ def conectar_db(caminho_db):
 
 def carregar_export(conn, edital):
     sql = """
-        SELECT ac.uuid, ac.disciplina, ac.nome_canonico AS assunto,
+        SELECT ea.id AS edital_assunto_id, ac.uuid, ac.disciplina, ac.nome_canonico AS assunto,
                ea.edital, ea.peso, ea.ordem, ea.referencia_material
         FROM edital_assunto ea
         JOIN assuntos_canonicos ac ON ac.uuid = ea.assunto_uuid
@@ -41,6 +49,23 @@ def carregar_export(conn, edital):
         ORDER BY ea.ordem IS NULL, ea.ordem, ac.disciplina, ac.nome_canonico
     """
     return conn.execute(sql, (edital,)).fetchall()
+
+
+def carregar_pedacos(conn, edital_assunto_id):
+    sql = """
+        SELECT ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min
+        FROM material_pedacos
+        WHERE edital_assunto_id = ?
+        ORDER BY ordem
+    """
+    return [dict(r) for r in conn.execute(sql, (edital_assunto_id,)).fetchall()]
+
+
+def resolver_referencia_material(conn, linha):
+    pedacos = carregar_pedacos(conn, linha["edital_assunto_id"])
+    if pedacos:
+        return json.dumps(pedacos, ensure_ascii=False)
+    return linha["referencia_material"] or ""
 
 
 def exportar(conn, edital, saida_path):
@@ -56,7 +81,9 @@ def exportar(conn, edital, saida_path):
         writer = csv.DictWriter(f, fieldnames=CAMPOS)
         writer.writeheader()
         for l in linhas:
-            writer.writerow({campo: (l[campo] if l[campo] is not None else "") for campo in CAMPOS})
+            linha_csv = {campo: (l[campo] if l[campo] is not None else "") for campo in CAMPOS}
+            linha_csv["referencia_material"] = resolver_referencia_material(conn, l)
+            writer.writerow(linha_csv)
 
     return len(linhas), len(sem_ordem)
 

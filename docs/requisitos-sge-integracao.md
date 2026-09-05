@@ -46,6 +46,12 @@ candidato, não sobre a prova):
 estático, vem do planejamento. O SGE só armazena e exibe, não interpreta nem decide a partir
 dele.
 
+Formato: string JSON com uma lista ordenada de pedaços de leitura (`ordem`, `arquivo`,
+`página_inicial`, `página_final`, `tempo_estimado_min`) — um por bloco de ~45–75min gerado pelo
+fatiamento do lado do planejamento (ver `docs/arquitetura-integracao-planejamento-sge.md`
+§4/§5). Continua sendo só um ponteiro: o SGE não abre nem interpreta o conteúdo, só guarda e
+exibe pro candidato saber onde parou.
+
 ## 4. Import: `id` passa a ser UUID gerado externamente, sempre upsert
 
 Contrato atual (Jornada J-1): `id` vazio = cria, preenchido = atualiza — SGE decide o `id` na

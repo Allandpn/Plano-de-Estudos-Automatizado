@@ -6,6 +6,7 @@ Uso:
     python canonizar_assuntos.py --buscar "normaliza" [--disciplina "Banco de Dados"]
     python canonizar_assuntos.py --listar [--edital SEFAZ-SC-2026]
     python canonizar_assuntos.py --adicionar-lote assuntos_bloco.json
+    python canonizar_assuntos.py --adicionar-pedacos <assunto-slug>_pedacos.json
 
 Formato do JSON de --adicionar-lote (lista de objetos):
 [
@@ -47,6 +48,13 @@ O que faz:
     peso/ordem/referência de material/volume são atributos POR EDITAL (tabela
     edital_assunto), não do assunto canônico — o mesmo assunto pode ter peso ALTO num
     edital e BAIXO em outro.
+
+    --adicionar-pedacos grava, na tabela material_pedacos, a lista ordenada de pedaços
+    de leitura gerada por dias/montar_bloco.py (arquivo de saída
+    <assunto-slug>_pedacos.json) — substitui os pedaços anteriores desse par
+    (edital, assunto_uuid), se houver. É essa lista que integracao/exportar_sge.py usa
+    pra preencher referencia_material no CSV. O par (edital, assunto_uuid) já precisa
+    existir em edital_assunto (rodar --adicionar-lote antes).
 """
 
 import argparse
@@ -86,6 +94,17 @@ CREATE TABLE IF NOT EXISTS edital_assunto (
     volume_paginas INTEGER,
     tempo_estimado_min INTEGER,
     UNIQUE(edital, assunto_uuid)
+);
+
+CREATE TABLE IF NOT EXISTS material_pedacos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    edital_assunto_id INTEGER NOT NULL REFERENCES edital_assunto(id),
+    ordem INTEGER NOT NULL,
+    arquivo TEXT NOT NULL,
+    pagina_inicial INTEGER,
+    pagina_final INTEGER,
+    tempo_estimado_min INTEGER,
+    UNIQUE(edital_assunto_id, ordem)
 );
 """
 
@@ -197,6 +216,38 @@ def adicionar(conn, disciplina, assunto, edital, redacao, peso, paginas, referen
     return assunto_uuid, criado
 
 
+def achar_edital_assunto_id(conn, edital, assunto_uuid):
+    row = conn.execute(
+        "SELECT id FROM edital_assunto WHERE edital = ? AND assunto_uuid = ?",
+        (edital, assunto_uuid),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def adicionar_pedacos(conn, edital, assunto_uuid, pedacos):
+    """Grava a lista ordenada de pedaços (saída de dias/montar_bloco.py) pro par
+    (edital, assunto_uuid) já existente em edital_assunto. Substitui os pedaços
+    anteriores desse par (reexecução idempotente após reprocessar o mesmo assunto)."""
+    edital_assunto_id = achar_edital_assunto_id(conn, edital, assunto_uuid)
+    if edital_assunto_id is None:
+        raise ValueError(
+            f"par (edital={edital!r}, assunto_uuid={assunto_uuid!r}) não encontrado em "
+            f"edital_assunto — rode --adicionar-lote pra esse assunto antes"
+        )
+
+    conn.execute("DELETE FROM material_pedacos WHERE edital_assunto_id = ?", (edital_assunto_id,))
+    for p in pedacos:
+        conn.execute(
+            """INSERT INTO material_pedacos
+               (edital_assunto_id, ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (edital_assunto_id, p["ordem"], p["arquivo"], p.get("pagina_inicial"),
+             p.get("pagina_final"), p.get("tempo_estimado_min")),
+        )
+    conn.commit()
+    return len(pedacos)
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
@@ -211,6 +262,10 @@ def main():
 
     ap.add_argument("--adicionar-lote", metavar="ARQUIVO.json",
                      help="Cria/atualiza assuntos canônicos a partir de um JSON (ver docstring)")
+
+    ap.add_argument("--adicionar-pedacos", metavar="ARQUIVO.json",
+                     help="Registra os pedaços gerados por dias/montar_bloco.py "
+                          "(<assunto-slug>_pedacos.json) pro par edital+assunto_uuid")
 
     args = ap.parse_args()
     conn = conectar_db(args.db)
@@ -271,7 +326,25 @@ def main():
             sys.exit(1)
         return
 
-    print("Informe --buscar, --listar ou --adicionar-lote.", file=sys.stderr)
+    if args.adicionar_pedacos:
+        with open(args.adicionar_pedacos, encoding="utf-8") as f:
+            registro = json.load(f)
+
+        faltando = [n for n in ("assunto_uuid", "edital", "pedacos") if not registro.get(n)]
+        if faltando:
+            print(f"ERRO: faltando {', '.join(faltando)} no registro de pedaços", file=sys.stderr)
+            sys.exit(1)
+
+        try:
+            n = adicionar_pedacos(conn, registro["edital"], registro["assunto_uuid"], registro["pedacos"])
+        except ValueError as e:
+            print(f"ERRO: {e}", file=sys.stderr)
+            sys.exit(1)
+
+        print(f"{n} pedaço(s) registrado(s) pro assunto {registro['assunto_uuid']} em {registro['edital']}.")
+        return
+
+    print("Informe --buscar, --listar, --adicionar-lote ou --adicionar-pedacos.", file=sys.stderr)
     sys.exit(1)
 
 

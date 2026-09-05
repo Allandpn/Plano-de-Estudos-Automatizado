@@ -1,0 +1,6 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 1 - Dados::Governanca-Dados
+#tags column:3
+MDM	"Master Data Management — Gestão de Dados Mestres, visa criar uma ""Fonte Confiável""/""Golden Record"" único e consistente de cada entidade central do negócio"	governanca-dados dados-mestres
+Data Owner	Dono/Gestor de Dados — tem autoridade de aprovação sobre decisões de dados do seu domínio, responde pela qualidade e define quem acessa/usa os dados	governanca-dados papeis

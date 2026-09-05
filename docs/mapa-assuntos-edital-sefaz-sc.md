@@ -41,12 +41,14 @@ Este mapa substitui minhas suposições anteriores de "quanto tempo cada assunto
 | Apache Spark 4.x, DataFrame, Spark SQL | `10-Área Fiscal\22`, Aula 12, seção Apache Spark, Teoria pág 78-96 + Resumo pág 97-103 | ✅ |
  
 ### Governança e Qualidade de Dados
+*(triado em 04/09/2026 — ver `docs/triagens/triagem-bloco-governanca-dados-sefaz-sc.md`)*
+
 | Assunto | Aula/PDF | Status |
 |---|---|---|
-| Governança: papéis, catálogo, glossário, metadados, dicionário, linhagem | | |
-| Ciclo de vida, dados mestres/referência | | |
-| Qualidade de dados (completude, consistência, validade, precisão, unicidade, integridade, atualidade) | | |
-| Data profiling, limpeza, tratamento de inconsistências/duplicidades/outliers | | |
+| Governança: papéis, catálogo, glossário, metadados, dicionário, linhagem | `10-Área Fiscal\22`, Aula 01 (Governança de Dados), pág. 6-23 e 51-53 | ✅ |
+| Ciclo de vida, dados mestres/referência | `10-Área Fiscal\22`, Aula 00, pág. 123-128 (ciclo de vida) + Aula 01, pág. 44-47 (dados mestres/referência) | ✅ |
+| Qualidade de dados (completude, consistência, validade, precisão, unicidade, integridade, atualidade) | `10-Área Fiscal\22`, Aula 01, pág. 54-55 | ✅ |
+| Data profiling, limpeza, tratamento de inconsistências/duplicidades/outliers | `10-Área Fiscal\22`, Aula 01, pág. 56-57 + Aula 00, pág. 124 | ✅ |
  
 ### Programação e Automação para Dados
 | Assunto | Aula/PDF | Status |

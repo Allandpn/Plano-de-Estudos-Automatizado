@@ -15,7 +15,8 @@ de dias por bloco).
 docs/            → plano, cronograma, mapa-assuntos, inventário, triagens
 apostilas/       → os PDFs originais (não editar/mover)
 indice/          → indice.db (SQLite+FTS5) e os scripts de indexação/busca
-dias/            → PDFs mesclados por dia de estudo + manifestos JSON
+dias/            → PDFs mesclados por dia (SEFAZ SC) ou por bloco de assunto (editais
+                   novos) + manifestos JSON
 anki/            → rascunhos de deck (JSON) e CSVs gerados
 integracao/      → canonico.db (registro canônico de assuntos) e os scripts de
                    canonicalização/orçamento/exportação pro SGE-Concursos
@@ -76,7 +77,7 @@ Quando pedirem "triagem do bloco X":
 ## Fluxo de canonicalização de assuntos
 
 Depois que um bloco (ou o mapa-assuntos inteiro de um edital) está triado e aprovado, e
-antes de rodar o orçamento/exportação pro SGE (estágios 3-5 de
+antes de rodar o orçamento/exportação pro SGE (estágios 3-6 de
 `docs/arquitetura-integracao-planejamento-sge.md`): decidir se cada assunto já triado é
 "o mesmo" de um assunto canônico que já existe (de um edital anterior), ou se é novo.
 
@@ -124,12 +125,40 @@ sem ensinar de verdade. Ao notar isso durante uma sessão:
 
 ## PDF mesclado do dia
 
-Junto de cada ficha de sessão, gerar o manifesto JSON e rodar
+Pro SEFAZ SC (prazo curto, já em andamento), continua valendo o fluxo por dia de calendário:
+junto de cada ficha de sessão, gerar o manifesto JSON e rodar
 `dias/montar_dia.py` pra produzir um único PDF por dia, com as páginas na
 ordem de leitura sugerida (não necessariamente a ordem do PDF original) e
 capa de rastreabilidade. Ver `dias/montar_dia.py` (docstring) pro formato do
 manifesto. Gerar os manifestos/PDFs de todos os dias do bloco junto com as
 fichas, na mesma leva — não esperar o dia chegar pra montar.
+
+**Este fluxo por dia não é usado em editais novos** — ver
+`docs/requisitos-alinhamento-fatiamento-pdf-bloco.md` pro motivo. Editais novos usam o fluxo
+por bloco de assunto abaixo.
+
+## PDF fatiado por bloco de assunto (editais novos)
+
+Depois da triagem de um bloco aprovada, pra cada assunto (não por dia): montar o manifesto por
+assunto e rodar `dias/montar_bloco.py` pra cortar o material em pedaços de leitura de tempo
+aproximadamente igual (`minutos_por_bloco`, default 60 — valor fixo combinado com o SGE, não
+mudar sem avisar), sem data de calendário — quem decide qual pedaço estudar em qual dia é a
+escada do SGE. Ver `dias/montar_bloco.py` (docstring) pro formato do manifesto e
+`docs/arquitetura-integracao-planejamento-sge.md` §4/§5 pro desenho completo.
+
+O script já gera os PDFs no layout combinado com o SGE:
+`blocos/<assunto-slug>/segmento-NN.pdf` dentro do `--saida-dir`. Depois de gerar:
+1. Rodar `integracao/canonizar_assuntos.py --adicionar-pedacos` pra registrar a lista em
+   `canonico.db` (campo `arquivo` ainda com o caminho local).
+2. Subir a pasta `blocos/` pro Google Drive (manual por enquanto — sem `rclone`/Drive API
+   automatizado aqui) e compartilhar cada PDF com link.
+3. Atualizar `arquivo` em `canonico.db` com o link de cada segmento antes de rodar
+   `integracao/exportar_sge.py` — é esse link, não o caminho local, que vai no CSV
+   (`referência_material`, ver `docs/arquitetura-integracao-planejamento-sge.md` §8).
+
+Pro orçamento (estágio 4), `integracao/calcular_orcamento.py --blocos-por-dia N` aceita
+ritmo direto em "blocos por dia" em vez de minutos — conversão interna via
+`minutos_por_bloco`, nunca exportado ao SGE.
 
 ## Rascunho de Anki
 

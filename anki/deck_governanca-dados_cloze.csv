@@ -1,0 +1,9 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Trilha 1 - Dados::Governanca-Dados
+#tags column:3
+A Organização de Governança de Dados inclui o {{c1::DGC}} (Conselho de Governança de Dados, que gerencia políticas e escalonamento) e o {{c1::DGO}} (Escritório de Governança de Dados, focado na manutenção contínua de definições e padrões).		governanca-dados papeis
+Os três tipos de metadados são: {{c1::Metadados de Negócio}} (definições/regras, não técnico), {{c1::Metadados Técnicos}} (esquemas, colunas, jobs de ETL) e {{c1::Metadados Operacionais}} (logs de execução, histórico de extrações).		governanca-dados metadados
+As dimensões de Qualidade de Dados incluem {{c1::Completude}} (dados presentes), {{c1::Consistência}} (uniformidade entre registros), {{c1::Acurácia}} (corresponde à realidade), {{c1::Validade}} (conforme domínio/formato definido) e {{c1::Unicidade}} (sem duplicatas).		governanca-dados qualidade
+O Ciclo de Melhoria de Qualidade de Dados segue o modelo {{c1::Plan-Do-Check-Act}} (Planejar-Fazer-Verificar-Agir) de Shewhart/Deming.		governanca-dados qualidade
+O ciclo de vida dos dados tem 6 etapas: {{c1::Coleta}}, {{c1::Tratamento}} (limpeza/padronização), {{c1::Armazenamento}}, {{c1::Integração}}, {{c1::Recuperação}} e {{c1::Descarte}}.		governanca-dados ciclo-de-vida

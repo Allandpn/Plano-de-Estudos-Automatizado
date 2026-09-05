@@ -1,6 +1,9 @@
 # Cronograma Detalhado — Sessão a Sessão
 ### SEFAZ SC 2026 — complementa o plano-estudos-sefaz-sc-2026.md e o mapa-assuntos-edital-sefaz-sc.md
-*v3 — bloco Bancos de Dados e SQL triado e expandido de 2 para 3 dias (14-16/09); Semana 3 reorganizada para absorver a expansão sem empurrar a Fase 3*
+*v4 — bloco Bancos de Dados e SQL triado e expandido de 2 para 3 dias (14-16/09); bloco
+Governança e Qualidade de Dados triado e expandido de 1 para 2 dias (21-22/09), absorvido
+removendo a Matemática Financeira de Qua 23/09 (conteúdo passa pra Qua 30/09); Semanas 3-4
+reorganizadas para absorver as duas expansões sem empurrar a Fase 3*
 
 Este arquivo divide o conteúdo oficial do edital em sessões diárias. Marque as caixas conforme for concluindo.
 
@@ -20,6 +23,7 @@ Conforme cada bloco for triado, registre aqui se o orçamento de dias bateu com 
 | Bloco | Orçamento original | Real (triagem) | Diferença | Status |
 |---|---|---|---|---|
 | Bancos de Dados e SQL | 2 dias | 3 dias | +1 dia | Absorvido nos 3 dias de Matemática Financeira (provisório — pode mudar no rebalanceamento final) |
+| Governança e Qualidade de Dados | 1 dia | 2 dias | +1 dia | Absorvido removendo a sessão de Matemática Financeira de Qua 23/09 (conteúdo dela passa pra Qua 30/09) — ver Semana 4 |
 
 ---
 
@@ -55,9 +59,9 @@ Conforme cada bloco for triado, registre aqui se o orçamento de dias bateu com 
 - [ ] **Dom 20/09** — Data Warehouse: Apache Spark 4.x, DataFrame, Spark SQL (fechamento)
 
 ### Semana 4 (21–27/09) — Governança de Dados + Python + Estatística (início)
-- [ ] **Seg 21/09** — Governança e Qualidade de Dados (bloco completo): catálogo/metadados/linhagem, ciclo de vida/dados mestres, qualidade de dados, data profiling
-- [ ] **Ter 22/09** — Python: lógica de programação, sintaxe, NumPy, pandas
-- [ ] **Qua 23/09** — Gerais: Matemática Financeira (juros simples/compostos, taxa real/efetiva, capitais equivalentes)
+- [ ] **Seg 21/09** — Governança de Dados (dia 1 de 2): conceitos básicos, papéis/data stewardship, modelos de governança, metadados (tipos/repositório/linhagem/glossário/padrões)
+- [ ] **Ter 22/09** — Governança de Dados (dia 2 de 2, fechamento): dados mestres/referência, ciclo de vida dos dados, qualidade de dados, data profiling
+- [ ] **Qua 23/09** — Python: lógica de programação, sintaxe, NumPy, pandas
 - [ ] **Qui 24/09** — Python: CSV/JSON/XML, consumo de APIs, web scraping, automação/RPA (fechamento)
 - [ ] **Sex 25/09** — Estatística: descritiva (medidas de posição/dispersão)
 - [ ] **Sáb 26/09** — Questões mistas: Governança de Dados + Python
@@ -66,7 +70,7 @@ Conforme cada bloco for triado, registre aqui se o orçamento de dias bateu com 
 ### Semana 5 (28/09–04/10) — Estatística e ML
 - [ ] **Seg 28/09** — 🔴 Estatística: inferência — amostragem, intervalos de confiança, testes de hipótese, correlação, regressão
 - [ ] **Ter 29/09** — Ciência de Dados: análise exploratória, ciclo de vida de projetos de CD, preparação/engenharia/seleção de atributos
-- [ ] **Qua 30/09** — Gerais: Matemática Financeira (descontos simples/composto, amortizações SAC/francês/misto)
+- [ ] **Qua 30/09** — Gerais: Matemática Financeira (juros simples/compostos, taxa real/efetiva, capitais equivalentes — absorvido da Semana 4 — + descontos simples/composto, amortizações SAC/francês/misto)
 - [ ] **Qui 01/10** — ML: aprendizado supervisionado/não supervisionado, classificação, regressão, clustering
 - [ ] **Sex 02/10** — ML: árvores de decisão, ensemble, algoritmos por distância, overfitting/underfitting, métricas, scikit-learn (fechamento Estatística/ML)
 - [ ] **Sáb 03/10** — Questões mistas: Estatística + ML (fixação pesada — bloco mais denso da trilha)

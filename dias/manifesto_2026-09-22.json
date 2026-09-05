@@ -1,0 +1,20 @@
+{
+    "titulo": "Ter 22/09 — Governança de Dados (dia 2 de 2, fechamento): Dados Mestres, Ciclo de Vida, Qualidade",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-01-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "44-47",
+            "rotulo": "Aula 01 - Dados Mestres e de Referência (Teoria)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-00-prof-diego-carvalho-e-renato-da-costa-3347-completo.pdf",
+            "paginas": "123-128,131",
+            "rotulo": "Aula 00 - Ciclo de Vida de Dados (Teoria + Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-01-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "54-57",
+            "rotulo": "Aula 01 - Qualidade de Dados e Data Profiling (Teoria)"
+        }
+    ]
+}

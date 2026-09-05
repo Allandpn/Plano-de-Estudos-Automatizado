@@ -35,15 +35,26 @@ revisão espaçada, "o que fazer hoje").
 - **Planejamento roda no PC pessoal**, como processo sob demanda (pipeline em lote) — não é
   um serviço 24/7. Roda uma vez por edital novo, ou por bloco/correção pontual.
 - **SGE roda no Raspberry Pi**, junto do Pi-hole, como serviço sempre disponível.
-- Comunicação entre os dois via Tailscale (mesma rede já usada hoje pra sync do
-  `indice.db`/Drive entre PCs — mas este fluxo é PC→Pi, separado daquele).
+- **Sem chamada de rede direta entre os dois sistemas.** Decisão do lado do SGE (ADR-037,
+  ver `docs/requisitos-alinhamento-fatiamento-pdf-bloco.md` §5): os artefatos da exportação
+  (estágio 6) chegam via **Google Drive**, não via Tailscale/endpoint direto — planejamento e
+  SGE têm ritmos de disponibilidade diferentes (sob demanda vs. 24/7), e exigir os dois online
+  ao mesmo tempo seria fricção desnecessária.
+  - O **CSV** (assuntos + segmentos de material) é colocado numa pasta do Drive; o SGE
+    sincroniza essa pasta via `rclone`, no próprio ritmo dele — o planejamento não precisa
+    saber que o Pi existe nem se está acessível.
+  - Os **PDFs dos segmentos não vão pro Pi** — ficam no Drive, compartilhados com link; esse
+    link é o valor que entra em `referência_material` (seção 8), não um caminho local.
+  - Estrutura de pasta combinada: `SGE-Importacao/<slug-do-concurso>/assuntos.csv` +
+    `blocos/<assunto-slug>/segmento-NN.pdf`. `dias/montar_bloco.py` já gera esse layout
+    localmente (`<saida-dir>/blocos/<assunto-slug>/segmento-NN.pdf`); upload pro Drive e
+    geração do link compartilhável ainda são passos manuais (sem automação `rclone`/Drive
+    API do lado do planejamento por enquanto).
 - **O planejamento é autocontido durante a análise**: não depende de conectividade com o SGE
   pra decidir nomes canônicos, pesos ou UUIDs — o registro histórico de assuntos canonizados
-  vive só no lado do planejamento (ver seção 5). O único ponto de contato de rede necessário é
-  a exportação final (estágio 5 do pipeline).
-- Formato da exportação (CSV vs. chamada direta a um endpoint de import) é detalhe de
-  implementação em aberto — decidir quando o SGE tiver o endpoint pronto para receber o novo
-  formato (ver `docs/requisitos-sge-integracao.md`, seção 4).
+  vive só no lado do planejamento (ver seção 5). Nem a análise nem a exportação (estágio 6)
+  dependem do SGE estar online — só de uma pasta do Drive estar acessível.
+- Formato exato do CSV de exportação: ver seção 8.
 
 ## 4. Pipeline
 
@@ -53,7 +64,8 @@ revisão espaçada, "o que fazer hoje").
 | 2 | Triagem contra o acervo | Mapa de assuntos do estágio 1 | Busca no índice, decide cobertura/gap por assunto — fluxo já existente (ver `CLAUDE.md`, "Fluxo de uma triagem de bloco") | `mapa-assuntos-edital-<concurso>.md` + `docs/triagens/*` | Humano aprova diff (regra já existente) |
 | 3 | Canonicalização de assuntos | Assuntos triados + registro histórico de canônicos (seção 5) | IA compara semanticamente cada assunto novo contra os já canonizados de editais anteriores; propõe match existente ou novo | Nome canônico + UUID (reaproveitado ou recém-mintado) por assunto | Humano confirma quando o match é ambíguo |
 | 4 | Orçamento de tempo / ordem | Assuntos canonizados + peso + volume (páginas identificadas na triagem) + dias até a prova + tempo/dia disponível | Fórmula determinística: tempo proporcional a peso × volume, dentro do tempo disponível. Quando o total estoura o prazo, IA propõe compressão/corte com justificativa explícita | Ordem de estudo + tempo estimado por assunto, específicos daquele edital | Validação leve quando houve compressão/corte |
-| 5 | Exportação | Tudo acima | Gera o payload pro SGE (ver seção 8) | Import no SGE (Edital + relação Edital↔Assunto) | — |
+| 5 | Fatiamento do material por bloco | Páginas identificadas na triagem + `minutos_por_bloco` (parâmetro local, ver seção 6) | Corta o material de cada assunto em pedaços de leitura de tempo aproximadamente igual — mesmo critério de página que a triagem já usa, só muda o ponto de parada (`dias/montar_bloco.py`) | Sequência ordenada de pedaços por assunto (PDF + metadados de rastreio: arquivo, página inicial/final, tempo estimado) | — (determinístico) |
+| 6 | Exportação | Tudo acima | Gera o payload pro SGE (ver seção 8) | Import no SGE (Edital + relação Edital↔Assunto) | — |
 
 ## 5. Modelo de dados mantido pelo planejamento
 
@@ -69,7 +81,8 @@ edital individualmente.
 
 **Por par (edital, assunto canônico)**:
 - `peso`, `ordem`
-- `referência_material` (apostila + página, quando identificado na triagem)
+- `referência_material` — lista ordenada de pedaços de leitura: `(ordem, arquivo,
+  página_inicial, página_final, tempo_estimado_min)`, produzida pelo fatiamento (estágio 5)
 - `volume_estimado` (páginas / tempo de leitura estimado)
 
 ## 6. Regras e princípios
@@ -93,6 +106,20 @@ Novos, específicos desta integração:
 - **O planejamento nunca decide "quando" estudar dia a dia** — só a ordem de entrada dos
   assuntos e o orçamento de tempo agregado por assunto. O dia a dia real (o que muda com
   SUCESSO/PARCIAL/FALHA) é território exclusivo da escada do SGE.
+- **O fatiamento do material nunca data um pedaço a um dia de calendário** — produz uma
+  sequência ordenada de pedaços por assunto (estágio 5); é a escada do SGE quem decide, turno a
+  turno, qual pedaço consumir (ver `docs/requisitos-alinhamento-fatiamento-pdf-bloco.md`).
+- **O tamanho do bloco de leitura (`minutos_por_bloco`) é um valor fixo único, combinado entre
+  os dois lados (60min) e documentado nos dois repositórios** — nunca uma consulta em tempo
+  real ao SGE (mantém a autocontenção da seção 3). Se o SGE recalibrar esse parâmetro
+  (evento raro, registrado em changelog), o número é espelhado manualmente aqui — não é
+  esperado divergir em silêncio.
+- **Quantos blocos por dia (`blocos_por_dia`) é parâmetro só do estágio 4 (orçamento)**,
+  usado apenas pra checar se o volume total cabe até a prova — nunca é exportado nem
+  comunicado ao SGE de nenhuma forma. `integracao/calcular_orcamento.py --blocos-por-dia`
+  aceita esse número diretamente (convertido internamente via `minutos_por_bloco`).
+- **Reteach em `FALHA` nunca aciona nova geração de pedaço** — o SGE reaproveita o ponteiro já
+  entregue; o planejamento não precisa saber quantas vezes um assunto foi revisitado.
 
 ## 7. Fora do escopo do planejamento
 
@@ -113,7 +140,10 @@ Payload por linha (assunto dentro de um edital):
 | `edital` | referência ao Edital sendo importado |
 | `peso` | do quadro de distribuição de questões, ou "não determinado" |
 | `ordem` | do estágio 4 |
-| `referência_material` | opcional |
+| `referência_material` | opcional — string JSON com a lista ordenada de pedaços (`ordem`, `arquivo`, `página_inicial`, `página_final`, `tempo_estimado_min`); `arquivo` é o **link compartilhável do Google Drive** do PDF daquele segmento (não um caminho local — ver seção 3), preenchido manualmente após o upload; o SGE só armazena e exibe, não interpreta (ver `docs/requisitos-sge-integracao.md` §3) |
 
 Semântica de import: **sempre upsert por `uuid`** — nunca "criar quando vazio". O SGE nunca
 gera `id` de Assunto por conta própria nesse fluxo.
+
+O CSV em si (e não só os PDFs) também viaja por uma pasta do Google Drive sincronizada via
+`rclone` do lado do SGE, não por chamada direta a um endpoint — ver seção 3.
