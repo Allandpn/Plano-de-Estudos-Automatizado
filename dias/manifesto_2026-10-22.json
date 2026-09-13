@@ -1,0 +1,20 @@
+{
+    "titulo": "Qui 22/10 — Engenharia de Software: Git 2.x, CI/CD, DevOps, DevSecOps; APIs REST, HTTP/HTTPS, JSON, XML, mensageria",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/02 - Desenvolvimento de software/aula 05.pdf",
+            "paginas": "3-24",
+            "rotulo": "Aula 05 - DevOps (Git, CI/CD, DevSecOps)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 15.pdf",
+            "paginas": "37-43",
+            "rotulo": "Aula 15 - WS e REST (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 14.pdf",
+            "paginas": "5-38",
+            "rotulo": "Aula 14 - SOA (inclui Mensageria/CORBA)"
+        }
+    ]
+}

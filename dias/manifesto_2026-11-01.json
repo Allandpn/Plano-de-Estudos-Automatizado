@@ -1,0 +1,40 @@
+{
+    "titulo": "Dom 01/11 — Segurança da Informação: criptografia, PKI, TLS, LGPD aplicada (fechamento) + Direito Administrativo: LAI, Lei 8.429/1992 (improbidade), Lei 14.133/2021 (fechamento)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 11.pdf",
+            "paginas": "4-21",
+            "rotulo": "Aula 11 - SSL e TLS"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 12.pdf",
+            "paginas": "4-25",
+            "rotulo": "Aula 12 - Criptografia (simetrica/assimetrica, hashes)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 13.pdf",
+            "paginas": "4-6",
+            "rotulo": "Aula 13 - Assinatura Digital"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 14.pdf",
+            "paginas": "75-90",
+            "rotulo": "Aula 14 - Mascaramento de Dados, Pseudonimizacao, Anonimizacao"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/10 - TCE-SC (Exceto cargo de Direito) Direito Administrativo/aula 19.pdf",
+            "paginas": "3-22",
+            "rotulo": "Aula 19 - Lei de Acesso a Informacao (LAI, completa)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/10 - TCE-SC (Exceto cargo de Direito) Direito Administrativo/aula 18.pdf",
+            "paginas": "3-33",
+            "rotulo": "Aula 18 - Improbidade Administrativa - Nocoes Gerais (nucleo)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/10 - TCE-SC (Exceto cargo de Direito) Direito Administrativo/aula 09.pdf",
+            "paginas": "3-25",
+            "rotulo": "Aula 09 - Contratos Administrativos / Lei 14.133-2021 (nocoes introdutorias)"
+        }
+    ]
+}

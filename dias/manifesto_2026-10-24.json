@@ -1,0 +1,20 @@
+{
+    "titulo": "Sáb 24/10 — Engenharia de Software (dia 2 de 2, fechamento): HTML5/CSS3/JavaScript/TypeScript + POO/arquitetura em camadas/cliente-servidor, leitura de código-fonte",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/05 - Desenvolvimento de Software para Concursos/aula 13.pdf",
+            "paginas": "3-50",
+            "rotulo": "Aula 13 - CSS (Teoria, primeira metade - fundamentos/seletores/box model)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/05 - Desenvolvimento de Software para Concursos/aula 14.pdf",
+            "paginas": "3-13,54-57,68-70",
+            "rotulo": "Aula 14 - JavaScript DEV + JavaScript Moderno (ECMA 2021) + TypeScript"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 09.pdf",
+            "paginas": "34-39",
+            "rotulo": "Aula 09 - APOO (Resumo)"
+        }
+    ]
+}

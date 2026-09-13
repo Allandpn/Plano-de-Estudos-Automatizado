@@ -1,0 +1,20 @@
+{
+    "titulo": "Qui 29/10 — Segurança da Informação: CIA, ameaças/vulnerabilidades, riscos, controles; IAM, MFA, RBAC",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 09.pdf",
+            "paginas": "3-11,58-69,93-115",
+            "rotulo": "Aula 09 - Principios de Seguranca + Seguranca Fisica-Logica-Controle de Acesso + Autenticacao"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 14.pdf",
+            "paginas": "3-25",
+            "rotulo": "Aula 14 - ISO 27001 e 27002 (nucleo)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 15.pdf",
+            "paginas": "3-25",
+            "rotulo": "Aula 15 - ISO 27005 e Gestao de Riscos (nucleo)"
+        }
+    ]
+}

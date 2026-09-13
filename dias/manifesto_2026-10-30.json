@@ -1,0 +1,20 @@
+{
+    "titulo": "Sex 30/10 — Segurança da Informação: firewalls, IDS/IPS, WAF, hardening, gestão de patches; logs, monitoramento, incidentes, continuidade",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 10.pdf",
+            "paginas": "3-33",
+            "rotulo": "Aula 10 - Firewall e Proxy (inclui IDS/IPS/WAF/hardening)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 16.pdf",
+            "paginas": "3-30",
+            "rotulo": "Aula 16 - Plano de Continuidade de Negocio (RTO/RPO) + inicio ISO 22313"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/07 - Sistemas Operacionais/aula 03.pdf",
+            "paginas": "95-109",
+            "rotulo": "Aula 03 SO - trecho Linux Servicos de Rede e Seguranca (monitoramento e resposta a incidentes)"
+        }
+    ]
+}

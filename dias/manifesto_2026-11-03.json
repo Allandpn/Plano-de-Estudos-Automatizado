@@ -1,0 +1,15 @@
+{
+    "titulo": "Ter 03/11 - Auditoria com Tecnologia: auditoria de contratos de TI, SLA, metricas de software",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/15 - Governança, Gestão e Contratações de TIC/curso-383844-aula-09-prof-paolla-ramos-e-fernando-pedrosa-somente-em-pdf-67b0-completo.pdf",
+            "paginas": "3-42,44-49",
+            "rotulo": "Aula 09 - Contratos de TI e IN 94/2022"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 17.pdf",
+            "paginas": "3-53",
+            "rotulo": "Aula 17 - Metricas de Software (APF, Pontos de Caso de Uso)"
+        }
+    ]
+}

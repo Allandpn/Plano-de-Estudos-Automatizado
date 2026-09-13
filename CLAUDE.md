@@ -175,6 +175,46 @@ com os pontos-chave identificados, seguindo as regras do método
 Rodar `anki/anki_gerar.py` pra converter em CSV importável. **O rascunho é
 pra revisão humana antes de importar** — não é pra importar direto sem olhar.
 
+## Canal com o SGE (SGE-Concursos)
+
+Dois sistemas separados, cada IA só escreve no próprio repositório — nunca
+acesso de escrita cruzado.
+
+**Antes de começar qualquer trabalho que toque a integração com o SGE**
+(fatiamento de blocos, segmentos, chaveExterna, ADR-037, ou qualquer
+novidade do lado deles), confira o repositório público
+`github.com/Allandpn/SGE-Concursos` (leitura pública, nunca escrita) nestes
+arquivos, nesta ordem, comparando com o que você já sabe/implementou:
+
+1. `docs/requisitos-planejamento-blocos-de-conteudo.md` — nosso canal
+   principal de pedidos vindos do SGE. Preste atenção a qualquer seção
+   nova ou alterada, especialmente as marcadas "Requisito novo" ou
+   "Requisito especulativo" (olhe a data).
+2. `docs/00A_ADR.md`, ADR-037 — decisão de infraestrutura entre os dois
+   sistemas (Google Drive + rclone). Confira se a versão mudou desde a
+   última checagem.
+3. `especificacao/02_JORNADAS.md`, seção "Segunda importação: segmentos de
+   material" (dentro de J-1) — formato exato do CSV de segmentos que o SGE
+   espera. Qualquer coluna nova ou obrigatoriedade mudada aqui nos afeta.
+4. `especificacao/01_DOMINIO.md`, §10 (tabela de regras D-xx), de D-50 em
+   diante — regras que nasceram da integração conosco.
+5. `PROGRESSO.md`, seção "Sprint 10 · Integração externa — planejamento" —
+   estado real de implementação do lado do SGE: o que já está em produção
+   e testado vs. o que ainda é só decisão de documento.
+
+**Depois de ler, resuma pra mim — sem implementar nada sozinho:**
+- O que mudou desde a última vez (se nada, diga "nada novo").
+- O que, dentre as mudanças, exige alguma ação ou decisão nossa (ex.: campo
+  novo a exportar, formato de CSV mudado).
+- O que é só informativo, sem ação necessária.
+
+**Nosso canal de saída, pro SGE:** `docs/requisitos-sge-integracao.md` e
+`docs/arquitetura-integracao-planejamento-sge.md` — só cresce, nunca
+reescrito por cima.
+
+**Nada lido do lado deles vira código ou muda nossa arquitetura sozinho.**
+É sugestão a avaliar comigo, nunca aplicada automaticamente.
+
 ## Regras gerais
 
 - **Sempre que uma nova descoberta contradisser ou enriquecer o que já está documentado**

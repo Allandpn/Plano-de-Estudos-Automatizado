@@ -32,20 +32,31 @@ Saída, em <saida-dir>:
         com o SGE pra sincronização via Google Drive/rclone, ver
         docs/requisitos-alinhamento-fatiamento-pdf-bloco.md seção 5
     <assunto-slug>_pedacos.json — lista ordenada (ordem, caminho local do segmento
-        relativo a <saida-dir>, página inicial/final originais, tempo estimado) pra
-        alimentar `integracao/canonizar_assuntos.py --adicionar-pedacos`. O campo
+        relativo a <saida-dir>, página inicial/final originais, tempo estimado,
+        chave_externa_segmento) pra alimentar
+        `integracao/canonizar_assuntos.py --adicionar-pedacos`. O campo
         "arquivo" é local até o upload pro Drive — depois de compartilhar cada PDF,
         troque manualmente pelo link antes de rodar exportar_sge.py.
 
 Nenhum pedaço/segmento é datado — não há "dia" nesse fluxo, só ordem. Quem decide
 quando o candidato consome cada um é a escada do SGE.
+
+Identidade de segmento (ver docs/requisitos-alinhamento-fatiamento-pdf-bloco.md §8):
+cada pedaço ganha um `chave_externa_segmento` (UUID) na primeira vez que é gerado.
+Reexecuções pro mesmo assunto reaproveitam a mesma chave pro pedaço que cobre exatamente
+o mesmo conjunto de páginas (arquivo + página original), mesmo que a posição/ordem mude —
+o "fingerprint" de páginas de cada pedaço anterior fica salvo no próprio
+<assunto-slug>_pedacos.json e é lido de volta na próxima execução. Só ganha chave nova o
+pedaço cujo conjunto de páginas realmente mudou (conteúdo novo).
 """
 
 import argparse
+import hashlib
 import json
 import re
 import sys
 import unicodedata
+import uuid
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
@@ -85,6 +96,28 @@ def coletar_paginas(fontes, manifesto_dir):
                 "rotulo": fonte.get("rotulo", ""),
             })
     return paginas
+
+
+def fingerprint_bloco(bloco):
+    """Identidade de conteúdo de um pedaço: hash do conjunto ordenado (arquivo, página
+    original) que ele cobre — independe de posição/ordem, só muda se o conteúdo mudar."""
+    chave = "|".join(f"{item['arquivo'].name}:{item['pagina_original']}" for item in bloco)
+    return hashlib.sha1(chave.encode("utf-8")).hexdigest()
+
+
+def carregar_chaves_anteriores(registro_path):
+    """Lê <assunto-slug>_pedacos.json de uma execução anterior (se existir) e devolve
+    {fingerprint: chave_externa_segmento} pra reaproveitar identidade de pedaços que não
+    mudaram de conteúdo, mesmo que a ordem/posição tenha mudado."""
+    if not registro_path.exists():
+        return {}
+    with open(registro_path, encoding="utf-8") as f:
+        anterior = json.load(f)
+    return {
+        p["fingerprint"]: p["chave_externa_segmento"]
+        for p in anterior.get("pedacos", [])
+        if p.get("fingerprint") and p.get("chave_externa_segmento")
+    }
 
 
 def dividir_em_blocos(paginas, minutos_por_pagina, minutos_por_bloco):
@@ -154,13 +187,25 @@ def montar_bloco(manifesto_path, saida_dir):
     saida_dir = Path(saida_dir)
     assunto_dir_rel = Path("blocos") / slug
     assunto_dir = saida_dir / assunto_dir_rel
+    registro_path = saida_dir / f"{slug}_pedacos.json"
+    chaves_anteriores = carregar_chaves_anteriores(registro_path)
     pedacos_registro = []
+    reaproveitadas, novas = 0, 0
 
     for i, bloco in enumerate(blocos, 1):
         nome_arquivo = f"segmento-{i:02d}.pdf"
         saida_pdf = assunto_dir / nome_arquivo
         titulo_bloco = f"{titulo} — segmento {i}/{len(blocos)}"
         montar_pedaco(bloco, titulo_bloco, saida_pdf)
+
+        fingerprint = fingerprint_bloco(bloco)
+        chave_existente = chaves_anteriores.get(fingerprint)
+        if chave_existente:
+            chave_externa_segmento = chave_existente
+            reaproveitadas += 1
+        else:
+            chave_externa_segmento = str(uuid.uuid4())
+            novas += 1
 
         tempo_estimado_min = round(len(bloco) * minutos_por_pagina)
         pedacos_registro.append({
@@ -171,10 +216,15 @@ def montar_bloco(manifesto_path, saida_dir):
             "pagina_inicial": bloco[0]["pagina_original"],
             "pagina_final": bloco[-1]["pagina_original"],
             "tempo_estimado_min": tempo_estimado_min,
+            # identidade estável do segmento (docs/requisitos-alinhamento-fatiamento-pdf-bloco.md §8)
+            "chave_externa_segmento": chave_externa_segmento,
+            "fingerprint": fingerprint,
         })
         print(f"Gerado: {saida_pdf}  ({len(bloco) + 1} páginas, ~{tempo_estimado_min}min)")
 
-    registro_path = saida_dir / f"{slug}_pedacos.json"
+    if chaves_anteriores:
+        print(f"Identidade de segmentos: {reaproveitadas} reaproveitada(s), {novas} nova(s).")
+
     with open(registro_path, "w", encoding="utf-8") as f:
         json.dump({
             "assunto_uuid": manifesto.get("assunto_uuid"),

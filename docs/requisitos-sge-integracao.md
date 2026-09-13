@@ -20,12 +20,19 @@ import levemente estendido.
 
 ## 2. Nova entidade: `Edital`
 
-Campos sugeridos: `nome`, `data da prova`, `tempo de estudo disponível` (opcional), `status`
+Campos: `nome`, `data da prova`, `tempo de estudo disponível` (opcional), `status`
 (ativo/concluído).
 
 Motivo: o candidato estuda pra mais de um concurso ao longo do tempo (o acervo já referencia
 material de SEFAZ CE / TCE-SC, por exemplo). Sem essa entidade não dá pra ter peso/ordem por
 contexto de prova, nem uma futura priorização entre provas concorrentes ativas ao mesmo tempo.
+
+**Decisão (2026-09-06):** `nome` e `data da prova` não são digitados manualmente no SGE —
+vêm de um manifesto enviado pelo planejamento, `concurso.json`, na mesma pasta do Drive do
+CSV de assuntos (`SGE-Importacao/<slug>/concurso.json`). O SGE só armazena e exibe esses
+dois campos, nunca decide nada a partir deles — mesmo princípio do `chaveExterna` (§3). Ver
+`docs/arquitetura-integracao-planejamento-sge.md` §5/§8 do lado do planejamento pro formato
+exato.
 
 ## 3. `Assunto`: peso e ordem deixam de ser fixos, viram atributos da relação `Edital`↔`Assunto`
 

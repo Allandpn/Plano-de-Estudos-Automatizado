@@ -1,0 +1,6 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Trilha 1 - Dados::Deteccao-Anomalias
+#tags column:3
+O roteiro de Mapeamento de Riscos numa Trilha de Auditoria começa por {{c1::Entendimento do Negócio e Análise das Regras}}, antes mesmo de olhar os dados — só depois é que se definem as Tipologias de fraude a buscar.		deteccao-anomalias trilhas-de-auditoria
+Numa Matriz de Confusão de detecção de fraude: {{c1::Verdadeiro Positivo}} = fraude real detectada corretamente; {{c1::Falso Positivo}} = transação lícita sinalizada como fraude; {{c1::Falso Negativo}} = fraude real que passou despercebida; {{c1::Verdadeiro Negativo}} = transação lícita corretamente não sinalizada.		deteccao-anomalias metricas

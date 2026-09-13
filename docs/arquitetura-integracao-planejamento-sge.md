@@ -22,6 +22,7 @@ revisão espaçada, "o que fazer hoje").
 
 | Responsabilidade | Dono |
 |---|---|
+| Definir o escopo do concurso (nome, data da prova, disciplinas, assuntos, segmentos) | **Planejamento** |
 | Ler o edital, extrair conteúdo programático e peso | **Planejamento** |
 | Triar o acervo, decidir cobertura/gap por assunto | **Planejamento** |
 | Canonicalizar assuntos entre editais diferentes | **Planejamento** |
@@ -46,10 +47,11 @@ revisão espaçada, "o que fazer hoje").
   - Os **PDFs dos segmentos não vão pro Pi** — ficam no Drive, compartilhados com link; esse
     link é o valor que entra em `referência_material` (seção 8), não um caminho local.
   - Estrutura de pasta combinada: `SGE-Importacao/<slug-do-concurso>/assuntos.csv` +
-    `blocos/<assunto-slug>/segmento-NN.pdf`. `dias/montar_bloco.py` já gera esse layout
-    localmente (`<saida-dir>/blocos/<assunto-slug>/segmento-NN.pdf`); upload pro Drive e
-    geração do link compartilhável ainda são passos manuais (sem automação `rclone`/Drive
-    API do lado do planejamento por enquanto).
+    `concurso.json` (nome + data da prova, ver seção 5/8) + `blocos/<assunto-slug>/segmento-NN.pdf`.
+    `dias/montar_bloco.py` já gera o layout de `blocos/` localmente
+    (`<saida-dir>/blocos/<assunto-slug>/segmento-NN.pdf`); upload pro Drive e geração do
+    link compartilhável ainda são passos manuais (sem automação `rclone`/Drive API do lado
+    do planejamento por enquanto).
 - **O planejamento é autocontido durante a análise**: não depende de conectividade com o SGE
   pra decidir nomes canônicos, pesos ou UUIDs — o registro histórico de assuntos canonizados
   vive só no lado do planejamento (ver seção 5). Nem a análise nem a exportação (estágio 6)
@@ -72,6 +74,16 @@ revisão espaçada, "o que fazer hoje").
 Isso é uma camada nova, agregando por cima do que já existe (mapa-assuntos por edital,
 triagens por bloco) — não substitui esses artefatos, que continuam fiéis à redação de cada
 edital individualmente.
+
+**Concurso** (decisão de 2026-09-06, ver `docs/requisitos-alinhamento-fatiamento-pdf-bloco.md`
+§9 — todo o escopo do concurso é responsabilidade do planejamento, nunca digitado manualmente
+no SGE):
+- `slug` — mesmo identificador usado na pasta do Drive (`SGE-Importacao/<slug>/`)
+- `nome` — nome de exibição (ex.: "SEFAZ SC 2026")
+- `data_prova`
+- Disciplinas não têm entidade própria — continuam sendo só o atributo `disciplina` de
+  cada assunto canônico (abaixo); a lista de disciplinas do concurso é derivável agrupando
+  os assuntos por esse campo.
 
 **Registro canônico de assuntos** (novo, persistente, atravessa múltiplos editais):
 - `uuid` — identidade estável, mintada na primeira vez que o assunto é canonizado
@@ -130,7 +142,21 @@ Novos, específicos desta integração:
 
 ## 8. Formato de exportação
 
-Payload por linha (assunto dentro de um edital):
+**`concurso.json`** — um por concurso, em `SGE-Importacao/<slug>/concurso.json`, ao lado
+do CSV de assuntos (ver seção 3 e `docs/requisitos-alinhamento-fatiamento-pdf-bloco.md`
+§9):
+
+| Campo | Observação |
+|---|---|
+| `slug` | mesmo valor usado no nome da pasta |
+| `nome` | nome de exibição do concurso |
+| `data_prova` | formato ISO `AAAA-MM-DD` |
+
+O SGE só armazena e exibe esses campos, nunca decide nada a partir deles (mesmo princípio
+do `chave_externa_segmento`, seção 5 / `docs/requisitos-alinhamento-fatiamento-pdf-bloco.md`
+§8).
+
+**CSV de assuntos** — payload por linha (assunto dentro de um edital):
 
 | Campo | Observação |
 |---|---|
@@ -140,10 +166,10 @@ Payload por linha (assunto dentro de um edital):
 | `edital` | referência ao Edital sendo importado |
 | `peso` | do quadro de distribuição de questões, ou "não determinado" |
 | `ordem` | do estágio 4 |
-| `referência_material` | opcional — string JSON com a lista ordenada de pedaços (`ordem`, `arquivo`, `página_inicial`, `página_final`, `tempo_estimado_min`); `arquivo` é o **link compartilhável do Google Drive** do PDF daquele segmento (não um caminho local — ver seção 3), preenchido manualmente após o upload; o SGE só armazena e exibe, não interpreta (ver `docs/requisitos-sge-integracao.md` §3) |
+| `referência_material` | opcional — string JSON com a lista ordenada de pedaços (`ordem`, `arquivo`, `página_inicial`, `página_final`, `tempo_estimado_min`, `chave_externa_segmento`); `arquivo` é o **link compartilhável do Google Drive** do PDF daquele segmento (não um caminho local — ver seção 3), preenchido manualmente após o upload; o SGE só armazena e exibe, não interpreta (ver `docs/requisitos-sge-integracao.md` §3) |
 
 Semântica de import: **sempre upsert por `uuid`** — nunca "criar quando vazio". O SGE nunca
 gera `id` de Assunto por conta própria nesse fluxo.
 
-O CSV em si (e não só os PDFs) também viaja por uma pasta do Google Drive sincronizada via
-`rclone` do lado do SGE, não por chamada direta a um endpoint — ver seção 3.
+O CSV e o `concurso.json` viajam pela mesma pasta do Google Drive sincronizada via `rclone`
+do lado do SGE, não por chamada direta a um endpoint — ver seção 3.

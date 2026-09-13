@@ -1,0 +1,25 @@
+{
+    "titulo": "Seg 26/10 — Infraestrutura: servidores, virtualização, contêineres, alta disponibilidade; redes — OSI/TCP-IP, IPv4, DNS",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/07 - Sistemas Operacionais/aula 04.pdf",
+            "paginas": "4-18,88-90",
+            "rotulo": "Aula 04 SO - Virtualizacao + Tipos de Hypervisor"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 01.pdf",
+            "paginas": "4-20,103-120,171-177",
+            "rotulo": "Aula 01 Redes - Equipamentos de Rede + Modelo OSI + Arquitetura TCP-IP"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 04.pdf",
+            "paginas": "3-20",
+            "rotulo": "Aula 04 Redes - Protocolo IPv4 (nucleo)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 08.pdf",
+            "paginas": "4-20",
+            "rotulo": "Aula 08 Redes - DNS (nucleo)"
+        }
+    ]
+}

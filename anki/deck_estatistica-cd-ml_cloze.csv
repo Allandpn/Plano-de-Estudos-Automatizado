@@ -1,0 +1,7 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Trilha 1 - Dados::Estatistica-CD-ML
+#tags column:3
+Amostragem probabilística inclui: {{c1::Aleatória Simples}} (cada elemento tem a mesma chance), {{c1::Estratificada}} (divide em estratos e amostra cada um), {{c1::por Conglomerados}} (seleciona seções inteiras) e {{c1::Sistemática}} (escolhe a cada k elementos).		estatistica-cd-ml inferencia amostragem
+Num teste de hipótese, o {{c1::Erro Tipo I}} é rejeitar a hipótese nula quando ela é verdadeira (falso positivo); o {{c1::Erro Tipo II}} é não rejeitar a hipótese nula quando ela é falsa (falso negativo).		estatistica-cd-ml inferencia
+Numa Matriz de Confusão, {{c1::Acurácia}} é o percentual total de acertos, {{c1::Precisão}} é dos previstos como positivos quantos eram realmente positivos, e {{c1::Recall/Sensibilidade}} é dos realmente positivos quantos foram identificados.		estatistica-cd-ml ml metricas

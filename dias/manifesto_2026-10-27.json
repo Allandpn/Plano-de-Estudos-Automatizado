@@ -1,0 +1,25 @@
+{
+    "titulo": "Ter 27/10 — Infraestrutura: cloud — IaaS/PaaS/SaaS, AWS/Azure/GCP; Docker e Kubernetes (fechamento)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 05.pdf",
+            "paginas": "4-16",
+            "rotulo": "Aula 05 Redes - NAT e PAT (inclui IPv6 dual-stack)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/06 - Redes e Segurança/aula 07.pdf",
+            "paginas": "3-20",
+            "rotulo": "Aula 07 Redes - HTTP (nucleo)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/07 - Sistemas Operacionais/aula 05.pdf",
+            "paginas": "3-12",
+            "rotulo": "Aula 05 SO - Computacao em Nuvem + Azure AD"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/05 - Desenvolvimento de Software para Concursos/aula 09.pdf",
+            "paginas": "84-110,156-180",
+            "rotulo": "Aula 09 - Docker (nucleo) + Kubernetes (nucleo)"
+        }
+    ]
+}

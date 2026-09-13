@@ -1,0 +1,20 @@
+{
+    "titulo": "Sáb 17/10 — Finanças Públicas (fechamento): receita/despesa orçamentária, estágios; créditos adicionais; restos a pagar, DEA, fontes de recursos",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/12 - TCE-SC (Exceto cargos de Direito Administração Pública e Ciências Contábeis) Direito Financeiro/aula 10.pdf",
+            "paginas": "3-44",
+            "rotulo": "Aula 10 - Estagios da Receita e da Despesa Publica + Enfoque Orcamentario/Patrimonial"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/12 - TCE-SC (Exceto cargos de Direito Administração Pública e Ciências Contábeis) Direito Financeiro/aula 03.pdf",
+            "paginas": "3-45",
+            "rotulo": "Aula 03 - Creditos Ordinarios e Adicionais + Fontes para abertura de creditos"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/12 - TCE-SC (Exceto cargos de Direito Administração Pública e Ciências Contábeis) Direito Financeiro/aula 11.pdf",
+            "paginas": "3-33",
+            "rotulo": "Aula 11 - Restos a Pagar + Despesas de Exercicios Anteriores (nucleo)"
+        }
+    ]
+}

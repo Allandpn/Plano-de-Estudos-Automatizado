@@ -1,0 +1,9 @@
+#separator:tab
+#notetype:Basic
+#deck:SEFAZ SC::Trilha 1 - Dados::BI-Analytics-Visualizacao
+#tags column:3
+Quando usar BI Self-Service em vez do modelo tradicional de BI?	Self-Service quando o próprio usuário de negócio cria seus relatórios/análises sem depender do time de TI para levantar requisitos a cada necessidade — o BI tradicional exige que TI reúna requisitos e construa cada relatório sob demanda, o que é mais lento.	bi-analytics-visualizacao self-service
+Quando uma análise deixa de ser Diagnóstica e passa a ser Preditiva?	Diagnóstica explica por que algo aconteceu no passado (causas) — Preditiva usa dados históricos e modelos estatísticos/ML pra prever o que vai acontecer no futuro. O BI clássico se limita a Descritiva e Diagnóstica; Preditiva e Prescritiva exigem técnicas mais avançadas (ciência de dados).	bi-analytics-visualizacao tipos-de-analise
+Quando usar Power Query em vez de DAX no Power BI?	Power Query é usado ANTES dos dados entrarem no modelo — pra extrair, transformar e carregar (ETL) os dados de origem, usando a linguagem M. DAX é usado DEPOIS, sobre os dados já carregados, pra criar medidas e cálculos dinâmicos.	bi-analytics-visualizacao powerbi
+Quando criar um Relacionamento em vez de mesclar (merge) duas tabelas no Power BI?	Relacionamento quando as tabelas devem continuar separadas mas conectadas por uma chave comum (permite hierarquias e reuso em vários visuais, ex: Ano > Trimestre > Mês) — mesclar cria uma única tabela nova a partir de duas, perdendo a estrutura relacional.	bi-analytics-visualizacao powerbi
+Quando usar CALCULATE em DAX?	Quando é preciso alterar o contexto de filtro padrão de uma medida — CALCULATE permite construir medidas mais dinâmicas modificando quais linhas são consideradas no cálculo, mesmo ignorando relacionamentos definidos se necessário.	bi-analytics-visualizacao powerbi dax

@@ -1,0 +1,5 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 1 - Dados::Deteccao-Anomalias
+#tags column:3
+Red flags (sinais de alerta)	Indicadores automatizados de possível fraude/corrupção, implementados como parte do Monitoramento em Tempo Real — melhoram eficiência/eficácia da detecção mas não substituem a verificação humana (podem gerar falso positivo)	deteccao-anomalias monitoramento

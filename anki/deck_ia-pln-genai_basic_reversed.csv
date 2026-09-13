@@ -1,0 +1,7 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 1 - Dados::IA-PLN-GenAI
+#tags column:3
+Transformers	Arquitetura de rede neural usada por LLMs pra modelar sequências de texto e capturar dependências/padrões de longo alcance — substituiu arquiteturas anteriores (RNN/LSTM) como base dos modelos de linguagem modernos	ia-pln-genai llm
+Embeddings	Representações vetoriais de palavras/textos organizadas em espaços latentes, de forma que itens com significado semântico parecido ficam próximos no espaço vetorial — base pra busca semântica e RAG	ia-pln-genai llm
+Vector Database (Banco de Dados Vetorial)	"Sistema de banco de dados projetado especificamente pra armazenar e buscar embeddings (vetores) por similaridade — peça central de arquiteturas RAG, permite achar rapidamente os textos mais ""parecidos semanticamente"" com uma consulta"	ia-pln-genai llm rag

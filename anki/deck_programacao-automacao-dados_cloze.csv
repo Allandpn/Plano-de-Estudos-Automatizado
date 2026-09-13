@@ -1,0 +1,7 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Trilha 1 - Dados::Programacao-Automacao-Dados
+#tags column:3
+As representações de algoritmo mais usadas são: {{c1::Linguagem Natural}} (descrição em texto comum), {{c1::Pseudocódigo}} (mistura de português e lógica de programação) e {{c1::Fluxograma}} (representação gráfica com símbolos padronizados).		programacao-automacao-dados logica
+No Pandas, o método {{c1::read_csv()}} lê um arquivo CSV para um DataFrame e o {{c1::to_csv()}} escreve um DataFrame de volta pra CSV; o equivalente pra Excel é {{c1::read_excel()}}/{{c1::to_excel()}}.		programacao-automacao-dados pandas csv
+Uma API do tipo {{c1::REST}} usa todos os métodos HTTP apropriados ({{c1::GET}}, {{c1::POST}}, {{c1::PUT}}, {{c1::DELETE}}), não só POST, e pode retornar dados em vários formatos como JSON, XML ou CSV.		programacao-automacao-dados api

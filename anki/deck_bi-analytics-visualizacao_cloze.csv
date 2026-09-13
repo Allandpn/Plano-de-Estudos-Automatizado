@@ -1,0 +1,6 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Trilha 1 - Dados::BI-Analytics-Visualizacao
+#tags column:3
+A evolução histórica que levou ao BI moderno: {{c1::Sistemas de Processamento de Transações (STP)}} → {{c1::Sistemas de Suporte à Decisão (SSD)}} → {{c1::Sistemas de Informação Executiva (SIE)}} → {{c1::Data Warehouse}} + OLAP.		bi-analytics-visualizacao historico
+Os quatro tipos de análise em BI, do mais simples ao mais avançado: {{c1::Descritiva}} (o que aconteceu), {{c1::Diagnóstica}} (por que aconteceu), {{c1::Preditiva}} (o que vai acontecer) e {{c1::Prescritiva}} (o que fazer a respeito).		bi-analytics-visualizacao tipos-de-analise

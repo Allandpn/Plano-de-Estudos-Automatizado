@@ -1,0 +1,20 @@
+{
+    "titulo": "Qua 04/11 — Ética e Integridade: ética no setor público, compliance, Lei 12.846/2013 (anticorrupção) + Ciência de Dados: Governo Digital, LGPD como lei",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/29 - Passo Estratégico Básico de Direito Administrativo/curso-376805-aula-21-4f7a-completo.pdf",
+            "paginas": "1-53",
+            "rotulo": "Etica no Setor Publico, Compliance, Programa de Integridade (Passo Estrategico, completa)"
+        },
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/01 - Administração Pública/curso-383400-aula-03-prof-stefan-fantini-ce6c-completo.pdf",
+            "paginas": "45-70",
+            "rotulo": "Governo Digital (transformacao digital, servicos publicos digitais, interoperabilidade)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/10 - TCE-SC (Exceto cargo de Direito) Direito Administrativo/aula 20.pdf",
+            "paginas": "3-30",
+            "rotulo": "LGPD - Lei Geral de Protecao de Dados (principios, bases legais, direitos dos titulares)"
+        }
+    ]
+}

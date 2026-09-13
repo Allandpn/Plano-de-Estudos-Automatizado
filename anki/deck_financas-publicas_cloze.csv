@@ -1,0 +1,6 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Gerais::Financas-Publicas
+#tags column:3
+Os três instrumentos de planejamento orçamentário previstos na CF-88 são: {{c1::PPA}} (Plano Plurianual, 4 anos), {{c1::LDO}} (Lei de Diretrizes Orçamentárias, anual, orienta a LOA) e {{c1::LOA}} (Lei Orçamentária Anual, autoriza a execução do orçamento do ano).		financas-publicas ppa-ldo-loa
+Os três estágios da Receita Pública são: {{c1::Lançamento}}, {{c1::Arrecadação}} e {{c1::Recolhimento}}. Os três estágios da Despesa Pública são: {{c1::Empenho}}, {{c1::Liquidação}} e {{c1::Pagamento}}.		financas-publicas estagios

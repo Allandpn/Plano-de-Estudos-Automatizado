@@ -1,0 +1,8 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 3 - Infraestrutura-Seguranca
+#tags column:3
+Responsabilidade Compartilhada (Cloud)	Modelo em que o provedor cloud é responsável pela segurança DA nuvem (infraestrutura física, virtualização) e o cliente é responsável pela segurança NA nuvem (dados, configuração de acesso, aplicações) — a divisão exata varia conforme IaaS/PaaS/SaaS	infraestrutura-seguranca cloud
+MFA (Multi-Factor Authentication)	Autenticação que exige dois ou mais fatores de categorias diferentes (algo que você sabe/senha, algo que você tem/token, algo que você é/biometria) — reduz drasticamente o risco de uma senha vazada comprometer a conta sozinha	infraestrutura-seguranca iam
+WAF (Web Application Firewall)	Firewall especializado em proteger aplicações web, filtrando tráfego HTTP/HTTPS contra ataques específicos da camada de aplicação (SQL Injection, XSS) — não substitui firewall de rede tradicional nem hardening do servidor	infraestrutura-seguranca firewall-ids-ips
+PKI (Public Key Infrastructure)	Infraestrutura de Chaves Públicas — conjunto de hardware, software, políticas e procedimentos pra criar, gerenciar, distribuir e revogar certificados digitais, viabilizando confiança em criptografia assimétrica em larga escala	infraestrutura-seguranca criptografia pki

@@ -1,0 +1,5 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Gerais
+#tags column:3
+"Uma proposição p e uma proposição q são {{c1::equivalentes}} quando têm a mesma tabela-verdade — por exemplo, {{c1::""se p então q""}} é equivalente à sua contrapositiva {{c1::""se não-q então não-p""}}."		portugues-rlm logica

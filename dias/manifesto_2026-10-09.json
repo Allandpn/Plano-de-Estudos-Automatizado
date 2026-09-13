@@ -1,0 +1,15 @@
+{
+    "titulo": "Sex 09/10 — IA/GenAI (dia 1 de 3): conceitos de IA + Redes Neurais/Deep Learning (parte 1)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-15-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "93-100",
+            "rotulo": "Aula 15 - Resumo (Conceitos Basicos de IA, Ontologias, Tipos de IA)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-07-5d3c-completo.pdf",
+            "paginas": "3-50",
+            "rotulo": "Aula 07 - Redes Neurais e Deep Learning (parte 1)"
+        }
+    ]
+}

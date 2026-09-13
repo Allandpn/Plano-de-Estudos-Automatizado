@@ -1,0 +1,15 @@
+{
+    "titulo": "Seg 07/09 — RLM (dia 1 de 2): estruturas lógicas, raciocínio verbal/matemático",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/57 - Especialidade TI - Raciocínio Lógico/curso-220914-aula-01-5c90-completo.pdf",
+            "paginas": "3-40",
+            "rotulo": "Equivalencias Logicas (nucleo)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/57 - Especialidade TI - Raciocínio Lógico/curso-220914-aula-02-ebc3-completo.pdf",
+            "paginas": "3-22",
+            "rotulo": "Diagramas Logicos, Proposicoes Quantificadas, Validade de Argumentos"
+        }
+    ]
+}

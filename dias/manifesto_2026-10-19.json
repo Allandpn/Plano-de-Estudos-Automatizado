@@ -1,0 +1,25 @@
+{
+    "titulo": "Seg 19/10 — Engenharia de Software: ciclo de vida/processos, requisitos, arquitetura, sistemas distribuídos, microsserviços (revisão rápida)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 00.pdf",
+            "paginas": "39-46",
+            "rotulo": "Aula 00 - Metodologias de Desenvolvimento Parte 1 (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 01.pdf",
+            "paginas": "27-30",
+            "rotulo": "Aula 01 - Metodologias de Desenvolvimento Parte 2 (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 07.pdf",
+            "paginas": "50-55",
+            "rotulo": "Aula 07 - Engenharia de Requisitos (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 13.pdf",
+            "paginas": "10-30",
+            "rotulo": "Aula 13 - Arquitetura de Software (Camadas/MVC/Distribuida + Resumo)"
+        }
+    ]
+}

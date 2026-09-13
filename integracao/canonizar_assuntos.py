@@ -104,9 +104,19 @@ CREATE TABLE IF NOT EXISTS material_pedacos (
     pagina_inicial INTEGER,
     pagina_final INTEGER,
     tempo_estimado_min INTEGER,
+    chave_externa_segmento TEXT,
     UNIQUE(edital_assunto_id, ordem)
 );
 """
+
+
+def migrar_schema(conn):
+    """Adiciona colunas novas a bancos criados antes delas — CREATE TABLE IF NOT EXISTS
+    não altera tabela já existente."""
+    colunas = {row["name"] for row in conn.execute("PRAGMA table_info(material_pedacos)")}
+    if "chave_externa_segmento" not in colunas:
+        conn.execute("ALTER TABLE material_pedacos ADD COLUMN chave_externa_segmento TEXT")
+        conn.commit()
 
 
 def conectar_db(caminho_db):
@@ -114,6 +124,7 @@ def conectar_db(caminho_db):
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(SCHEMA)
+    migrar_schema(conn)
     return conn
 
 
@@ -239,10 +250,11 @@ def adicionar_pedacos(conn, edital, assunto_uuid, pedacos):
     for p in pedacos:
         conn.execute(
             """INSERT INTO material_pedacos
-               (edital_assunto_id, ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min)
-               VALUES (?, ?, ?, ?, ?, ?)""",
+               (edital_assunto_id, ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min,
+                chave_externa_segmento)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
             (edital_assunto_id, p["ordem"], p["arquivo"], p.get("pagina_inicial"),
-             p.get("pagina_final"), p.get("tempo_estimado_min")),
+             p.get("pagina_final"), p.get("tempo_estimado_min"), p.get("chave_externa_segmento")),
         )
     conn.commit()
     return len(pedacos)

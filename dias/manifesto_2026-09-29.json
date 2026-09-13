@@ -1,0 +1,15 @@
+{
+    "titulo": "Ter 29/09 — Inferência: amostragem, IC, testes de hipótese, correlação, regressão",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-04-010d-completo.pdf",
+            "paginas": "5,7",
+            "rotulo": "Aula 04 - Amostragem (revisao rapida)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/15 - Curso Básico de Estatística/curso-220877-aula-15-5daf-completo.pdf",
+            "paginas": "4-24",
+            "rotulo": "Aula 15 - Testes de Hipoteses (Introducao, Conceitos Fundamentais, Tipos de Erros)"
+        }
+    ]
+}

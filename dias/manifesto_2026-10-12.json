@@ -1,0 +1,20 @@
+{
+    "titulo": "Seg 12/10 — Finanças Públicas: Lei nº 4.320/1964, PPA/LDO/LOA, princípios orçamentários",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/12 - TCE-SC (Exceto cargos de Direito Administração Pública e Ciências Contábeis) Direito Financeiro/aula 00.pdf",
+            "paginas": "5-30",
+            "rotulo": "Aula 00 - Introducao ao Direito Financeiro (Lei 4.320/1964)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/12 - TCE-SC (Exceto cargos de Direito Administração Pública e Ciências Contábeis) Direito Financeiro/aula 01.pdf",
+            "paginas": "3-38",
+            "rotulo": "Aula 01 - PPA, LDO e LOA na Constituicao Federal"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/12 - TCE-SC (Exceto cargos de Direito Administração Pública e Ciências Contábeis) Direito Financeiro/aula 02.pdf",
+            "paginas": "3-35",
+            "rotulo": "Aula 02 - Principios Orcamentarios (nucleo)"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "titulo": "Sáb 12/09 — Português (dia 4 de 4, fechamento): pronomes, linguagem/fonética, tempos verbais, variação linguística",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/39 - Passo Estratégico Básico de Português/curso-376803-aula-05-75bc-completo.pdf",
+            "paginas": "1-26",
+            "rotulo": "Pronomes; Colocacao Pronominal"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/39 - Passo Estratégico Básico de Português/curso-376803-aula-06-5dea-completo.pdf",
+            "paginas": "1-40",
+            "rotulo": "Linguagem, Tipologia e Fonetica"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/39 - Passo Estratégico Básico de Português/curso-376803-aula-09-77d4-completo.pdf",
+            "paginas": "1-27",
+            "rotulo": "Tempos e Modos Verbais"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/39 - Passo Estratégico Básico de Português/curso-376803-aula-10-441a-completo.pdf",
+            "paginas": "1-30",
+            "rotulo": "Variacao Linguistica"
+        }
+    ]
+}

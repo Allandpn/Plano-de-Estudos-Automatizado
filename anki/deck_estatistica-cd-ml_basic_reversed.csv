@@ -1,0 +1,7 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 1 - Dados::Estatistica-CD-ML
+#tags column:3
+Distribuição Qui-Quadrado	Distribuição usada em testes de aderência/independência (comparar frequências observadas vs esperadas) e para testar a variância de uma população	estatistica-cd-ml probabilidade
+Distribuição F de Snedecor	Distribuição usada para comparar a variância (dispersão) de duas populações — é a razão entre duas variâncias amostrais, cada uma seguindo uma Qui-Quadrado	estatistica-cd-ml probabilidade
+CRISP-DM	Cross Industry Standard Process for Data Mining — modelo de ciclo de vida padrão pra projetos de mineração de dados/ciência de dados, cobrindo entendimento do negócio até implantação	estatistica-cd-ml ciclo-de-vida

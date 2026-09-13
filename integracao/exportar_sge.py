@@ -13,11 +13,13 @@ canonizar_assuntos.py) — o import no SGE é sempre upsert por esse uuid, nunca
 "criar quando vazio".
 
 `referencia_material` sai como string JSON com a lista ordenada de pedaços de leitura
-(ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min) quando o assunto
-passou por dias/montar_bloco.py + canonizar_assuntos.py --adicionar-pedacos. Assuntos
-sem pedaços registrados (ex: SEFAZ SC, que usa o fluxo por dia) mantêm o texto livre
-gravado em --adicionar-lote (ou vazio). O SGE só armazena/exibe esse campo, nunca
-interpreta (ver docs/requisitos-sge-integracao.md, seção 3).
+(ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min, chave_externa_segmento)
+quando o assunto passou por dias/montar_bloco.py + canonizar_assuntos.py --adicionar-pedacos.
+`chave_externa_segmento` é a identidade estável do pedaço (docs/requisitos-alinhamento-fatiamento-pdf-bloco.md
+§8) — sobrevive a reordenação/reexportação do mesmo conteúdo, ao contrário de `ordem`,
+que é só posição. Assuntos sem pedaços registrados (ex: SEFAZ SC, que usa o fluxo por dia)
+mantêm o texto livre gravado em --adicionar-lote (ou vazio). O SGE só armazena/exibe esse
+campo, nunca interpreta (ver docs/requisitos-sge-integracao.md, seção 3).
 
 Rode calcular_orcamento.py antes, pra popular `ordem` — exportar sem isso ainda funciona,
 mas o CSV sai com ordem vazia e um aviso é impresso.
@@ -53,7 +55,8 @@ def carregar_export(conn, edital):
 
 def carregar_pedacos(conn, edital_assunto_id):
     sql = """
-        SELECT ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min
+        SELECT ordem, arquivo, pagina_inicial, pagina_final, tempo_estimado_min,
+               chave_externa_segmento
         FROM material_pedacos
         WHERE edital_assunto_id = ?
         ORDER BY ordem

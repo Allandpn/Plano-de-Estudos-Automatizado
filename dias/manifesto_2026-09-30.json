@@ -1,0 +1,25 @@
+{
+    "titulo": "Qua 30/09 — Gerais: Matemática Financeira (juros, taxa real/efetiva, descontos, amortizações)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/12 - Matemática Financeira/curso-383529-aula-01-3c09-completo.pdf",
+            "paginas": "3-28",
+            "rotulo": "Aula 01 - Capitalizacao Composta, Montante, Juros Compostos"
+        },
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/12 - Matemática Financeira/curso-383529-aula-02-35ff-completo.pdf",
+            "paginas": "3-20",
+            "rotulo": "Aula 02 - Taxa Aparente, Real e de Inflacao"
+        },
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/12 - Matemática Financeira/curso-383529-aula-03-1df8-completo.pdf",
+            "paginas": "3-25",
+            "rotulo": "Aula 03 - Descontos (nucleo)"
+        },
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/12 - Matemática Financeira/curso-383529-aula-06-945b-completo.pdf",
+            "paginas": "3-25",
+            "rotulo": "Aula 06 - Sistemas de Amortizacao (SAC/Frances/Misto, nucleo)"
+        }
+    ]
+}

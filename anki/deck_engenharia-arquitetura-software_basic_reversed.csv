@@ -1,0 +1,6 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 2 - Governanca-Projetos-Engenharia::Engenharia-Arquitetura-Software
+#tags column:3
+APF (Análise de Pontos de Função)	Técnica de estimativa de tamanho de software baseada na funcionalidade do ponto de vista do usuário (entradas, saídas, consultas, arquivos lógicos internos/externos) — independente da tecnologia usada para implementar, ao contrário de métricas como linhas de código	engenharia-arquitetura-software metricas
+DevSecOps	Extensão do DevOps que integra práticas de segurança em TODAS as etapas do pipeline (não só no final), tornando a segurança responsabilidade compartilhada do time inteiro desde o início do desenvolvimento	engenharia-arquitetura-software git-devops

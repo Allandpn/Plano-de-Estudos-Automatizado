@@ -1,0 +1,20 @@
+{
+    "titulo": "Qui 15/10 — Governança de TI: alinhamento estratégico, COBIT 2019, ITIL v5",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/15 - Governança, Gestão e Contratações de TIC/curso-383844-aula-01-prof-paolla-ramos-e-fernando-pedrosa-f513-completo.pdf",
+            "paginas": "48-66",
+            "rotulo": "Aula 01 - COBIT 2019 (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/15 - Governança, Gestão e Contratações de TIC/curso-383844-aula-02-prof-paolla-ramos-e-fernando-pedrosa-c6da-completo.pdf",
+            "paginas": "61-69",
+            "rotulo": "Aula 02 - ITIL 4 (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/15 - Governança, Gestão e Contratações de TIC/curso-383844-aula-06-prof-paolla-ramos-e-fernando-pedrosa-somente-em-pdf-1907-compl.pdf",
+            "paginas": "3-28",
+            "rotulo": "Aula 06 - Estrategia e Governanca de TI (Teoria)"
+        }
+    ]
+}

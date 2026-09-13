@@ -1,0 +1,7 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 1 - Dados::BI-Analytics-Visualizacao
+#tags column:3
+KPI (Key Performance Indicator)	Indicador-chave de desempenho — métrica quantificável usada pra avaliar o sucesso de uma organização/processo em atingir um objetivo estratégico	bi-analytics-visualizacao indicadores
+Linguagem M (Power Query)	Linguagem de programação funcional usada pelo Power Query para codificar as transformações/consultas aos dados — parte integrante do Power Query, usada também no Excel	bi-analytics-visualizacao powerbi
+DAX (Data Analysis Expressions)	Linguagem de fórmulas do Power BI usada para criar Medidas e Colunas Calculadas, com cálculos dinâmicos sensíveis ao contexto de filtro aplicado no relatório	bi-analytics-visualizacao powerbi

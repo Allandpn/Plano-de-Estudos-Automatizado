@@ -1,0 +1,20 @@
+{
+    "titulo": "Qua 07/10 — Gerais: Combinatória + Matemática Financeira: fluxo de caixa, valor atual, TIR (fechamento)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/36 - Passo Estratégico Básico de Estatística/curso-376822-aula-05-7dd4-completo.pdf",
+            "paginas": "1-39",
+            "rotulo": "Aula 05 - Combinatoria completa (Permutacao/Combinacao/Principio Fundamental da Contagem/Arranjo)"
+        },
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/12 - Matemática Financeira/curso-383529-aula-04-b6ce-completo.pdf",
+            "paginas": "3-25",
+            "rotulo": "Aula 04 - Fluxo de Caixa"
+        },
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/12 - Matemática Financeira/curso-383529-aula-05-621e-completo.pdf",
+            "paginas": "3-25",
+            "rotulo": "Aula 05 - VPL, TMA, TIR"
+        }
+    ]
+}

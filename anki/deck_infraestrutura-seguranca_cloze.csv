@@ -1,0 +1,7 @@
+#separator:tab
+#notetype:Cloze
+#deck:SEFAZ SC::Trilha 3 - Infraestrutura-Seguranca
+#tags column:3
+As 7 camadas do modelo OSI, de baixo pra cima: {{c1::Física}}, {{c1::Enlace}}, {{c1::Rede}}, {{c1::Transporte}}, {{c1::Sessão}}, {{c1::Apresentação}}, {{c1::Aplicação}}.		infraestrutura-seguranca redes
+A tríade CIA da Segurança da Informação: {{c1::Confidencialidade}} (só quem tem permissão acessa), {{c1::Integridade}} (dado não foi alterado indevidamente) e {{c1::Disponibilidade}} (dado acessível quando necessário).		infraestrutura-seguranca cia
+Num Plano de Continuidade de Negócio, {{c1::RTO}} (Recovery Time Objective) é o tempo máximo aceitável pra restaurar o serviço após um incidente, e {{c1::RPO}} (Recovery Point Objective) é a quantidade máxima aceitável de dados perdidos, medida em tempo desde o último backup.		infraestrutura-seguranca continuidade

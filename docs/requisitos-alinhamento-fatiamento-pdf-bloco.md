@@ -11,10 +11,6 @@ Este documento **não é sobre o payload de import de `Edital`/`Assunto`**
 É sobre uma camada anterior: **como o material de estudo (PDF) é fatiado antes de
 chegar ao candidato.**
 
-**Status (2026-09-04): todas as questões da seção 7 foram confirmadas pelo lado do
-planejamento — ver `docs/arquitetura-integracao-planejamento-sge.md` seções 3/6/8 pro
-resultado incorporado.**
-
 ---
 
 ## 1. O atrito
@@ -137,14 +133,6 @@ O SGE só sincroniza (`rclone`) a raiz de `assuntos.csv`/CSVs — nunca a pasta
 `blocos/`, que existe só pra vocês organizarem os PDFs antes de gerar os
 links.
 
-**Confirmado pelo planejamento (2026-09-04):** `dias/montar_bloco.py` já gera
-exatamente esse layout localmente (`<saida-dir>/blocos/<assunto-slug>/segmento-NN.pdf`).
-O upload pro Drive e a geração do link compartilhável ainda são passos manuais do lado do
-planejamento — o campo `arquivo` do registro interno (`<assunto-slug>_pedacos.json`) guarda
-o caminho local até esse upload acontecer, e é substituído pelo link antes de rodar
-`exportar_sge.py`. Não há automação de upload (`rclone`/Drive API) no planejamento ainda;
-se isso virar gargalo operacional, entra numa rodada futura.
-
 ## 6. O que **não** muda
 
 A divisão de responsabilidades de `docs/arquitetura-integracao-planejamento-sge.md §2`
@@ -155,10 +143,13 @@ continua igual — esta proposta não move nenhuma linha daquela tabela:
 - SGE continua sendo o único lado que decide dia a dia, com base em desempenho
   real (escada, frente, teto).
 
-## 7. Questões em aberto — com proposta do lado do SGE (todas confirmadas pelo planejamento)
+## 7. Questões — respondidas pelo planejamento em 2026-09-04
 
 Pra cada uma, três alternativas foram avaliadas do lado de cá; a coluna
-"proposta" é a que o SGE recomenda, pro planejamento confirmar ou contestar.
+"proposta" é a que o SGE recomendou. **As quatro vieram confirmadas sem
+contestação**, registradas em `docs/requisitos-alinhamento-fatiamento-pdf-bloco.md`
+e `docs/arquitetura-integracao-planejamento-sge.md §3/§6/§8` do lado do
+planejamento.
 
 ### 7.1 Origem do tamanho do bloco — e separação de dois parâmetros diferentes
 
@@ -175,8 +166,7 @@ tempo"), não constante fixa.
 | Planejamento consulta o SGE em tempo real antes de fatiar | Quebra a autocontenção que `arquitetura-integracao-planejamento-sge.md §3` já promete do lado de vocês — fatiar é análise, não exportação |
 | **Proposta: valor único fixo (sugestão: 60 min), documentado nos dois lados** — sem chamada em tempo real; quando o SGE recalibrar (evento raro, registrado em changelog), o número espelha manualmente do outro lado | Baixo — muda em meses, não em dias |
 
-**CONFIRMADO pelo planejamento** — `dias/montar_bloco.py` já usa 60min como default
-(`minutos_por_bloco`), ajustável por parâmetro local, sem chamada de rede.
+**Confirmado: 60 min fixo, documentado nos dois lados.**
 
 **(b) Quantos blocos por dia.** Isso é diferente de (a) e **não precisa
 cruzar pra o SGE em nenhuma hipótese** — é usado só internamente pelo
@@ -195,9 +185,8 @@ cadastrar o edital, "quantos blocos de estudo por dia, em média" (um número
 só, não por dia da semana) — é a mesma simplificação que o SGE já faz internamente
 no dimensionamento de `01_DOMINIO §7.3`.
 
-**CONFIRMADO pelo planejamento** — `integracao/calcular_orcamento.py --blocos-por-dia`
-aceita esse número diretamente (convertido pra minutos internamente via `--minutos-por-bloco`,
-default 60), sem exportar nada disso ao SGE.
+**Confirmado: uso interno do orçamento, nunca exportado.** Implementado como
+`calcular_orcamento.py --blocos-por-dia N`, alternativa a `--minutos-dia`.
 
 ### 7.2 Manifestos de dia já gerados (concurso atual, SEFAZ SC)
 
@@ -206,7 +195,7 @@ default 60), sem exportar nada disso ao SGE.
 | Reprocessar agora, migrando pro novo formato | Risco desnecessário perto da prova de novembro, sem ganho real pro candidato |
 | **Proposta: deixar como estão** — só assunto/concurso novo usa o fatiamento por bloco | Nenhum — dois formatos coexistem por um tempo, sem conflito |
 
-**CONFIRMADO pelo planejamento** — `dias/montar_dia.py` fica intocado, usado só pro SEFAZ SC.
+**Confirmado: manifestos do SEFAZ SC ficam intocados.**
 
 ### 7.3 Reteach em `FALHA` (D-07: assunto regride e volta pra fila de estudo)
 
@@ -215,8 +204,7 @@ default 60), sem exportar nada disso ao SGE.
 | SGE pede ao planejamento um "segmento de reforço" direcionado à causa do erro | Reabre o atrito original — planejamento decidindo "o que estudar" reativamente a um evento do SGE; exige comunicação em tempo real |
 | **Proposta: planejamento não é avisado** — SGE só registra uma sessão `ESTUDO` nova no mesmo assunto; o candidato reabre, por conta própria, o(s) PDF(s) que já tem salvos (reforçado pelo próprio registro de `Erro`, com causa e confiança, que já orienta o candidato) | Nenhum |
 
-**CONFIRMADO pelo planejamento** — nenhuma comunicação nesse sentido é esperada nem
-implementada do lado do planejamento.
+**Confirmado: planejamento não é avisado.**
 
 ### 7.4 Estrutura de pastas/arquivo no Google Drive (§5)
 
@@ -225,12 +213,87 @@ implementada do lado do planejamento.
 | Cada PDF de bloco vira um link avulso, sem convenção de pasta | Funciona, mas espalha os artefatos sem rastro — difícil auditar "o que já foi exportado pra qual concurso" |
 | **Proposta: convenção de pasta do §5** (`SGE-Importacao/<concurso>/assuntos.csv` + `blocos/<assunto>/segmento-NN.pdf`, cada PDF compartilhado com link) | Baixo — é só convenção de nomenclatura, ajustável sem impacto em código de nenhum dos dois lados |
 
-**CONFIRMADO pelo planejamento** — `dias/montar_bloco.py` gera localmente
-`blocos/<assunto-slug>/segmento-NN.pdf`, pronto pra sincronizar/subir na estrutura acima.
-O passo de upload pro Drive + geração de link ainda é manual (ver seção 5).
+**Confirmado.** `montar_bloco.py` já gera `blocos/<assunto-slug>/segmento-NN.pdf`
+localmente. **Ressalva do planejamento:** o upload pro Drive e a geração do
+link compartilhável de cada PDF ainda são passos **manuais** — o campo
+`arquivo` fica com o caminho local até alguém trocar pelo link antes de
+exportar. **Sem impacto no SGE**: `referência_material` já era desenhado
+como ponteiro opaco (`§4`) — não importa se o link foi colocado ali manual
+ou automaticamente. Não é gargalo deste lado; automatizar o lado deles é
+opcional, prioridade só se virar toil real pra eles.
 
-## 8. Rastreabilidade
+## 8. Requisito novo (2026-09-06): identificador estável por segmento
+
+Ponto que nasceu já na escrita do documento técnico do lado do SGE
+(`docs/SPRINT-10-SEGMENTO.md`), depois das quatro questões de §7 já terem
+sido confirmadas — o SGE é quem fecha a especificação primeiro (decisão do
+usuário), então este pedido vira requisito do lado de vocês, não sugestão.
+
+**O problema:** o CSV de segmentos (§4) hoje identifica cada linha por
+`chaveExternaAssunto` + `ordem`. `ordem` é **posição**, não identidade. Se
+vocês reordenarem o material de um assunto depois de já exportado — por
+exemplo, inserir um segmento novo entre o que hoje é "02" e "03", empurrando
+os seguintes —, o SGE não teria como distinguir "o segmento 3 de antes" do
+"segmento 3 de agora": um candidato que já tinha estudado o antigo teria seu
+registro histórico silenciosamente associado ao conteúdo novo que passou a
+ocupar aquela posição.
+
+**O que muda do lado de vocês:** o CSV de segmentos ganha uma coluna nova,
+**`chaveExternaSegmento`** — um identificador **por segmento** (não por
+assunto), gerado e mantido por vocês, estável entre reexportações do mesmo
+pedaço de material. Mesma natureza que `chaveExterna` já tem do lado do
+assunto (§4 original) — o SGE guarda, nunca interpreta.
+
+Hoje `montar_bloco.py` nomeia arquivos só por posição
+(`segmento-NN.pdf`, §7.4) — não existe, no pipeline de vocês, um conceito de
+identidade de segmento independente da posição no arquivo. Pra gerar essa
+chave, algo como um UUID mintado na primeira vez que um segmento é criado, e
+persistido num manifesto local (mesmo padrão que `dias/manifesto_AAAA-MM-DD.json`
+já usa do lado de vocês) resolveria — a chave nasce junto com o segmento e
+viaja com ele nas reexportações seguintes, mesmo que a posição mude.
+
+**Sem isso**, a reimportação do lado do SGE continua funcionando para o caso
+comum (corrigir o link de um PDF resubido, mesma posição) — só fica exposta
+ao risco de reordenação descrito acima. Registrado como requisito, não
+bloqueio: se reordenar segmentos já importados não é algo que aconteça na
+prática, o risco pode ficar documentado e aceito em vez de resolvido agora.
+
+## 9. Decisão (2026-09-06): o planejamento é a fonte da verdade do escopo do concurso
+
+Revisão do que era um requisito especulativo em versão anterior deste documento: ficou
+decidido, do lado do planejamento, que **todo o escopo do concurso** — nome, data da
+prova, disciplinas, assuntos e segmentos — é responsabilidade do planejamento entregar,
+nunca digitado manualmente no SGE. Isso fecha a lacuna apontada abaixo.
+
+**O problema que motivou a decisão:** o SGE identifica um concurso só pelo **slug da
+pasta** em `SGE-Importacao/<slug>/` (ADR-037) — não existia, em `assuntos.csv` nem em
+nenhum outro arquivo do contrato, um nome de exibição (ex.: "SEFAZ SC") nem a data da
+prova. E o SGE **nunca cria** concurso, só importa o que o planejamento já preparou —
+então esses dois dados têm que vir de aqui.
+
+**Motivo prático:** um indicador de "progresso vs. data da prova" (sem virar tela de
+calendário, `00_PRODUTO.md §8.5`) depende de uma data que hoje não existe em lugar
+nenhum do contrato. O percentual de cobertura do edital já é calculável só com o que o
+SGE tem hoje (backlog/frente/consolidado); os dias restantes até a prova, não.
+
+**Formato decidido:** um manifesto pequeno por concurso, `SGE-Importacao/<slug>/concurso.json`,
+na mesma pasta do Drive do CSV de assuntos — não colunas extras no CSV existente, pra não
+repetir o mesmo dado em toda linha. Campos: `slug`, `nome`, `data_prova`. Mesmo princípio de
+`chave_externa_segmento`/`chaveExterna` (§8): o SGE guarda o valor, nunca decide nada a
+partir dele.
+
+**Disciplinas não ganham manifesto/entidade própria** — continuam sendo só o atributo
+`disciplina` de cada assunto (já exportado no CSV hoje). A lista de disciplinas do
+concurso é derivável agrupando os assuntos por esse campo; não há necessidade de uma
+estrutura nova só pra isso.
+
+Ver `docs/arquitetura-integracao-planejamento-sge.md` §5/§8 pro modelo de dados e formato
+de exportação atualizados com essa decisão.
+
+## 10. Rastreabilidade
 
 Regras do SGE citadas: `01_DOMINIO.md` D-07, D-19, D-20, D-23, D-26, D-27,
-D-29; `02_JORNADAS.md §1.1`, `§7.3`. Decisão de infraestrutura:
-`docs/00A_ADR.md` ADR-037 (artefatos via Google Drive + `rclone`).
+D-29, D-50, D-51, D-53 (§8); `02_JORNADAS.md §1.1`, `§7.3`;
+`00_PRODUTO.md §8.5` (sem tela de calendário, §9). Decisão de
+infraestrutura: `docs/00A_ADR.md` ADR-037 (artefatos via Google Drive +
+`rclone`).

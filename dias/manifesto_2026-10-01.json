@@ -1,0 +1,15 @@
+{
+    "titulo": "Qui 01/10 — Ciência de Dados: análise exploratória, ciclo de vida, preparação/engenharia/seleção de atributos",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-04-010d-completo.pdf",
+            "paginas": "10-19",
+            "rotulo": "Aula 04 - Analise Exploratoria de Dados (outliers, escalas de mensuracao)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-02-df85-completo.pdf",
+            "paginas": "3-42",
+            "rotulo": "Aula 02 - Mineracao de Dados (CRISP-DM) + Tecnicas de Pre-Processamento"
+        }
+    ]
+}

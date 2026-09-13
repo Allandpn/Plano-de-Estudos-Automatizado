@@ -1,0 +1,15 @@
+{
+    "titulo": "Seg 28/09 — Probabilidade e distribuições (dia mais denso do bloco)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/15 - Curso Básico de Estatística/curso-220877-aula-09-425b-completo.pdf",
+            "paginas": "5-67",
+            "rotulo": "Aula 09 - Distribuicoes Discretas (Uniforme/Bernoulli/Binomial/Geometrica/Hipergeometrica/Poisson)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/15 - Curso Básico de Estatística/curso-220877-aula-11-17f8-completo.pdf",
+            "paginas": "5-79",
+            "rotulo": "Aula 11 - Distribuicoes Continuas (Uniforme/Exponencial/Normal/TCL/Qui-Quadrado/T-Student/F-Snedecor)"
+        }
+    ]
+}

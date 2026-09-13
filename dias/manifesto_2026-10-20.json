@@ -1,0 +1,20 @@
+{
+    "titulo": "Ter 20/10 — Engenharia de Software: qualidade e testes de software; Métricas de Software (APF, PCU, produtividade/estimativas)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 11.pdf",
+            "paginas": "36-42",
+            "rotulo": "Aula 11 - Qualidade de Software (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 12.pdf",
+            "paginas": "74-78",
+            "rotulo": "Aula 12 - Testes de Software (Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 17.pdf",
+            "paginas": "3-53",
+            "rotulo": "Aula 17 - APF (Teoria completa)"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "titulo": "Sex 25/09 — Python (dia 3 de 3, fechamento): CSV/JSON/XML, consumo de APIs, web scraping, automação/RPA",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-22-prof-diego-carvalho-e-raphael-lacerda-.pdf",
+            "paginas": "7,30-34",
+            "rotulo": "Aula 22 - Pandas (leitura/escrita CSV/Excel/XML)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-21-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "111-141",
+            "rotulo": "Aula 21 - Conceito de API REST (questoes comentadas intercaladas)"
+        },
+        {
+            "arquivo": "../apostilas/06 - TRT-SC/05 - Desenvolvimento de Software/aula 05.pdf",
+            "paginas": "68-75,91-96",
+            "rotulo": "Aula 05 TRT-SC - RegEx + Automacao de Scripts (PyAutoGUI/Selenium/Splinter/Scrapy/Tagui)"
+        },
+        {
+            "arquivo": "../apostilas/07 - TSE Unificado/02 - Banco de Dados/aula 15.pdf",
+            "paginas": "55-58,98",
+            "rotulo": "Aula 15 TSE Unificado - RPA conceitual (IA na Robotica) + questao FGV/SEFAZ AM/2022"
+        }
+    ]
+}

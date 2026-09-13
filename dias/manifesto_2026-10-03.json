@@ -1,0 +1,10 @@
+{
+    "titulo": "Sáb 03/10 — ML: árvores de decisão, ensemble, algoritmos por distância, overfitting/underfitting, métricas, scikit-learn (fechamento)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-05-e3e2-completo.pdf",
+            "paginas": "91-167",
+            "rotulo": "Aula 05 - Aprendizado Supervisionado (parte 2: ensemble/Random Forest, distancia, overfitting, metricas, scikit-learn)"
+        }
+    ]
+}

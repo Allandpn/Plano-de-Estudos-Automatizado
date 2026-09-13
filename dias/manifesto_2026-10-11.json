@@ -1,0 +1,25 @@
+{
+    "titulo": "Dom 11/10 — IA/GenAI (dia 3 de 3, fechamento): PLN (parte 2), LLMs/GenAI, RAG, uso responsável — fecha a Trilha 1",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-08-3bd0-completo.pdf",
+            "paginas": "51-101",
+            "rotulo": "Aula 08 - PLN (parte 2: similaridade, busca semantica, sumarizacao)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-15-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "21-26,101-112",
+            "rotulo": "Aula 15 - Resumo (Riscos: vieses/alucinacoes + IA Generativa: modelos/agentes/prompt engineering)"
+        },
+        {
+            "arquivo": "../apostilas/07 - TSE Unificado/02 - Banco de Dados/aula 15.pdf",
+            "paginas": "37-38",
+            "rotulo": "Aula 15 TSE - RAG (Retrieval-Augmented Generation)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/02 - Banco de Dados para Concursos/aula 15.pdf",
+            "paginas": "48-50",
+            "rotulo": "Aula 15 BD - Vector Storages (bancos vetoriais)"
+        }
+    ]
+}

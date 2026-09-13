@@ -1,0 +1,20 @@
+{
+    "titulo": "Dom 18/10 — Governança de TI: PMBOK Guide 8ª edição, Scrum Guide 2020, Kanban, abordagens preditivas/adaptativas/híbridas (fechamento)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/SEFAZ-CE 2026/15 - Governança, Gestão e Contratações de TIC/curso-383844-aula-03-prof-paolla-ramos-e-fernando-pedrosa-91a8-completo.pdf",
+            "paginas": "100-104,119-146",
+            "rotulo": "Aula 03 - PMBOK 7 (Tailoring + Resumo)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 04.pdf",
+            "paginas": "5-30",
+            "rotulo": "Aula 04 - Metodologias Ageis: Scrum (Teoria)"
+        },
+        {
+            "arquivo": "../apostilas/00 - Curso Regular/06 - Engenharia de Software/aula 06.pdf",
+            "paginas": "5-19",
+            "rotulo": "Aula 06 - Kanban (Teoria+Resumo)"
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "titulo": "Dom 04/10 — Detecção de Anomalias: técnicas estatísticas/ML, análise de transações, falsos positivos/negativos, indicadores de risco",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/01 - Banco de Dados/Aula 21.pdf",
+            "paginas": "7-40",
+            "rotulo": "Aula 21 - Auditoria Continua e Analise de Fraudes (Prof. Rodrigo Renno)"
+        },
+        {
+            "arquivo": "../apostilas/05 - TCE-SC 2026 - Pos Edital/01 - Banco de Dados/Aula 19.pdf",
+            "paginas": "4-31",
+            "rotulo": "Aula 19 - Metricas de Avaliacao de Modelos de Classificacao (Prof. Lucas Ianni)"
+        }
+    ]
+}

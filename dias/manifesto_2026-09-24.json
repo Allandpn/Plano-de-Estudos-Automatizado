@@ -1,0 +1,15 @@
+{
+    "titulo": "Qui 24/09 — Python (dia 2 de 3): Estruturas de dados avançadas, OOP, NumPy, pandas",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-21-prof-diego-carvalho-e-renato-da-costa-.pdf",
+            "paginas": "35-77",
+            "rotulo": "Aula 21 - Estruturas de Dados, Controle de Fluxo, Arquivos, f-string, OOP"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/22 - Curso Completo de Tecnologia da Informação/curso-247678-aula-22-prof-diego-carvalho-e-raphael-lacerda-.pdf",
+            "paginas": "6-30,36-61",
+            "rotulo": "Aula 22 - Bibliotecas de Python (Pandas + NumPy)"
+        }
+    ]
+}

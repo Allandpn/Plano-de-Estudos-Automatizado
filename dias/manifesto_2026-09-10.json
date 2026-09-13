@@ -1,0 +1,20 @@
+{
+    "titulo": "Qui 10/09 — RLM (dia 2 de 2, fechamento): raciocínio sequencial, orientação espacial/temporal, formação de conceitos",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/57 - Especialidade TI - Raciocínio Lógico/curso-220914-aula-04-47c0-completo.pdf",
+            "paginas": "3-20",
+            "rotulo": "Sequencias Numericas, de Figuras, de Letras e Palavras"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/57 - Especialidade TI - Raciocínio Lógico/curso-220914-aula-07-f1ef-completo.pdf",
+            "paginas": "3-16",
+            "rotulo": "Verdades e Mentiras, Formacao de Conceitos, Discriminacao de Elementos"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/57 - Especialidade TI - Raciocínio Lógico/curso-220914-aula-10-556c-completo.pdf",
+            "paginas": "3-7",
+            "rotulo": "Orientacao Espacial"
+        }
+    ]
+}

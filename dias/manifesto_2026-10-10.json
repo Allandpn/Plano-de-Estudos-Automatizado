@@ -1,0 +1,15 @@
+{
+    "titulo": "Sáb 10/10 — IA/GenAI (dia 2 de 3): Redes Neurais/DL (parte 2) + PLN (parte 1)",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-07-5d3c-completo.pdf",
+            "paginas": "51-96",
+            "rotulo": "Aula 07 - Redes Neurais e Deep Learning (parte 2: TensorFlow/Keras/PyTorch)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-08-3bd0-completo.pdf",
+            "paginas": "3-50",
+            "rotulo": "Aula 08 - PLN (parte 1)"
+        }
+    ]
+}

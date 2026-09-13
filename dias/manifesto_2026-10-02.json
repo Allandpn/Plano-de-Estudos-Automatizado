@@ -1,0 +1,15 @@
+{
+    "titulo": "Sex 02/10 — ML: aprendizado supervisionado/não supervisionado, classificação, regressão, clustering",
+    "fontes": [
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-05-e3e2-completo.pdf",
+            "paginas": "3-90",
+            "rotulo": "Aula 05 - Aprendizado Supervisionado (parte 1: regressao, classificacao, arvores, KNN)"
+        },
+        {
+            "arquivo": "../apostilas/10 - Área Fiscal - Cursos Regulares/50 - Especialidade TI - Ciência de Dados/curso-263551-aula-06-4df9-completo.pdf",
+            "paginas": "3-39",
+            "rotulo": "Aula 06 - Aprendizado Nao Supervisionado (clustering)"
+        }
+    ]
+}

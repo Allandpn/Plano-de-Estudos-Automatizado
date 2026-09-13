@@ -1,0 +1,8 @@
+#separator:tab
+#notetype:Basic (and reversed card)
+#deck:SEFAZ SC::Trilha 1 - Dados::Programacao-Automacao-Dados
+#tags column:3
+DataFrame (Pandas)	Estrutura de dados bidimensional (linhas e colunas) do Pandas — o equivalente a uma tabela; uma única coluna/linha dele é chamada de Series	programacao-automacao-dados pandas
+RPA	"Robotic Process Automation — tecnologia (""bots"") que automatiza tarefas repetitivas e baseadas em regras, imitando ações humanas em sistemas digitais (inserir dados, consultar sistemas, enviar e-mails), sem precisar de IA"	programacao-automacao-dados rpa
+Scrapy	Framework Python open source pra web scraping — extrai dados de sites de forma rápida e extensível, permitindo escrever regras de extração e deixar o framework cuidar do resto	programacao-automacao-dados web-scraping
+OpenPyXL	Biblioteca Python pra ler/gravar arquivos do Excel (.xlsx/.xlsm/.xltx/.xltm) nativamente, sem depender do Pandas	programacao-automacao-dados automacao
