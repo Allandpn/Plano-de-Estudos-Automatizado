@@ -1,4 +1,4 @@
-# Toolkit de indexação — SEFAZ SC 2026
+# Toolkit de planejamento de estudos para concursos (qualquer edital)
 
 Testado nesta sessão contra um PDF real de apostila (Estratégia Concursos,
 coluna única, cabeçalho/rodapé repetido) — ver detalhes no chat. Antes de
@@ -47,11 +47,26 @@ ao arquivo/página original).
 Crie um JSON de cards (ver `anki/anki_gerar.py` pro formato), depois:
 
 ```bash
-python anki/anki_gerar.py cards.json --saida deck.csv --deck "SEFAZ SC::Trilha 1 - Dados::Bloco"
+python anki/anki_gerar.py cards.json --saida deck.csv --deck "Concurso::Trilha 1 - Dados::Bloco"
 ```
 
 Gera um CSV por tipo de note (Basic / Basic-reversed / Cloze), pronto pra
 `File > Import` no Anki. **Revise antes de importar.**
+
+## 5. Exportar um concurso pro SGE-Concursos
+
+Depois de canonicalizar os assuntos (`integracao/canonizar_assuntos.py`) e calcular a
+ordem (`integracao/calcular_orcamento.py`):
+
+```bash
+python integracao/exportar_sge.py --db integracao/canonico.db --edital MEU-EDITAL-2027 \
+    --nome "Meu Edital 2027" --data-prova 2027-05-10 \
+    --saida-dir "<Google Drive>/SGE-Importacao/meu-edital-2027"
+```
+
+Gera `assuntos.csv`, `segmentos.csv` (se houver material fatiado) e `concurso.json` no
+formato que o SGE lê (`docs/arquitetura-integracao-planejamento-sge.md` §8.1). No SGE,
+o concurso entra quando `CONCURSO_ATIVO=meu-edital-2027`.
 
 ## Próximos passos
 

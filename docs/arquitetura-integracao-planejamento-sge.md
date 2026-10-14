@@ -63,7 +63,7 @@ revisão espaçada, "o que fazer hoje").
 | # | Estágio | Entrada | O que faz | Saída | Gate de validação |
 |---|---|---|---|---|---|
 | 1 | Leitura do edital | PDF do edital | IA extrai conteúdo programático (assuntos finos) e o quadro de distribuição de questões (peso por disciplina, quando o edital granular isso) | Rascunho de mapa de assuntos + pesos candidatos | Humano revisa/corrige antes de seguir |
-| 2 | Triagem contra o acervo | Mapa de assuntos do estágio 1 | Busca no índice, decide cobertura/gap por assunto — fluxo já existente (ver `CLAUDE.md`, "Fluxo de uma triagem de bloco") | `mapa-assuntos-edital-<concurso>.md` + `docs/triagens/*` | Humano aprova diff (regra já existente) |
+| 2 | Triagem contra o acervo | Mapa de assuntos do estágio 1 | Busca no índice, decide cobertura/gap por assunto — fluxo já existente (ver `CLAUDE.md`, "Fluxo de uma triagem de bloco") | `mapa-assuntos-edital-<concurso>.md` + `docs/concursos/sefaz-sc-2026/triagens/*` | Humano aprova diff (regra já existente) |
 | 3 | Canonicalização de assuntos | Assuntos triados + registro histórico de canônicos (seção 5) | IA compara semanticamente cada assunto novo contra os já canonizados de editais anteriores; propõe match existente ou novo | Nome canônico + UUID (reaproveitado ou recém-mintado) por assunto | Humano confirma quando o match é ambíguo |
 | 4 | Orçamento de tempo / ordem | Assuntos canonizados + peso + volume (páginas identificadas na triagem) + dias até a prova + tempo/dia disponível | Fórmula determinística: tempo proporcional a peso × volume, dentro do tempo disponível. Quando o total estoura o prazo, IA propõe compressão/corte com justificativa explícita | Ordem de estudo + tempo estimado por assunto, específicos daquele edital | Validação leve quando houve compressão/corte |
 | 5 | Fatiamento do material por bloco | Páginas identificadas na triagem + `minutos_por_bloco` (parâmetro local, ver seção 6) | Corta o material de cada assunto em pedaços de leitura de tempo aproximadamente igual — mesmo critério de página que a triagem já usa, só muda o ponto de parada (`dias/montar_bloco.py`) | Sequência ordenada de pedaços por assunto (PDF + metadados de rastreio: arquivo, página inicial/final, tempo estimado) | — (determinístico) |
@@ -173,3 +173,30 @@ gera `id` de Assunto por conta própria nesse fluxo.
 
 O CSV e o `concurso.json` viajam pela mesma pasta do Google Drive sincronizada via `rclone`
 do lado do SGE, não por chamada direta a um endpoint — ver seção 3.
+
+### 8.1 Formato vigente (2026-10-14) — substitui o CSV único acima
+
+O CSV único desta seção (`uuid,...,referencia_material` com segmentos em JSON) **nunca
+bateu com o que o SGE lê** — achado numa análise dos dois repositórios. Importado como
+estava, o assunto entraria sem `chaveExterna` e os segmentos seriam recusados. O contrato
+é do lado que consome: `especificacao/02_JORNADAS.md` J-1 do SGE-Concursos (v1.6.0). O
+texto acima fica como registro; vale este.
+
+Pasta do concurso, `SGE-Importacao/<slug>/` (o slug é o nome da pasta, e o mesmo de
+`docs/concursos/<slug>/` aqui):
+
+| Arquivo | Colunas / campos |
+|---|---|
+| `assuntos.csv` | `disciplina,assunto,peso,ordem,chaveExterna` — `chaveExterna` = `uuid` canônico; peso `ALTO`/`MEDIO`/`BAIXO`, ou vazio quando "não determinado" (o SGE assume `MEDIO`); sem `id` |
+| `segmentos.csv` | `chaveExternaSegmento,chaveExternaAssunto,ordem,arquivo,paginaInicial,paginaFinal,tempoEstimadoMin` — só quando há pedaços; `arquivo` = link do Drive |
+| `concurso.json` | `{"slug", "nome", "dataProva"}` |
+
+Gerado por `integracao/exportar_sge.py --saida-dir`. Do lado do SGE (Sprint 16, já feito):
+
+- linha sem `id` com `chaveExterna` conhecida **atualiza** o assunto — o "upsert por uuid"
+  que esta seção sempre pediu passa a existir de fato;
+- só o **concurso-alvo ativo** (`CONCURSO_ATIVO=<slug>`, ADR-039 deles) é importado.
+  Assunto canônico comum a dois editais mantém escada e histórico no SGE ao trocar de
+  concurso; peso e ordem passam a ser os do concurso ativo. A entidade `Edital` com peso
+  por edital (pedida em `docs/requisitos-sge-integracao.md` §2-§3) **não** foi adotada —
+  ver §8 daquele documento.

@@ -92,3 +92,14 @@ próprio quando chegar a hora.
 
 Outros ajustes/sprints do SGE não relacionados a esta integração (ex: frontend do Sprint 9)
 ficam de fora — tratar separadamente, no fluxo normal de `especificacao/` do próprio SGE.
+
+## 8. Resposta do SGE às §2-§4 (registrada em 2026-10-14)
+
+- **§2/§3 (entidade `Edital`, peso por edital):** não adotada por ora. O SGE decidiu por
+  **um concurso-alvo ativo por vez** (ADR-039 deles): peso e ordem vêm do edital ativo,
+  e a escada/histórico de um assunto canônico sobrevive à troca de concurso porque a
+  identidade é a `chaveExterna` (= nosso `uuid`). `Edital` volta à mesa se um dia for
+  preciso estudar para dois concursos com pesos diferentes ao mesmo tempo.
+- **§4 (upsert por UUID):** adotado — linha sem `id` com `chaveExterna` conhecida
+  atualiza o assunto (`02_JORNADAS` J-1 v1.6.0 deles).
+- Formato de arquivo vigente: `docs/arquitetura-integracao-planejamento-sge.md` §8.1.

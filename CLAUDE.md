@@ -1,18 +1,26 @@
-# SEFAZ SC 2026 — Instruções do Projeto
+# Planejamento de estudos para concursos — Instruções do Projeto
 
-Contexto: preparação pro concurso SEFAZ SC 2026 (Auditor Estadual de Finanças
-Públicas, área Ciências da Computação), prova em 22/11/2026. Acervo de ~2600
-apostilas do Estratégia Concursos indexadas em `indice/indice.db`.
+Contexto: preparação para **qualquer edital** de concurso público (foco em TI), a partir
+de um acervo de ~2600 apostilas do Estratégia Concursos indexadas em `indice/indice.db`.
+O planejamento lê o edital, mapeia os assuntos, tria o acervo, fatia o material e
+exporta tudo pro SGE-Concursos, que decide o dia a dia (escada de revisão, turno).
+O primeiro concurso trabalhado foi o SEFAZ SC 2026 — o material dele fica arquivado em
+`docs/concursos/sefaz-sc-2026/` e serve de **referência de convenção** (formato do mapa
+de assuntos, das triagens, das fichas).
 
-Leia sempre, antes de qualquer tarefa: `docs/plano-estudos-sefaz-sc-2026.md`
-(método completo), `docs/mapa-assuntos-edital-sefaz-sc.md` (lista oficial de
-assuntos finos) e `docs/cronograma-detalhado-sessoes-sefaz-sc.md` (orçamento
-de dias por bloco).
+Cada concurso tem a própria pasta, `docs/concursos/<slug>/` (o mesmo slug da pasta de
+importação do SGE, `SGE-Importacao/<slug>/`). Leia sempre, antes de qualquer tarefa
+sobre um concurso: o mapa de assuntos (`mapa-assuntos-edital-<slug>.md`) e o plano/
+cronograma dele, se existirem. O **método** (recuperação, espaçamento, regras de
+flashcard) está em `docs/concursos/sefaz-sc-2026/plano-estudos-sefaz-sc-2026.md` e vale
+para todos os concursos até ganhar documento próprio.
 
 ## Estrutura de pastas
 
 ```
-docs/            → plano, cronograma, mapa-assuntos, inventário, triagens
+docs/            → integração com o SGE e documentos gerais
+docs/concursos/<slug>/ → por concurso: edital, mapa-assuntos, triagens, sessoes (legado
+                   SEFAZ), inventário
 apostilas/       → os PDFs originais (não editar/mover)
 indice/          → indice.db (SQLite+FTS5) e os scripts de indexação/busca
 dias/            → PDFs mesclados por dia (SEFAZ SC) ou por bloco de assunto (editais
@@ -30,7 +38,7 @@ saída é um mapa de assuntos novo pronto pra triagem.
 
 1. Ler o edital completo (conteúdo programático) e extrair os assuntos finos, um por
    linha, na ordem em que aparecem — mesmo formato/granularidade de
-   `mapa-assuntos-edital-sefaz-sc.md` (usar esse arquivo como referência de convenção,
+   `docs/concursos/sefaz-sc-2026/mapa-assuntos-edital-sefaz-sc.md` (referência de convenção,
    inclusive o agrupamento por ponto-e-vírgula quando fizer sentido).
 2. Procurar o quadro de distribuição de questões do edital (normalmente um anexo com
    número de questões por disciplina). Se existir e for granular por disciplina, esse
@@ -38,15 +46,19 @@ saída é um mapa de assuntos novo pronto pra triagem.
    total de questões daquele edital) aplicado a todos os assuntos daquela disciplina.
    **Se o edital não granular peso por disciplina, marcar `peso` como "não determinado"
    e seguir — nunca estimar peso a partir de menções soltas em apostilas.**
-3. Propor o novo `docs/mapa-assuntos-edital-<concurso>.md` **como diff, pedindo aprovação
-   antes de gravar** — mesma regra de sempre pra `docs/*.md`.
-4. Depois de aprovado, o assunto entra no fluxo normal de triagem (próxima seção).
+3. **Reaproveitar antes de triar:** pra cada assunto, buscar o canônico existente
+   (`integracao/canonizar_assuntos.py --buscar`, ver "Fluxo de canonicalização"). Assunto
+   que já existe de um edital anterior já tem triagem e material — só os realmente novos
+   precisam de triagem completa. É isso que deixa um edital novo pronto em pouco tempo.
+4. Propor o novo `docs/concursos/<slug>/mapa-assuntos-edital-<slug>.md` **como diff,
+   pedindo aprovação antes de gravar** — mesma regra de sempre pra `docs/*.md`.
+5. Depois de aprovado, os assuntos novos entram no fluxo normal de triagem (próxima seção).
 
 ## Fluxo de uma triagem de bloco
 
 Quando pedirem "triagem do bloco X":
 
-1. Ler os assuntos finos do bloco em `mapa-assuntos-edital-sefaz-sc.md`.
+1. Ler os assuntos finos do bloco no mapa de assuntos do concurso.
 2. Pra cada assunto, buscar no índice: `python indice/buscar_indice.py "termo"`.
    - A busca usa OR entre palavras (prioriza recall) — **sempre ler o trecho
      retornado antes de considerar o assunto coberto**, não confiar só no
@@ -61,8 +73,8 @@ Quando pedirem "triagem do bloco X":
    4. Se mesmo assim não achar: marcar ❌ no `mapa-assuntos-edital.md`,
       registrar no "Gap confirmado" da triagem, e seguir em frente — não
       repetir o ciclo pro mesmo assunto.
-4. Escrever `docs/triagens/triagem-bloco-<nome>.md` no mesmo formato de
-   `triagem-bloco-bd-sql-sefaz-sc.md` (acervo identificado, decisões de
+4. Escrever `docs/concursos/<slug>/triagens/triagem-bloco-<nome>.md` no mesmo formato de
+   `docs/concursos/sefaz-sc-2026/triagens/triagem-bloco-bd-sql-sefaz-sc.md` (acervo identificado, decisões de
    descarte, gap confirmado, roteiro por dia com leitura/pretest/fixação/
    banco de reserva/observações). **Toda citação de aula/PDF no roteiro leva
    o caminho da pasta (relativo a `apostilas/`) escrito por extenso ao lado**
@@ -70,9 +82,10 @@ Quando pedirem "triagem do bloco X":
    várias vezes ao longo do documento. Nada de código/legenda que exija
    voltar ao topo do arquivo pra decodificar — o objetivo é achar o PDF no
    Explorer sem sair do trecho que está lendo.
-5. Propor as edições em `mapa-assuntos-edital.md` e `cronograma-detalhado.md`
-   **como diff, pedindo aprovação antes de gravar** — esses dois arquivos são
-   a espinha dorsal do plano de 11 semanas, erro silencioso ali é caro.
+5. Propor as edições no mapa de assuntos do concurso **como diff, pedindo
+   aprovação antes de gravar** — é a espinha dorsal do plano, erro silencioso ali é
+   caro. (Em edital novo não há cronograma por dia: quem decide o dia é o SGE. O
+   `cronograma-detalhado` existe só no legado SEFAZ.)
 
 ## Fluxo de canonicalização de assuntos
 
@@ -98,11 +111,11 @@ antes de rodar o orçamento/exportação pro SGE (estágios 3-6 de
    existente estava errado, corrigir com `--uuid-existente` apontando pro UUID certo
    (nunca criar um UUID novo só porque o nome mudou — isso quebraria o upsert no SGE).
 
-## Ficha de sessão diária
+## Ficha de sessão diária (legado SEFAZ SC — não usar em edital novo)
 
 Assim que a triagem de um bloco for aprovada, gerar de uma vez **todas as
 fichas dos dias daquele bloco** (não dia a dia sob demanda) em
-`docs/sessoes/AAAA-MM-DD.md`: versão compacta só do necessário pra cada dia
+`docs/concursos/sefaz-sc-2026/sessoes/AAAA-MM-DD.md`: versão compacta só do necessário pra cada dia
 (leitura com arquivo+página exatos, pretest, fixação, banco de reserva,
 observações de gap) — extraída da triagem completa, sem exigir abrir o
 documento inteiro na hora de estudar. Gerar o bloco inteiro de uma vez evita
@@ -116,16 +129,16 @@ está coberto em outro PDF, ou um ✅/🟡 que só menciona o termo de passagem
 sem ensinar de verdade. Ao notar isso durante uma sessão:
 
 1. Registrar no campo "observações de gap" da ficha do dia
-   (`docs/sessoes/AAAA-MM-DD.md`).
+   (`docs/concursos/sefaz-sc-2026/sessoes/AAAA-MM-DD.md`).
 2. Propor a correção pontual em `mapa-assuntos-edital.md` como diff, pedindo
    aprovação — não é preciso reabrir a triagem inteira do bloco por um único
    assunto divergente.
 3. Não recalcular o mapa inteiro a cada achado isolado — um recheck
    consolidado faz mais sentido em cadência semanal.
 
-## PDF mesclado do dia
+## PDF mesclado do dia (legado SEFAZ SC)
 
-Pro SEFAZ SC (prazo curto, já em andamento), continua valendo o fluxo por dia de calendário:
+Usado só no SEFAZ SC, registrado aqui pra entender o material arquivado — fluxo por dia de calendário:
 junto de cada ficha de sessão, gerar o manifesto JSON e rodar
 `dias/montar_dia.py` pra produzir um único PDF por dia, com as páginas na
 ordem de leitura sugerida (não necessariamente a ordem do PDF original) e
@@ -153,8 +166,14 @@ O script já gera os PDFs no layout combinado com o SGE:
 2. Subir a pasta `blocos/` pro Google Drive (manual por enquanto — sem `rclone`/Drive API
    automatizado aqui) e compartilhar cada PDF com link.
 3. Atualizar `arquivo` em `canonico.db` com o link de cada segmento antes de rodar
-   `integracao/exportar_sge.py` — é esse link, não o caminho local, que vai no CSV
-   (`referência_material`, ver `docs/arquitetura-integracao-planejamento-sge.md` §8).
+   `integracao/exportar_sge.py` — é esse link, não o caminho local, que vai no
+   `segmentos.csv` (o exportador avisa se achar caminho local).
+4. Exportar a pasta do concurso, já no formato do SGE
+   (`docs/arquitetura-integracao-planejamento-sge.md` §8.1):
+   `python integracao/exportar_sge.py --db integracao/canonico.db --edital <EDITAL>
+   --nome "<nome>" --data-prova AAAA-MM-DD --saida-dir <Drive>/SGE-Importacao/<slug>`
+   — gera `assuntos.csv`, `segmentos.csv` e `concurso.json`. No SGE, o concurso só é
+   importado quando `CONCURSO_ATIVO=<slug>` (ADR-039 deles).
 
 Pro orçamento (estágio 4), `integracao/calcular_orcamento.py --blocos-por-dia N` aceita
 ritmo direto em "blocos por dia" em vez de minutos — conversão interna via
@@ -164,13 +183,15 @@ ritmo direto em "blocos por dia" em vez de minutos — conversão interna via
 
 Ao final de uma triagem (ou sessão), gerar `anki/cards_bloco_<nome>.json`
 com os pontos-chave identificados, seguindo as regras do método
-(`plano-estudos-sefaz-sc-2026.md`, seção "Sistema de flashcards"):
+(`docs/concursos/sefaz-sc-2026/plano-estudos-sefaz-sc-2026.md`, seção "Sistema de flashcards"):
 
 - **cloze** → leis, classificações, decoreba
 - **basic** → "quando usar X em vez de Y" (não "defina X")
 - **basic_reversed** → sigla ↔ significado
 - Cards atômicos: um fato por card
-- Deck: `SEFAZ SC::<Trilha>::<Bloco>` (ver estrutura em `inventario-materiais-sefaz-sc.md`)
+- Deck: `<Concurso>::<Trilha>::<Bloco>` (estrutura de referência em
+  `docs/concursos/sefaz-sc-2026/inventario-materiais-sefaz-sc.md`). Card de assunto canônico
+  comum a vários editais não se duplica por concurso
 
 Rodar `anki/anki_gerar.py` pra converter em CSV importável. **O rascunho é
 pra revisão humana antes de importar** — não é pra importar direto sem olhar.
