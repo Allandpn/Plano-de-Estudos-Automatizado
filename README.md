@@ -42,6 +42,18 @@ python dias/montar_dia.py meu_manifesto.json --saida dias/2026-09-16.pdf
 Gera um único PDF com capa de rastreabilidade (mapeia cada página de volta
 ao arquivo/página original).
 
+## 3A. Fatiar o material de um assunto em blocos de leitura
+
+```bash
+python dias/montar_bloco.py manifesto_assunto.json --saida-dir dias/ --validar   # confere, não gera
+python dias/montar_bloco.py manifesto_assunto.json --saida-dir dias/
+python -m unittest dias/test_montar_bloco.py                                     # testes do fatiador
+```
+
+O manifesto declara os subitens do assunto, quais páginas cobrem cada um e as lacunas.
+Qualquer página perdida, repetida ou fora do PDF faz o script parar sem gerar nada. Leia o
+`<assunto>_cobertura.md` gerado antes de subir os blocos pro Drive.
+
 ## 4. Gerar rascunho de deck Anki
 
 Crie um JSON de cards (ver `anki/anki_gerar.py` pro formato), depois:

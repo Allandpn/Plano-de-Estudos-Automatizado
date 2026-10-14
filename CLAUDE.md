@@ -73,6 +73,9 @@ Quando pedirem "triagem do bloco X":
    4. Se mesmo assim não achar: marcar ❌ no `mapa-assuntos-edital.md`,
       registrar no "Gap confirmado" da triagem, e seguir em frente — não
       repetir o ciclo pro mesmo assunto.
+   A triagem registra a cobertura **por subitem** do assunto (quais páginas ensinam cada
+   parte, ou ❌ com motivo) e as páginas descartadas com motivo — é disso que sai o
+   manifesto do fatiamento, que recusa subitem sem página e sem lacuna declarada.
 4. Escrever `docs/concursos/<slug>/triagens/triagem-bloco-<nome>.md` no mesmo formato de
    `docs/concursos/sefaz-sc-2026/triagens/triagem-bloco-bd-sql-sefaz-sc.md` (acervo identificado, decisões de
    descarte, gap confirmado, roteiro por dia com leitura/pretest/fixação/
@@ -158,6 +161,31 @@ aproximadamente igual (`minutos_por_bloco`, default 60 — valor fixo combinado 
 mudar sem avisar), sem data de calendário — quem decide qual pedaço estudar em qual dia é a
 escada do SGE. Ver `dias/montar_bloco.py` (docstring) pro formato do manifesto e
 `docs/arquitetura-integracao-planejamento-sge.md` §4/§5 pro desenho completo.
+
+**O manifesto é onde se prova que nada ficou de fora** (formato completo na docstring de
+`dias/montar_bloco.py`). Ao montar cada um a partir da triagem:
+
+- `subitens`: as partes do assunto fino exatamente como estão no mapa (o que vem separado
+  por vírgula/ponto-e-vírgula). Toda fonte diz em `cobre` quais subitens ensina. Subitem
+  sem página **só passa declarado em `lacunas`, com motivo** — o mesmo ❌ do mapa.
+- `descartes`: o que a triagem decidiu deixar de fora (as "decisões de descarte"), com motivo.
+- `paginas` é a **posição no PDF** (contador do leitor, a mesma de `buscar_indice.py`),
+  nunca o número impresso na apostila.
+- **Fixação entra sempre:** questões comentadas, lista de exercícios e resumo de cada aula
+  vão como fonte `"tipo": "fixacao"`, logo depois da teoria correspondente. O script nunca
+  mistura fixação com teoria no mesmo bloco. Use `minutos_por_pagina` por fonte quando o
+  ritmo for diferente (lei seca, código, questões).
+- Rodar primeiro com `--validar` (confere tudo e mostra o corte, sem gerar nada). Qualquer
+  erro — arquivo inexistente, faixa invertida, página fora do PDF, página repetida, subitem
+  sem cobertura — faz o script parar sem gerar nada.
+- O corte cai em troca de fonte ou início de seção do PDF (marcadores), entre 75% e 125% do
+  alvo. Sem fronteira natural, corta no alvo e marca "corte no meio de seção".
+- **Ler `<assunto>_cobertura.md` antes de subir pro Drive:** subitem → páginas, a primeira
+  linha de cada faixa (se não bate com o esperado, a numeração está deslocada), descartes e
+  alertas por segmento.
+- Assunto já fatiado (e talvez já exportado) não é refatiado sem `--refatiar`: o SGE nunca
+  apaga segmento, então refatiar deixa os antigos lá ao lado dos novos.
+- Testes do fatiador: `python -m unittest dias/test_montar_bloco.py`.
 
 O script já gera os PDFs no layout combinado com o SGE:
 `blocos/<assunto-slug>/segmento-NN.pdf` dentro do `--saida-dir`. Depois de gerar:
