@@ -52,6 +52,9 @@ saída é um mapa de assuntos novo pronto pra triagem.
    precisam de triagem completa. É isso que deixa um edital novo pronto em pouco tempo.
 4. Propor o novo `docs/concursos/<slug>/mapa-assuntos-edital-<slug>.md` **como diff,
    pedindo aprovação antes de gravar** — mesma regra de sempre pra `docs/*.md`.
+   **Nome do assunto fiel à redação do edital:** o SGE adota por nome (sem acento/caixa) o
+   assunto criado lá pela análise por IA; nome diferente duplica. Todo `concurso.json`
+   exportado precisa de `slug` e `nome` (o SGE passou a lê-lo; ver §14 dos requisitos de lá).
 5. Depois de aprovado, os assuntos novos entram no fluxo normal de triagem (próxima seção).
 
 ## Fluxo de uma triagem de bloco

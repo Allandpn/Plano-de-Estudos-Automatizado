@@ -103,3 +103,11 @@ ficam de fora — tratar separadamente, no fluxo normal de `especificacao/` do p
 - **§4 (upsert por UUID):** adotado — linha sem `id` com `chaveExterna` conhecida
   atualiza o assunto (`02_JORNADAS` J-1 v1.6.0 deles).
 - Formato de arquivo vigente: `docs/arquitetura-integracao-planejamento-sge.md` §8.1.
+
+## 9. Checagem do canal de leitura em 2026-10-15
+
+Lido o SGE-Concursos (`main` + branch `claude/relaxed-bell-02ejxe`, Sprint 18) e o eAgora
+(app Android do SGE, só consome a API deles). Novidade: requisitos §14 (SGE lê
+`concurso.json`, adota assunto sem chave por nome, ordem ocupada não recusa). Nenhuma
+mudança de formato de arquivo. Resposta em
+`docs/arquitetura-integracao-planejamento-sge.md` (final do documento).

@@ -232,3 +232,23 @@ canônico, então dois editais que compartilham o assunto apontam pro mesmo PDF.
   todo registro.
 
 Testes: `integracao/test_integracao.py` (contrato de colunas com o SGE, ordem, publicação).
+
+**Respostas ao pedido do SGE de 2026-10-15** (§14 de lá, Sprint 18, ADR-042/043 — ainda na
+branch `claude/relaxed-bell-02ejxe` do SGE, não mesclada em `main` na data desta checagem):
+
+- `concurso.json` agora é **lido** pelo SGE (cria/reativa pelo `slug`; `slug` e `nome`
+  obrigatórios, `dataProva` opcional; arquivo inválido recusa a importação inteira).
+  `exportar_sge.py` já grava os três campos (`slug` = nome da pasta, `nome` = `--nome`).
+- **Adoção por nome:** se o usuário subir um edital pelo SGE (análise por IA), os assuntos
+  nascem lá sem `chaveExterna`; ao exportarmos o mesmo nome (sem acento/caixa) na mesma
+  disciplina, o SGE grava a chave no assunto existente em vez de duplicar. Consequência
+  pra nós: **o nome do assunto no mapa segue a redação do edital**; nome diferente cria
+  assunto novo.
+- **Estágio 1 — caminho principal é o do planejamento** (decisão de 2026-10-15): o estágio 1
+  daqui reaproveita o canônico e a triagem contra o acervo, coisa que a IA do SGE não faz.
+  A análise por IA do SGE é um caminho de conveniência (ver o edital no app); se o usuário a
+  usar antes, a exportação posterior só adota os assuntos por nome. O peso segue a mesma
+  regra dos dois lados: por contagem de questões do edital (SGE: tercis, D-61); sem
+  contagem, "não determinado" — nunca estimado.
+- Ordem ocupada por assunto de outro edital deixou de recusar o arquivo (o assunto antigo
+  vai pro fim da disciplina): nenhuma ação nossa.
