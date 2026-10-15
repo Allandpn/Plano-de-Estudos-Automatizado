@@ -252,3 +252,25 @@ branch `claude/relaxed-bell-02ejxe` do SGE, não mesclada em `main` na data dest
   contagem, "não determinado" — nunca estimado.
 - Ordem ocupada por assunto de outro edital deixou de recusar o arquivo (o assunto antigo
   vai pro fim da disciplina): nenhuma ação nossa.
+
+**Revisão da decisão do estágio 1 (2026-10-15, mesmo dia, a pedido do usuário)** — substitui
+o parágrafo "Estágio 1 — caminho principal é o do planejamento" acima (mantido por ser
+documento que só cresce):
+
+- **O SGE (com o eAgora) é o sistema principal** na experiência do usuário: é onde o edital
+  é subido, onde a IA (OpenRouter, ADR-043 deles) separa os assuntos pelo cargo escolhido e
+  traz banca, data da prova e peso por questões, e onde o usuário revisa e confirma. **A
+  chave `OPENROUTER_API_KEY` vive só no SGE** (`.env` do Pi). O planejamento não chama IA
+  nenhuma e não guarda chave.
+- **O planejamento vira a retaguarda de material**, rodando sob demanda no PC: parte dos
+  assuntos já confirmados no SGE e faz a triagem contra o acervo, a canonicalização, o
+  fatiamento e a exportação dos segmentos pelo Drive (estágios 2–6). O estágio 1 daqui
+  (leitura de edital por sessão do Claude Code) fica como alternativa, para quem não usa a
+  análise do SGE.
+- **Convergência por nome:** os assuntos nascem no SGE sem `chaveExterna`; o planejamento
+  mantém o nome exatamente como veio do SGE, atribui o UUID canônico e exporta — o SGE adota
+  por nome (§14 dos requisitos de lá) e ganha os segmentos.
+- **Lacuna de entrada:** o `GET /api/assuntos/exportacao` do SGE devolve `id,disciplina,
+  assunto,peso,ordem,dificuldadePercebida` de todos os assuntos ativos, sem `chaveExterna`,
+  sem separar por concurso e sem os dados do concurso. Pedido de ajuste registrado em
+  `docs/requisitos-sge-integracao.md` §10.

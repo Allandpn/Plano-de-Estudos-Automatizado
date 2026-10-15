@@ -111,3 +111,23 @@ Lido o SGE-Concursos (`main` + branch `claude/relaxed-bell-02ejxe`, Sprint 18) e
 `concurso.json`, adota assunto sem chave por nome, ordem ocupada não recusa). Nenhuma
 mudança de formato de arquivo. Resposta em
 `docs/arquitetura-integracao-planejamento-sge.md` (final do documento).
+
+## 10. Pedido ao SGE (2026-10-15): entregar ao planejamento os assuntos de um concurso
+
+Contexto: decidido que o SGE é o sistema principal (leitura do edital por IA, ADR-043 deles)
+e o planejamento faz a triagem e o fatiamento a partir dos assuntos confirmados lá
+(`docs/arquitetura-integracao-planejamento-sge.md`, "Revisão da decisão do estágio 1").
+
+Hoje `GET /api/assuntos/exportacao` serve a outro propósito (round-trip do cadastro) e não
+basta. **Pedido:** uma saída por concurso, na pasta `SGE-Importacao/<slug>/` do Drive ou por
+endpoint, com:
+
+1. `concurso.json` (`slug`, `nome`, `dataProva`, e banca/cargo se o SGE os guarda);
+2. lista dos assuntos da cobertura daquele concurso, na ordem do edital: `disciplina,
+   assunto, peso, ordem, chaveExterna` (vazia se o assunto nasceu na análise por IA),
+   mais o número de questões da disciplina quando existir;
+3. indicação de assunto com **correspondência** a um assunto já existente (D-63), para o
+   planejamento reaproveitar o canônico.
+
+Nada disso é implementado por nós: a decisão de formato e de onde expor é do SGE. Até lá, o
+caminho manual funciona (copiar o CSV de exportação atual para o planejamento).

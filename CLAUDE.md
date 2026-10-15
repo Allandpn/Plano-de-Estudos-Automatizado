@@ -55,6 +55,10 @@ saída é um mapa de assuntos novo pronto pra triagem.
    **Nome do assunto fiel à redação do edital:** o SGE adota por nome (sem acento/caixa) o
    assunto criado lá pela análise por IA; nome diferente duplica. Todo `concurso.json`
    exportado precisa de `slug` e `nome` (o SGE passou a lê-lo; ver §14 dos requisitos de lá).
+   **Entrada alternativa:** se o edital já foi subido no SGE (análise por IA, que guarda a
+   chave do OpenRouter — o planejamento não tem chave), os assuntos confirmados lá são a
+   entrada no lugar do passo 1: manter os nomes exatamente como vieram e seguir da triagem
+   em diante (decisão de 2026-10-15, `docs/arquitetura-integracao-planejamento-sge.md`).
 5. Depois de aprovado, os assuntos novos entram no fluxo normal de triagem (próxima seção).
 
 ## Fluxo de uma triagem de bloco
