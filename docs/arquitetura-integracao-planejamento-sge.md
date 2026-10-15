@@ -200,3 +200,35 @@ Gerado por `integracao/exportar_sge.py --saida-dir`. Do lado do SGE (Sprint 16, 
   concurso; peso e ordem passam a ser os do concurso ativo. A entidade `Edital` com peso
   por edital (pedida em `docs/requisitos-sge-integracao.md` §2-§3) **não** foi adotada —
   ver §8 daquele documento.
+
+### 8.2 Ordem pedagógica, publicação no Drive e o uso do tempo estimado (2026-10-14)
+
+**Ordem (estágio 4) — correção.** `calcular_orcamento.py` desempatava assuntos de mesmo
+peso **pelo nome**. No SGE, `ordem` decide qual assunto da disciplina entra primeiro na
+frente de estudo (D-41 de lá), então a exportação mandava estudar "Bancos relacionais x
+NoSQL" antes de "Modelagem conceitual" e "SQL avançado" antes de "SQL: DDL". Passa a ser
+peso, depois a **ordem do mapa de assuntos** (a ordem em que o lote foi registrado). A
+§4 fala em "tempo proporcional a peso × volume"; o código nunca fez isso — o tempo é só
+volume × minutos por página, e peso só ordena e indica candidato a corte. Vale o código.
+
+**Publicação (entre os estágios 5 e 6) — novo.** `integracao/publicar_drive.py` sobe os
+PDFs de `blocos/` com `rclone` (o mesmo remoto que o SGE usa, ADR-037 de lá), pega o link
+compartilhável de cada um e grava em `material_pedacos.arquivo`. Era o único passo
+manual do caminho até o SGE, e nenhum comando fazia a parte de gravar o link. O caminho no
+Drive repete o local (`blocos/<assunto-slug>/segmento-NN.pdf`): o material é do assunto
+canônico, então dois editais que compartilham o assunto apontam pro mesmo PDF.
+
+**Respostas aos pedidos do SGE de 2026-10-14**
+(`docs/requisitos-planejamento-blocos-de-conteudo.md` de lá):
+
+- §11 (formato dos arquivos): atendido por `exportar_sge.py` (§8.1 acima).
+- §12 (segmento é leitura obrigatória): a `ordem` do segmento é a ordem de leitura do
+  manifesto; descartes nunca viram segmento; fixação (questões comentadas, resumo) vira
+  segmento próprio, como pedido.
+- §13 (`tempoEstimadoMin` passa a preencher o tempo do registro): o tempo sai sempre de
+  `minutos_por_pagina` (padrão 4). Como agora o usuário vê esse número toda vez que
+  registra, vale declarar `minutos_por_pagina` por fonte sempre que o ritmo for outro
+  (lei seca, questões comentadas, código) — um padrão errado vira correção manual em
+  todo registro.
+
+Testes: `integracao/test_integracao.py` (contrato de colunas com o SGE, ordem, publicação).

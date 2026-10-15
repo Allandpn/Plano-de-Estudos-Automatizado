@@ -22,7 +22,12 @@ O que faz:
            assunto leva pra ler, só a prioridade de quem estuda primeiro / quem é
            candidato a corte.
         2. ordem = ordenado por peso desc (ALTO > MEDIO > NAO_DETERMINADO > BAIXO), depois
-           por nome, dentro do mesmo peso.
+           pela ordem do mapa de assuntos, dentro do mesmo peso — a ordem em que o lote
+           registrou os assuntos (canonizar_assuntos.py --adicionar-lote), que é a do
+           mapa. No SGE, `ordem` decide qual assunto da disciplina entra primeiro na
+           frente (D-41 de lá): é ordem pedagógica (modelagem antes de normalização),
+           nunca alfabética. Antes desempatava por nome e mandava "Bancos relacionais x
+           NoSQL" à frente de "Modelagem conceitual".
         3. Se o total necessário couber no tempo disponível (dias × minutos-dia), grava
            tempo_estimado_min = tempo_necessario pra cada assunto — cobertura completa.
         4. Se estourar, NÃO decide sozinho o que cortar — grava tempo_estimado_min mesmo
@@ -69,9 +74,10 @@ def calcular(conn, edital, dias, minutos_dia, minutos_pagina):
     com_volume = [a for a in assuntos if a["volume_paginas"] is not None]
     sem_volume = [a for a in assuntos if a["volume_paginas"] is None]
 
+    # ea.id cresce na ordem em que o lote registrou os assuntos = ordem do mapa.
     ordenados = sorted(
         assuntos,
-        key=lambda a: (PESO_PRIORIDADE.get(a["peso"], 2), a["nome_canonico"]),
+        key=lambda a: (PESO_PRIORIDADE.get(a["peso"], 2), a["id"]),
     )
 
     tempo_disponivel = dias * minutos_dia

@@ -185,18 +185,22 @@ escada do SGE. Ver `dias/montar_bloco.py` (docstring) pro formato do manifesto e
   alertas por segmento.
 - Assunto já fatiado (e talvez já exportado) não é refatiado sem `--refatiar`: o SGE nunca
   apaga segmento, então refatiar deixa os antigos lá ao lado dos novos.
-- Testes do fatiador: `python -m unittest dias/test_montar_bloco.py`.
+- Testes do fatiador: `python -m unittest dias/test_montar_bloco.py`. Testes do caminho
+  canonizar → orçamento → publicar → exportar, incluindo o contrato de colunas com o SGE:
+  `python -m unittest discover -s integracao -p "test_*.py"`.
 
 O script já gera os PDFs no layout combinado com o SGE:
 `blocos/<assunto-slug>/segmento-NN.pdf` dentro do `--saida-dir`. Depois de gerar:
 1. Rodar `integracao/canonizar_assuntos.py --adicionar-pedacos` pra registrar a lista em
    `canonico.db` (campo `arquivo` ainda com o caminho local).
-2. Subir a pasta `blocos/` pro Google Drive (manual por enquanto — sem `rclone`/Drive API
-   automatizado aqui) e compartilhar cada PDF com link.
-3. Atualizar `arquivo` em `canonico.db` com o link de cada segmento antes de rodar
-   `integracao/exportar_sge.py` — é esse link, não o caminho local, que vai no
-   `segmentos.csv` (o exportador avisa se achar caminho local).
-4. Exportar a pasta do concurso, já no formato do SGE
+2. Publicar no Drive: `python integracao/publicar_drive.py --db integracao/canonico.db
+   --edital <EDITAL> --saida-dir <o mesmo de montar_bloco> --remoto <remoto rclone>`
+   (use `--simular` antes). Sobe cada PDF com `rclone`, pega o link compartilhável e grava
+   no lugar do caminho local — é esse link, não o caminho, que vai no `segmentos.csv` e
+   que o botão "Abrir material" do SGE abre. Pedaço que já tem link é pulado, então
+   rodar de novo depois de uma falha continua de onde parou. Registrar pedaços de novo
+   (passo 1) volta os caminhos locais: publique outra vez.
+3. Exportar a pasta do concurso, já no formato do SGE
    (`docs/arquitetura-integracao-planejamento-sge.md` §8.1):
    `python integracao/exportar_sge.py --db integracao/canonico.db --edital <EDITAL>
    --nome "<nome>" --data-prova AAAA-MM-DD --saida-dir <Drive>/SGE-Importacao/<slug>`
@@ -205,7 +209,10 @@ O script já gera os PDFs no layout combinado com o SGE:
 
 Pro orçamento (estágio 4), `integracao/calcular_orcamento.py --blocos-por-dia N` aceita
 ritmo direto em "blocos por dia" em vez de minutos — conversão interna via
-`minutos_por_bloco`, nunca exportado ao SGE.
+`minutos_por_bloco`, nunca exportado ao SGE. A `ordem` que ele grava é peso, depois a
+**ordem do mapa de assuntos** (a do lote registrado) — no SGE ela decide qual assunto da
+disciplina entra primeiro na frente, então é ordem pedagógica. Registre o lote na ordem
+do mapa.
 
 ## Rascunho de Anki
 
@@ -228,6 +235,11 @@ pra revisão humana antes de importar** — não é pra importar direto sem olha
 
 Dois sistemas separados, cada IA só escreve no próprio repositório — nunca
 acesso de escrita cruzado.
+
+**Exceção registrada (2026-10-14), pedida pelo usuário:** uma sessão do SGE trabalhou
+neste repositório, numa branch própria (`integracao-sge`) e seguindo este `CLAUDE.md`,
+para alinhar a exportação ao formato do SGE e fechar o caminho até o Drive. A regra acima
+continua valendo para o dia a dia; uma nova exceção precisa de novo pedido explícito.
 
 **Antes de começar qualquer trabalho que toque a integração com o SGE**
 (fatiamento de blocos, segmentos, chaveExterna, ADR-037, ou qualquer

@@ -48,6 +48,7 @@ ao arquivo/página original).
 python dias/montar_bloco.py manifesto_assunto.json --saida-dir dias/ --validar   # confere, não gera
 python dias/montar_bloco.py manifesto_assunto.json --saida-dir dias/
 python -m unittest dias/test_montar_bloco.py                                     # testes do fatiador
+python -m unittest discover -s integracao -p "test_*.py"                        # contrato com o SGE
 ```
 
 O manifesto declara os subitens do assunto, quais páginas cobrem cada um e as lacunas.
@@ -65,10 +66,26 @@ python anki/anki_gerar.py cards.json --saida deck.csv --deck "Concurso::Trilha 1
 Gera um CSV por tipo de note (Basic / Basic-reversed / Cloze), pronto pra
 `File > Import` no Anki. **Revise antes de importar.**
 
-## 5. Exportar um concurso pro SGE-Concursos
+## 5. Publicar os segmentos no Google Drive
 
-Depois de canonicalizar os assuntos (`integracao/canonizar_assuntos.py`) e calcular a
-ordem (`integracao/calcular_orcamento.py`):
+Depois de registrar os pedaços (`canonizar_assuntos.py --adicionar-pedacos`), com o
+`rclone` configurado para o Drive:
+
+```bash
+python integracao/publicar_drive.py --db integracao/canonico.db --edital MEU-EDITAL-2027 \
+    --saida-dir dias/ --remoto gdrive:Estudos/Material --simular   # mostra o que faria
+python integracao/publicar_drive.py --db integracao/canonico.db --edital MEU-EDITAL-2027 \
+    --saida-dir dias/ --remoto gdrive:Estudos/Material
+```
+
+Sobe cada PDF e troca o caminho local pelo link compartilhável no banco — é o link que o
+SGE abre no botão "Abrir material".
+
+## 6. Exportar um concurso pro SGE-Concursos
+
+Depois de canonicalizar os assuntos (`integracao/canonizar_assuntos.py`), calcular a
+ordem (`integracao/calcular_orcamento.py`, que segue a ordem do mapa de assuntos) e
+publicar os segmentos (§5):
 
 ```bash
 python integracao/exportar_sge.py --db integracao/canonico.db --edital MEU-EDITAL-2027 \

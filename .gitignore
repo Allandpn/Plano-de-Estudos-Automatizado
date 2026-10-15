@@ -4,6 +4,14 @@ indice/indice.db
 # PDFs mesclados regeneráveis (rode dias/montar_dia.py com os manifestos)
 dias/*.pdf
 
+# Segmentos fatiados (dias/montar_bloco.py) — regeneráveis e publicados no Drive por
+# integracao/publicar_drive.py. O <assunto>_pedacos.json e o _cobertura.md continuam
+# versionados: é no registro que mora a chave estável de cada segmento.
+**/blocos/**/*.pdf
+
+# Pasta de importação do SGE gerada por exportar_sge.py, quando a saída é local
+SGE-Importacao/
+
 # Biblioteca de apostilas — link local, aponta pra fora do repo, recriar em cada máquina
 apostilas/
 
