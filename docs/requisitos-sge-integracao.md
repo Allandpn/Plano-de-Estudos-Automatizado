@@ -131,3 +131,11 @@ endpoint, com:
 
 Nada disso é implementado por nós: a decisão de formato e de onde expor é do SGE. Até lá, o
 caminho manual funciona (copiar o CSV de exportação atual para o planejamento).
+
+**Atendido em 2026-10-15** (por pedido do usuário, escrito direto no SGE, branch
+`exportacao-planejamento`, ainda **não mesclada**): `GET /api/concursos/{id}/planejamento`
+devolve `slug, nome, cargo, banca, dataProva` e os assuntos na ordem do edital
+(`disciplina, assunto, peso, ordem, chaveExterna`). Ficaram de fora, por não serem guardados
+depois da confirmação: número de questões por disciplina e correspondência com assunto
+existente. O teste dessa branch ainda não rodou (sem Docker no PC onde foi escrito).
+

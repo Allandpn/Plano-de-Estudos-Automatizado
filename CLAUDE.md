@@ -248,6 +248,10 @@ neste repositório, numa branch própria (`integracao-sge`) e seguindo este `CLA
 para alinhar a exportação ao formato do SGE e fechar o caminho até o Drive. A regra acima
 continua valendo para o dia a dia; uma nova exceção precisa de novo pedido explícito.
 
+**Segunda exceção (2026-10-15), pedida pelo usuário:** esta sessão escreveu no SGE-Concursos,
+na branch `exportacao-planejamento` (endpoint `GET /api/concursos/{id}/planejamento`) e mesclou a
+Sprint 18 em `main` de lá. Também vale só para aquele pedido.
+
 **Antes de começar qualquer trabalho que toque a integração com o SGE**
 (fatiamento de blocos, segmentos, chaveExterna, ADR-037, ou qualquer
 novidade do lado deles), confira o repositório público
