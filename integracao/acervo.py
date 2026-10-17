@@ -57,9 +57,13 @@ class Acervo:
     def caminho(self, relativo):
         return self.raiz / Path(relativo)
 
-    def candidatos(self, termos, max_arquivos=6, max_paginas_por_arquivo=12, limite_hits=150):
+    def candidatos(self, termos, max_arquivos=6, max_paginas_por_arquivo=12, limite_hits=150,
+                   margem_mapa=3, max_mapa=45):
         """Os arquivos com mais páginas citando os termos, cada um com as páginas que citam
-        (e o trecho) e o sumário (bookmarks). Ordem: mais relevante primeiro."""
+        (e o trecho), o sumário (bookmarks) e o **mapa**: o início de cada página da região
+        das ocorrências. Sem o mapa, a IA não via onde um tema termina e o vizinho começa, e
+        as faixas transbordavam (acentuação dentro de crase — achado na primeira preparação
+        real, 2026-10-17). Ordem: mais relevante primeiro."""
         if not termos:
             return []
         query = " OR ".join(f'"{t}"*' for t in termos)
@@ -80,9 +84,10 @@ class Acervo:
             for l in linhas:
                 item = por_arquivo.setdefault(l["id"], {
                     "arquivo": caminho_relativo(l["curso"], l["nome_arquivo"]),
-                    "n_paginas": l["n_paginas"], "score": 0.0, "paginas": [],
+                    "n_paginas": l["n_paginas"], "score": 0.0, "paginas": [], "_todas": set(),
                 })
                 item["score"] += -l["score"]  # bm25: menor é melhor
+                item["_todas"].add(l["pagina"])  # região do mapa: todas as ocorrências, não só as listadas
                 if len(item["paginas"]) < max_paginas_por_arquivo:
                     item["paginas"].append({"pagina": l["pagina"], "trecho": l["trecho"]})
             escolhidos = sorted(por_arquivo.items(), key=lambda kv: -kv[1]["score"])[:max_arquivos]
@@ -96,5 +101,41 @@ class Acervo:
                         (arquivo_id,))
                 ]
                 del item["score"]
+                item["mapa"] = self._mapa(conn, arquivo_id, sorted(item.pop("_todas")), item["n_paginas"], margem_mapa, max_mapa)
                 resultado.append(item)
             return resultado
+
+    def inicio(self, relativo, pagina):
+        """Começo do texto de uma página de um arquivo do acervo (para conferir uma escolha)."""
+        partes = relativo.rsplit("/", 1)
+        curso, nome = (partes[0], partes[1]) if len(partes) == 2 else ("", partes[0])
+        with closing(self._conectar()) as conn:
+            for c, texto in conn.execute(
+                    """SELECT a.curso, p.texto FROM paginas p JOIN arquivos a ON a.id = p.arquivo_id
+                       WHERE a.nome_arquivo = ? AND p.pagina = ?""", (nome, pagina)):
+                if caminho_relativo(c, "") .rstrip("/") == curso:
+                    return inicio_da_pagina(texto)
+        return ""
+
+    @staticmethod
+    def _mapa(conn, arquivo_id, paginas, n_paginas, margem, maximo):
+        """Primeira linha útil de cada página entre a primeira e a última ocorrência (com
+        margem), limitada a `maximo` páginas a partir do começo da região."""
+        if not paginas:
+            return []
+        inicio = max(1, paginas[0] - margem)
+        fim = min(n_paginas or paginas[-1] + margem, paginas[-1] + margem, inicio + maximo - 1)
+        mapa = []
+        for pagina, texto in conn.execute(
+                "SELECT pagina, texto FROM paginas WHERE arquivo_id = ? AND pagina BETWEEN ? AND ? ORDER BY pagina",
+                (arquivo_id, inicio, fim)):
+            mapa.append({"pagina": pagina, "inicio": inicio_da_pagina(texto)})
+        return mapa
+
+
+def inicio_da_pagina(texto, tamanho=90):
+    """O começo do texto da página, sem o número de página/rodapé repetido que costuma
+    vir na primeira linha das apostilas ("17 39 ...")."""
+    linha = " ".join((texto or "").split())
+    linha = re.sub(r"^(\d+\s+){1,3}", "", linha)
+    return linha[:tamanho]

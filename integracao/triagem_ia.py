@@ -21,6 +21,10 @@ no acervo do usuário. Escolhe as páginas que ENSINAM cada parte do assunto.
 Regras:
 - Use só os arquivos e as páginas listados. Páginas são a posição no PDF (1 = primeira).
 - Prefira faixas contínuas ("12-30"). Não repita o mesmo conteúdo de duas apostilas: escolha a melhor.
+- Use o "Início de cada página" para achar onde o tema COMEÇA e onde TERMINA: a faixa começa na
+  página em que o tema começa e termina na página anterior àquela em que começa outro tema.
+  Apostilas-resumo e listas de questões misturam temas lado a lado — pegue só o trecho deste
+  assunto, mesmo que isso dê faixas curtas. Na dúvida sobre uma página, deixe-a de fora.
 - Não inclua páginas que só citam o termo de passagem, sumário, capa ou propaganda.
 - "cobre" lista exatamente os nomes das partes (como vieram) que aquela faixa ensina.
 - Toda parte precisa estar em "cobre" de alguma fonte OU em "lacunas" com motivo.
@@ -47,8 +51,12 @@ def montar_pedido(assunto, disciplina, partes, candidatos, erros_anteriores=None
         linhas.append(f"\n[A{i}] {c['arquivo']} ({c['n_paginas']} páginas)")
         if c.get("sumario"):
             linhas.append("Sumário: " + "; ".join(f"{s['titulo']} (p. {s['pagina']})" for s in c["sumario"]))
+        linhas.append("Ocorrências dos termos:")
         for p in c["paginas"]:
             linhas.append(f"  p. {p['pagina']}: {p['trecho']}")
+        if c.get("mapa"):
+            linhas.append("Início de cada página:")
+            linhas += [f"  p. {m['pagina']}: {m['inicio']}" for m in c["mapa"]]
     if erros_anteriores:
         linhas.append("\nSua resposta anterior foi recusada pela validação. Corrija:")
         linhas += [f"- {e}" for e in erros_anteriores]

@@ -318,3 +318,22 @@ como legado.
 Testes: `integracao/test_worker.py` (SGE e IA falsos, PDFs sintéticos, índice com caminho
 de outra máquina), `integracao/test_sge_api.py` (HTTP real local).
 
+### 9.1 Mapa de início das páginas (2026-10-17)
+
+**Achado na primeira preparação real** (SEFAZ SC 2026, Ciências da Computação, no Pi):
+a IA via só o trecho das páginas onde o termo aparecia e o sumário do PDF, e não onde
+um tema termina e o vizinho começa. Em apostilas-resumo e listas de questões, as faixas
+transbordavam — acentuação dentro de "crase", voz passiva dentro de "ortografia".
+
+**Correção:** cada arquivo candidato leva também o **início de cada página** da região
+das ocorrências (todas elas, com 3 páginas de margem, até 45 páginas), sem o número de
+rodapé; o prompt manda começar e terminar a faixa nas mudanças de tema e deixar de fora
+a página em dúvida. O validador continua o mesmo.
+
+**Para avaliar sem gravar nada:** `python integracao/worker.py --ensaiar "<assunto>"
+--disciplina "<disciplina>"` mostra a escolha, com o início da primeira e da última
+página de cada faixa, e se passaria na validação.
+
+Do lado do SGE, o material já preparado pode ser refeito (D-66 de lá): os segmentos são
+arquivados e o assunto volta a "a preparar".
+

@@ -262,6 +262,10 @@ branch `material-automatico`, o worker do material (`integracao/worker.py`, `ace
 `sge_api.py`, `triagem_ia.py`, `Dockerfile`), para a Sprint 19 de lá. Vale só para aquele
 pedido.
 
+**Quarta exceção (2026-10-17), pedida pelo usuário:** a mesma sessão melhorou a triagem
+automática (mapa de início das páginas, `--ensaiar`) na branch `triagem-mapa-paginas`,
+depois de avaliar a primeira preparação real no Pi. Vale só para aquele pedido.
+
 **Antes de começar qualquer trabalho que toque a integração com o SGE**
 (fatiamento de blocos, segmentos, chaveExterna, ADR-037, ou qualquer
 novidade do lado deles), confira o repositório público

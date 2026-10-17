@@ -117,6 +117,22 @@ class AcervoTest(Base):
         self.assertTrue((self.acervo_dir / candidatos[0]["arquivo"]).is_file())
         self.assertEqual([{"titulo": "Atos administrativos", "pagina": 3}], candidatos[0]["sumario"])
 
+    def test_mapa_mostra_onde_cada_pagina_comeca(self):
+        candidatos = Acervo(self.indice, self.acervo_dir).candidatos(termos_de_busca("Atos administrativos"))
+        mapa = {m["pagina"]: m["inicio"] for m in candidatos[0]["mapa"]}
+        # Ocorrências nas p. 3-20; mapa com margem de 3 páginas: 1 a 23.
+        self.assertEqual(1, min(mapa))
+        self.assertEqual(23, max(mapa))
+        self.assertTrue(mapa[22].startswith("outro tema"), "o mapa mostra onde o tema vizinho começa")
+
+    def test_inicio_da_pagina_sem_numeracao_de_rodape(self):
+        from acervo import inicio_da_pagina
+        self.assertEqual("acerca de / a cerca de", inicio_da_pagina("17 39 acerca de / a cerca de"))
+
+    def test_inicio_de_uma_pagina_pelo_caminho_relativo(self):
+        a = Acervo(self.indice, self.acervo_dir)
+        self.assertTrue(a.inicio("Direito/Adm/aula 03.pdf", 5).startswith("atos administrativos"))
+
     def test_termos_sem_conectivos_e_sem_acento(self):
         self.assertEqual(["atos", "administrativos", "requisitos"],
                          termos_de_busca("Atos administrativos: conceito e requisitos"))
@@ -136,6 +152,7 @@ class WorkerTest(Base):
             self.assertTrue((self.material / l["arquivo"].removeprefix("/material/")).is_file(),
                             "o SGE serve /material/ do mesmo diretório em que o PDF foi gerado")
         self.assertIn("p. 3: ", sge.pedidos_ia[0], "a IA recebe as páginas que citam o assunto")
+        self.assertIn("Início de cada página:", sge.pedidos_ia[0], "e o mapa de onde cada página começa")
 
     def test_ia_sem_material_registra_lacuna(self):
         sge = SgeFalso([assunto()], [{"sem_material": True, "motivo": "a apostila só cita o termo"}])

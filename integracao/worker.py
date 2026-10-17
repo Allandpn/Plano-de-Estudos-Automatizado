@@ -125,8 +125,40 @@ class Worker:
         motivo = "a seleção de páginas da IA não passou na validação: " + "; ".join((erros or [])[:3])
         return self._lacuna(chave, nome, motivo[:900])
 
-    def _fatiar(self, chave, edital, disciplina, nome, partes, escolha):
-        manifesto = {
+    def ensaiar(self, nome, disciplina, saida=print):
+        """Mostra a escolha da IA para um assunto, sem fatiar de verdade nem importar —
+        para avaliar a qualidade da triagem (python worker.py --ensaiar)."""
+        import re
+        candidatos = self.acervo.candidatos(termos_de_busca(nome))
+        saida(f"== {disciplina} — {nome}: {len(candidatos)} arquivo(s) candidato(s)")
+        if not candidatos:
+            return
+        partes = triagem_ia.partes_do_assunto(nome)
+        tipo, valor = triagem_ia.interpretar(
+            self.sge.completar(triagem_ia.SISTEMA, triagem_ia.montar_pedido(nome, disciplina, partes, candidatos)),
+            candidatos)
+        if tipo == "sem_material":
+            saida(f"   sem material: {valor}")
+            return
+        for f in valor["fontes"]:
+            numeros = [int(n) for n in re.findall(r"\d+", f["paginas"])] or [0]
+            saida(f"   {f['tipo']:<8} {f['paginas']:<10} {f['arquivo'][-70:]}")
+            saida(f"      início: {self.acervo.inicio(f['arquivo'], numeros[0])[:80]}")
+            saida(f"      fim:    {self.acervo.inicio(f['arquivo'], numeros[-1])[:80]}")
+        for l in valor["lacunas"]:
+            saida(f"   lacuna: {l['subitem']} — {l['motivo']}")
+        try:
+            manifesto = self._manifesto("ensaio", "ensaio", disciplina, nome, partes, valor)
+            caminho = self.trabalho_dir / "ensaio.json"
+            caminho.parent.mkdir(parents=True, exist_ok=True)
+            caminho.write_text(json.dumps(manifesto, ensure_ascii=False), encoding="utf-8")
+            _, segmentos = mb.montar_bloco(caminho, self.trabalho_dir / "ensaio", refatiar=True, so_validar=True)
+            saida(f"   validação: ok, {len(segmentos)} segmento(s)")
+        except mb.ManifestoInvalido as e:
+            saida("   validação: recusada — " + "; ".join(e.erros[:3]))
+
+    def _manifesto(self, chave, edital, disciplina, nome, partes, escolha):
+        return {
             "assunto_uuid": chave,
             "edital": edital,
             # Disciplina no título: dois assuntos de mesmo nome em disciplinas diferentes não
@@ -137,6 +169,9 @@ class Worker:
             "fontes": [dict(f, arquivo=str(self.acervo.caminho(f["arquivo"]))) for f in escolha["fontes"]],
             "descartes": [],
         }
+
+    def _fatiar(self, chave, edital, disciplina, nome, partes, escolha):
+        manifesto = self._manifesto(chave, edital, disciplina, nome, partes, escolha)
         self.trabalho_dir.mkdir(parents=True, exist_ok=True)
         caminho = self.trabalho_dir / f"{chave}.json"
         caminho.write_text(json.dumps(manifesto, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -172,6 +207,9 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     ap = argparse.ArgumentParser(description="Prepara sozinho o material do concurso-alvo do SGE.")
     ap.add_argument("--uma-vez", action="store_true", help="Um ciclo e sai")
+    ap.add_argument("--ensaiar", metavar="ASSUNTO",
+                    help="Mostra a escolha da IA para um assunto, sem fatiar nem importar")
+    ap.add_argument("--disciplina", default="", help="Disciplina do assunto de --ensaiar")
     args = ap.parse_args()
 
     env = os.environ
@@ -187,6 +225,9 @@ def main():
         env.get("TRABALHO_DIR", str(Path(material) / ".manifestos")),
         int(env.get("MAX_POR_CICLO", "10")),
     )
+    if args.ensaiar:
+        worker.ensaiar(args.ensaiar, args.disciplina)
+        return
     intervalo = int(env.get("INTERVALO_SEG", "300"))
     while True:
         try:
