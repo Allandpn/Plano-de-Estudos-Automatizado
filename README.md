@@ -66,7 +66,19 @@ python anki/anki_gerar.py cards.json --saida deck.csv --deck "Concurso::Trilha 1
 Gera um CSV por tipo de note (Basic / Basic-reversed / Cloze), pronto pra
 `File > Import` no Anki. **Revise antes de importar.**
 
-## 5. Publicar os segmentos no Google Drive
+## 4A. Worker do material (caminho principal, no Pi)
+
+`integracao/worker.py` roda como contêiner ao lado do SGE e prepara sozinho o material do
+concurso-alvo: busca no índice, IA pelo proxy do SGE, fatiamento, importação dos segmentos.
+Configuração por variável de ambiente (docstring do script); a imagem vem do `Dockerfile`
+da raiz. Para rodar um ciclo à mão:
+
+```bash
+SGE_URL=http://127.0.0.1:8080 INTERNAL_TOKEN=... ACERVO_DIR=apostilas INDICE_DB=indice/indice.db \
+    MATERIAL_DIR=/tmp/material python integracao/worker.py --uma-vez
+```
+
+## 5. Publicar os segmentos no Google Drive (legado)
 
 Depois de registrar os pedaços (`canonizar_assuntos.py --adicionar-pedacos`), com o
 `rclone` configurado para o Drive:

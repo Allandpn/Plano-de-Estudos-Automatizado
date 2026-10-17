@@ -4,6 +4,11 @@ Contexto: preparação para **qualquer edital** de concurso público (foco em TI
 de um acervo de ~2600 apostilas do Estratégia Concursos indexadas em `indice/indice.db`.
 O planejamento lê o edital, mapeia os assuntos, tria o acervo, fatia o material e
 exporta tudo pro SGE-Concursos, que decide o dia a dia (escada de revisão, turno).
+**Caminho principal desde 2026-10-17:** o material é preparado sozinho por
+`integracao/worker.py`, no Pi, ao lado do SGE (`docs/arquitetura-integracao-planejamento-sge.md`
+§9; ADR-044 do SGE). Os fluxos em chat abaixo viram **modo manual** — para revisar uma
+lacuna, refazer a triagem de um assunto com cuidado ou trabalhar o legado.
+
 O primeiro concurso trabalhado foi o SEFAZ SC 2026 — o material dele fica arquivado em
 `docs/concursos/sefaz-sc-2026/` e serve de **referência de convenção** (formato do mapa
 de assuntos, das triagens, das fichas).
@@ -193,8 +198,8 @@ escada do SGE. Ver `dias/montar_bloco.py` (docstring) pro formato do manifesto e
 - Assunto já fatiado (e talvez já exportado) não é refatiado sem `--refatiar`: o SGE nunca
   apaga segmento, então refatiar deixa os antigos lá ao lado dos novos.
 - Testes do fatiador: `python -m unittest dias/test_montar_bloco.py`. Testes do caminho
-  canonizar → orçamento → publicar → exportar, incluindo o contrato de colunas com o SGE:
-  `python -m unittest discover -s integracao -p "test_*.py"`.
+  canonizar → orçamento → publicar → exportar, incluindo o contrato de colunas com o SGE, e
+  do worker do material: `python -m unittest discover -s integracao -p "test_*.py"`.
 
 O script já gera os PDFs no layout combinado com o SGE:
 `blocos/<assunto-slug>/segmento-NN.pdf` dentro do `--saida-dir`. Depois de gerar:
@@ -251,6 +256,11 @@ continua valendo para o dia a dia; uma nova exceção precisa de novo pedido exp
 **Segunda exceção (2026-10-15), pedida pelo usuário:** esta sessão escreveu no SGE-Concursos,
 na branch `exportacao-planejamento` (endpoint `GET /api/concursos/{id}/planejamento`) e mesclou a
 Sprint 18 em `main` de lá. Também vale só para aquele pedido.
+
+**Terceira exceção (2026-10-17), pedida pelo usuário:** uma sessão do SGE escreveu aqui, na
+branch `material-automatico`, o worker do material (`integracao/worker.py`, `acervo.py`,
+`sge_api.py`, `triagem_ia.py`, `Dockerfile`), para a Sprint 19 de lá. Vale só para aquele
+pedido.
 
 **Antes de começar qualquer trabalho que toque a integração com o SGE**
 (fatiamento de blocos, segmentos, chaveExterna, ADR-037, ou qualquer

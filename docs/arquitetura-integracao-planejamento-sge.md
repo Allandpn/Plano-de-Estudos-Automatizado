@@ -274,3 +274,47 @@ documento que só cresce):
   assunto,peso,ordem,dificuldadePercebida` de todos os assuntos ativos, sem `chaveExterna`,
   sem separar por concurso e sem os dados do concurso. Pedido de ajuste registrado em
   `docs/requisitos-sge-integracao.md` §10.
+
+## 9. Material preparado sozinho, no Pi (2026-10-17)
+
+**Pedido do usuário:** "subir um edital, escolher um cargo, e todo o resto será feito pelo
+sistema". Do lado do SGE: ADR-044 (substitui ADR-037), `01_DOMINIO` v1.24.0 (§3.10, D-64,
+D-65) e `docs/SPRINT-19-MATERIAL-AUTOMATICO.md`, todos no repositório de lá.
+
+**O que muda aqui.** O caminho principal deixa de ser uma sessão em chat no PC e passa a
+ser `integracao/worker.py`, um contêiner no mesmo `docker compose` do SGE, no Pi:
+
+| Antes (§3–§8) | Agora |
+|---|---|
+| Alguém pede ao Claude Code no PC "leia o edital", "triagem do bloco X" | O usuário confirma o edital no SGE; o worker percebe sozinho |
+| Triagem, canonicalização e manifesto julgados no chat, com aprovação | A IA (OpenRouter, pelo proxy do SGE) escolhe as páginas; o validador estrito do `montar_bloco` decide se vale |
+| `canonico.db` dá o UUID; o SGE casava por nome | O SGE dá a `chaveExterna` na confirmação (D-64); o worker só a usa |
+| `publicar_drive.py` + Drive + cron com `CONCURSO_ATIVO` | PDF gravado em `MATERIAL_DIR`, servido pelo SGE em `/material/`; segmentos importados por HTTP interno |
+| Gap da triagem anotado no mapa de assuntos | Lacuna registrada no SGE com motivo (D-65), visível na tela |
+
+**Como o worker decide** (docstrings de `worker.py` e `triagem_ia.py`):
+
+1. Assunto do concurso-alvo **sem segmento e sem lacuna** — o estado mora no SGE;
+   reiniciar o worker retoma de onde parou.
+2. Busca no `indice.db` com os termos do nome do assunto (sem conectivos) → até 6 arquivos,
+   cada um com as páginas que citam e o sumário.
+3. A IA recebe o assunto dividido em partes (vírgula e ponto e vírgula, como o mapa faz) e
+   devolve as fontes no formato do manifesto. Nada inventado: o que não acha vira lacuna.
+4. `montar_bloco` valida. Recusou: **uma** nova tentativa, com os erros no pedido. Recusou
+   de novo: lacuna "não passou na validação", com os erros.
+5. Aceito: fatia, importa o `segmentos.csv` (arquivo `/material/blocos/...`) no SGE.
+6. IA fora do ar (sem chave, sem crédito) **não** é lacuna: o ciclo para e tenta depois.
+
+**O índice do PC funciona no Pi sem conversão:** o caminho é reconstruído como
+`ACERVO_DIR/<curso>/<nome_arquivo>`, não pelo caminho absoluto gravado na indexação.
+A indexação continua no PC (pesada demais para o Pi 4); o `indice.db` e as apostilas são
+copiados para o SSD do Pi.
+
+**O que continua valendo:** o fluxo em chat do `CLAUDE.md` vira modo manual — útil para
+revisar uma lacuna, refazer a triagem de um assunto com cuidado, ou trabalhar o legado
+SEFAZ. Exportação por arquivo (`exportar_sge.py`, `publicar_drive.py`) segue funcionando
+como legado.
+
+Testes: `integracao/test_worker.py` (SGE e IA falsos, PDFs sintéticos, índice com caminho
+de outra máquina), `integracao/test_sge_api.py` (HTTP real local).
+

@@ -1,0 +1,8 @@
+*
+!requirements-worker.txt
+!dias/montar_bloco.py
+!dias/montar_dia.py
+!integracao/acervo.py
+!integracao/sge_api.py
+!integracao/triagem_ia.py
+!integracao/worker.py

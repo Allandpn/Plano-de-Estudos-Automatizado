@@ -1,0 +1,4 @@
+# Dependências do worker do material (integracao/worker.py), o contêiner que roda no Pi
+# ao lado do SGE. Só o fatiador precisa delas; busca no índice e HTTP são biblioteca padrão.
+pypdf==6.17.0
+reportlab==5.0.1
