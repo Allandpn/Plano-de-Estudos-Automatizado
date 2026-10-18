@@ -28,6 +28,19 @@ def sem_acento(texto):
     return unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode("ascii")
 
 
+def radical_de_busca(termo):
+    """'modelos' -> 'modelo', 'servidores' -> 'servidor', 'configuracoes' -> 'configurac': o plural
+    do edital como prefixo FTS ("modelos"*) não casava "modelo" no texto da apostila — a parte
+    "modelos OSI e TCP/IP" achava só listas de questões, nunca a teoria."""
+    if len(termo) > 6 and termo.endswith(("oes", "aes", "aos")):
+        return termo[:-3]
+    if len(termo) > 6 and termo.endswith("es") and termo[-3] in "rzl":
+        return termo[:-2]
+    if len(termo) > 4 and termo.endswith("s") and not termo.endswith(("ss", "us", "is")):
+        return termo[:-1]
+    return termo
+
+
 def termos_de_busca(*textos):
     """'Atos administrativos: conceito, requisitos' -> ['atos', 'administrativos', 'requisitos']."""
     termos = []
@@ -171,7 +184,7 @@ class Acervo:
                     [r[0] for r in conn.execute("SELECT DISTINCT curso FROM arquivos") if r[0]], disciplina)
             arquivos = {}
             for parte in partes:
-                termos = termos_de_busca(alvo[parte])
+                termos = list(dict.fromkeys(radical_de_busca(t) for t in termos_de_busca(alvo[parte])))
                 for operador in (" AND ", " OR "):
                     query = operador.join(f'"{t}"*' for t in termos)
                     afim = self._hits(conn, query, limite_hits, afins) if afins else []

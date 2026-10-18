@@ -21,7 +21,7 @@ e classifica:
     ACERVO     em lugar nenhum — o acervo não tem
     SEM_TERMO  a questão não tem conceito listado (texto-base, gráfico, artigo de lei)
 
-Os conceitos vêm de um JSON {"<número>": ["conceito", "sinônimo", ...]} (--conceitos; o da
+Os conceitos vêm de um JSON {"<número>": ["conceito", ["sinônimo", "sinônimo"], ...]} (--conceitos; o da
 prova 2 está em integracao/diagnostico/conceitos-prova-2.json). Sem o arquivo, saem do
 campo `falta` do veredito, o que é ruidoso: prefira listar. Casamento por frase, sem acento,
 sem diferenciar maiúsculas; sigla curta ("NTP") pode casar por acaso — confira a página.
@@ -105,31 +105,42 @@ def no_acervo(indice_db, conceito):
     return sum(n for _, _, n in linhas), [f"{c}/{a} ({n})" for c, a, n in linhas[:3]]
 
 
+ORDEM_CAUSAS = ["ACERVO", "CADEIA", "CADEIA?", "ATRIBUICAO", "JULGADOR"]
+
+
+def onde_esta(conceito, questao, material, indice_db, nomes):
+    """(causa, evidências) de um termo: o lugar mais perto da questão onde ele aparece."""
+    no_assunto = material.buscar(conceito, questao["assuntoId"]) if questao.get("assuntoId") else []
+    if no_assunto:
+        return "JULGADOR", [f"S{s}-p{p}: {t}" for _, s, p, t in no_assunto]
+    no_concurso = material.buscar(conceito)
+    if no_concurso:
+        return "ATRIBUICAO", [f"{nomes.get(a, a)[:50]} · S{s}-p{p}: {t}" for a, s, p, t in no_concurso]
+    acervo = no_acervo(indice_db, conceito)
+    if acervo is None:
+        return "CADEIA?", ["índice do acervo não configurado (INDICE_DB)"]
+    if acervo[0]:
+        return "CADEIA", [f"{acervo[0]} pág. no acervo; " + "; ".join(acervo[1])]
+    return "ACERVO", ["nenhuma página no acervo"]
+
+
 def classificar(questao, conceitos, material, indice_db, nomes):
-    """Uma linha do diagnóstico para a questão: causa e as evidências de cada conceito."""
+    """Uma linha do diagnóstico para a questão: causa e as evidências de cada conceito.
+
+    Cada item de `conceitos` é um conceito: um texto, ou uma lista de sinônimos
+    (["hiperconvergente", "hiperconvergência"]) — basta um sinônimo aparecer, e vale o mais perto
+    da questão. Entre conceitos diferentes, a questão fica com o mais LONGE do material: se um
+    deles nem chegou, é ali o furo."""
     if not conceitos:
         return "SEM_TERMO", []
     evidencias, causas = [], []
-    for conceito in conceitos:
-        no_assunto = material.buscar(conceito, questao["assuntoId"]) if questao.get("assuntoId") else []
-        no_concurso = material.buscar(conceito) if not no_assunto else []
-        acervo = no_acervo(indice_db, conceito) if not no_assunto and not no_concurso else None
-        if no_assunto:
-            causa, onde = "JULGADOR", [f"S{s}-p{p}: {t}" for _, s, p, t in no_assunto]
-        elif no_concurso:
-            causa = "ATRIBUICAO"
-            onde = [f"{nomes.get(a, a)[:50]} · S{s}-p{p}: {t}" for a, s, p, t in no_concurso]
-        elif acervo is None:
-            causa, onde = "CADEIA?", ["índice do acervo não configurado (INDICE_DB)"]
-        elif acervo[0]:
-            causa, onde = "CADEIA", [f"{acervo[0]} pág. no acervo; " + "; ".join(acervo[1])]
-        else:
-            causa, onde = "ACERVO", ["nenhuma página no acervo"]
+    for item in conceitos:
+        sinonimos = item if isinstance(item, list) else [item]
+        achados = [(termo, *onde_esta(termo, questao, material, indice_db, nomes)) for termo in sinonimos]
+        termo, causa, onde = max(achados, key=lambda a: ORDEM_CAUSAS.index(a[1]))
         causas.append(causa)
-        evidencias.append((conceito, causa, onde))
-    # A causa da questão é a do conceito mais "longe" do material: se um conceito nem chegou, é aquele o furo.
-    ordem = ["ACERVO", "CADEIA", "CADEIA?", "ATRIBUICAO", "JULGADOR"]
-    return min(causas, key=ordem.index), evidencias
+        evidencias.append((" / ".join(sinonimos) if len(sinonimos) > 1 else termo, causa, onde))
+    return min(causas, key=ORDEM_CAUSAS.index), evidencias
 
 
 def conceitos_da_falta(falta):

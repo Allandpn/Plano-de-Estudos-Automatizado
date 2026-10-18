@@ -92,6 +92,15 @@ class PaginasTest(Base):
         self.assertEqual(5, paginas.total)
         self.assertEqual((12, 2), achadas[0][:2], "a página 2 do segmento 12 é a da camada de transporte")
 
+    def test_capa_de_rastreabilidade_nao_entra_na_busca(self):
+        capa = self.material / "blocos" / "redes" / "com-capa.pdf"
+        pdf(capa, ["Redes — protocolo de transporte confiável\nSumário de fontes (rastreabilidade) — página mesclada",
+                   "O TCP é um protocolo de transporte confiável."])
+        paginas = pj.PaginasDoAssunto([{"id": 7, "arquivo": "/material/blocos/redes/com-capa.pdf"}], self.material)
+
+        self.assertEqual(1, paginas.total)
+        self.assertEqual((7, 2), paginas.buscar(["protocolo", "transporte"])[0][:2], "a página 2 continua sendo a 2")
+
     def test_acento_nao_atrapalha_a_busca(self):
         paginas = pj.PaginasDoAssunto(self.assunto()["segmentos"], self.material)
 

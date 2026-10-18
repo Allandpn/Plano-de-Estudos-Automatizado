@@ -29,6 +29,7 @@ PAGINAS_POR_QUESTAO = 6
 MAX_TERMOS = 14
 MAX_CARACTERES_PAGINA = 2500
 TENTATIVAS_IA = 2
+MARCA_CAPA = "Sumário de fontes (rastreabilidade)"
 VEREDITOS = ("RESPONDIVEL", "PARCIAL", "NAO_RESPONDIVEL")
 
 SISTEMA = """Você julga se o material de estudo de um assunto permite justificar a alternativa CORRETA (o gabarito)
@@ -69,7 +70,9 @@ class PaginasDoAssunto:
                 with fitz.open(str(caminho)) as doc:
                     for numero, pagina in enumerate(doc, 1):
                         texto = pagina.get_text().strip()
-                        if texto:
+                        # A capa de rastreabilidade (dias/montar_dia.gerar_capa) repete o nome do
+                        # assunto e casava com quase toda questão, ocupando uma das 6 vagas.
+                        if texto and not (numero == 1 and MARCA_CAPA in texto):
                             self._db.execute("INSERT INTO p (texto, seg, pag) VALUES (?, ?, ?)", (texto, s["id"], numero))
                             self.total += 1
             except Exception as e:  # PyMuPDF lança vários tipos para arquivo ausente ou corrompido

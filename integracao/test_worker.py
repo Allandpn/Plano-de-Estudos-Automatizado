@@ -236,6 +236,17 @@ class AcervoTest(Base):
         self.assertIn(6, paginas)
         self.assertIn(25, paginas, "a região do NAT, depois da do VLAN, também aparece no mapa")
 
+    def test_plural_do_edital_casa_o_singular_da_apostila(self):
+        from acervo import radical_de_busca
+        self.assertEqual(["modelo", "servidor", "conteiner", "configurac", "rede", "ataque", "processo", "acesso"],
+                         [radical_de_busca(t) for t in ("modelos", "servidores", "conteineres", "configuracoes",
+                                                        "redes", "ataques", "processos", "acesso")])
+        acervo = self._indice_redes()
+        achados = acervo.candidatos_por_partes(["camadas OSI"])  # o texto diz "camadas"
+        self.assertTrue(achados)
+        singular = acervo.candidatos_por_partes(["modelos OSI"])  # o texto diz "modelo"
+        self.assertEqual("Area Fiscal/Ciencias da Computacao/computacao.pdf", singular[0]["arquivo"])
+
     def test_inicio_da_pagina_sem_numeracao_de_rodape(self):
         from acervo import inicio_da_pagina
         self.assertEqual("acerca de / a cerca de", inicio_da_pagina("17 39 acerca de / a cerca de"))

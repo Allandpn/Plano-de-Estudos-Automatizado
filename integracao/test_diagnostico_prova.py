@@ -61,6 +61,11 @@ class DiagnosticoTest(unittest.TestCase):
         self.assertEqual("ACERVO", self.causa(["VLAN", "PgBouncer"])[0])
         self.assertEqual("SEM_TERMO", self.causa([])[0])
 
+    def test_sinonimos_valem_pelo_mais_perto(self):
+        causa, evid = self.causa([["hiperconvergencia", "alta disponibilidade"]])
+        self.assertEqual("JULGADOR", causa, "um sinônimo ausente não derruba o grupo")
+        self.assertEqual("hiperconvergencia / alta disponibilidade", evid[0][0])
+
     def test_assunto_sem_segmento_cai_no_concurso_e_no_acervo(self):
         self.assertEqual("CADEIA", self.causa(["BGP"], assunto_id=10)[0])
 
