@@ -94,25 +94,19 @@ class Worker:
 
     def preparar(self, assunto, edital):
         nome, disciplina, chave = assunto["assunto"], assunto["disciplina"], assunto["chaveExterna"]
-        termos = termos_de_busca(nome)
-        rodadas = [self.acervo.candidatos(termos, disciplina=disciplina)]
-        if not rodadas[0]:
+        partes = triagem_ia.partes_do_assunto(nome)
+        # Uma busca por parte, nos cursos afins e no acervo inteiro ao mesmo tempo
+        # (Acervo.candidatos_por_partes): uma rodada só, com tudo o que cada parte achou.
+        candidatos = self.acervo.candidatos_por_partes(partes, disciplina=disciplina)
+        if not candidatos:
             return self._lacuna(chave, nome, "nenhuma página do acervo cita os termos do assunto")
-        # A disciplina do edital nem sempre bate com o nome da pasta do curso ("Ciências da
-        # Computação" não acha "Auditoria"): se a IA recusa o recorte, uma segunda rodada com o
-        # acervo inteiro, quando for diferente, antes de marcar a lacuna.
-        geral = self.acervo.candidatos(termos)
-        if [c["arquivo"] for c in geral] != [c["arquivo"] for c in rodadas[0]]:
-            rodadas.append(geral)
-        for candidatos in rodadas:
-            resultado = self._rodada(chave, nome, disciplina, edital, candidatos)
-            if resultado is True:
-                return True
+        resultado = self._rodada(chave, nome, disciplina, edital, partes, candidatos)
+        if resultado is True:
+            return True
         return self._lacuna(chave, nome, resultado)
 
-    def _rodada(self, chave, nome, disciplina, edital, candidatos):
+    def _rodada(self, chave, nome, disciplina, edital, partes, candidatos):
         """Uma rodada de triagem: True se importou os segmentos; senão, o motivo da lacuna."""
-        partes = triagem_ia.partes_do_assunto(nome)
         erros = None
         for tentativa in range(1, TENTATIVAS_IA + 1):
             pedido = triagem_ia.montar_pedido(nome, disciplina, partes, candidatos, erros)
@@ -134,19 +128,49 @@ class Worker:
                 log.info("%s: tentativa %d recusada pela validação (%d erro(s)).", nome, tentativa, len(erros))
                 continue
             self.sge.importar_segmentos(self._csv(chave, segmentos))
+            self._lacunas_parciais(chave, nome, disciplina, valor["lacunas"])
             log.info("%s: %d segmento(s) prontos.", nome, len(segmentos))
             return True
         return ("a seleção de páginas da IA não passou na validação: " + "; ".join((erros or [])[:3]))[:900]
 
-    def ensaiar(self, nome, disciplina, saida=print):
-        """Mostra a escolha da IA para um assunto, sem fatiar de verdade nem importar —
-        para avaliar a qualidade da triagem (python worker.py --ensaiar)."""
-        import re
-        candidatos = self.acervo.candidatos(termos_de_busca(nome), disciplina=disciplina)
-        saida(f"== {disciplina} — {nome}: {len(candidatos)} arquivo(s) candidato(s)")
-        if not candidatos:
+    def _lacunas_parciais(self, chave, nome, disciplina, lacunas):
+        """Parte do assunto que a IA declarou sem página, num assunto que ganhou material. O SGE
+        só registra lacuna do assunto inteiro (D-65): sem isto, o assunto aparecia PRONTO e a
+        parte que faltou não deixava rastro fora do _cobertura.md. Uma linha JSON por parte em
+        TRABALHO_DIR/lacunas-parciais.jsonl — a lista do que o acervo não ensina."""
+        if not lacunas:
             return
+        self.trabalho_dir.mkdir(parents=True, exist_ok=True)
+        with open(self.trabalho_dir / "lacunas-parciais.jsonl", "a", encoding="utf-8") as f:
+            for l in lacunas:
+                f.write(json.dumps({"quando": time.strftime("%Y-%m-%dT%H:%M:%S"), "chaveExterna": chave,
+                                    "disciplina": disciplina, "assunto": nome, "parte": l["subitem"],
+                                    "motivo": l["motivo"]}, ensure_ascii=False) + "\n")
+        log.info("%s: %d parte(s) sem material (lacunas-parciais.jsonl).", nome, len(lacunas))
+
+    def ensaiar(self, nome, disciplina, saida=print, busca="nova", sem_ia=False):
+        """Mostra os candidatos e a escolha da IA para um assunto, sem fatiar de verdade nem
+        importar — para avaliar a qualidade da triagem (python worker.py --ensaiar).
+        `busca="antiga"` usa a busca de antes (nome inteiro, um recorte), para comparar;
+        `sem_ia` só lista os candidatos, sem gastar cota."""
+        import re
         partes = triagem_ia.partes_do_assunto(nome)
+        if busca == "antiga":
+            candidatos = self.acervo.candidatos(termos_de_busca(nome), disciplina=disciplina)
+        else:
+            candidatos = self.acervo.candidatos_por_partes(partes, disciplina=disciplina)
+        saida(f"== {disciplina} — {nome}: {len(candidatos)} arquivo(s) candidato(s) (busca {busca})")
+        for i, c in enumerate(candidatos, 1):
+            paginas = [p["pagina"] for p in c["paginas"]]
+            faixa = f"p. {min(paginas)}–{max(paginas)}" if paginas else "-"
+            saida(f"   [A{i}] {c['arquivo'][-90:]}  ({len(paginas)} págs. citadas, {faixa})")
+            if c.get("partes"):
+                saida(f"        achado para: {'; '.join(c['partes'])[:150]}")
+        if busca != "antiga":
+            sem = [p for p in partes if not any(p in c.get("partes", []) for c in candidatos)]
+            saida(f"   partes sem nenhum candidato: {'; '.join(sem) if sem else 'nenhuma'}")
+        if not candidatos or sem_ia:
+            return
         tipo, valor = triagem_ia.interpretar(
             self.sge.completar(triagem_ia.SISTEMA, triagem_ia.montar_pedido(nome, disciplina, partes, candidatos)),
             candidatos)
@@ -156,6 +180,7 @@ class Worker:
         for f in valor["fontes"]:
             numeros = [int(n) for n in re.findall(r"\d+", f["paginas"])] or [0]
             saida(f"   {f['tipo']:<8} {f['paginas']:<10} {f['arquivo'][-70:]}")
+            saida(f"      cobre:  {'; '.join(f['cobre'])[:120]}")
             saida(f"      início: {self.acervo.inicio(f['arquivo'], numeros[0])[:80]}")
             saida(f"      fim:    {self.acervo.inicio(f['arquivo'], numeros[-1])[:80]}")
         for l in valor["lacunas"]:
@@ -166,7 +191,8 @@ class Worker:
             caminho.parent.mkdir(parents=True, exist_ok=True)
             caminho.write_text(json.dumps(manifesto, ensure_ascii=False), encoding="utf-8")
             _, segmentos = mb.montar_bloco(caminho, self.trabalho_dir / "ensaio", refatiar=True, so_validar=True)
-            saida(f"   validação: ok, {len(segmentos)} segmento(s)")
+            saida(f"   validação: ok, {len(segmentos)} segmento(s), "
+                  f"~{sum(s['tempo_estimado_min'] for s in segmentos)} min")
         except mb.ManifestoInvalido as e:
             saida("   validação: recusada — " + "; ".join(e.erros[:3]))
 
@@ -223,6 +249,9 @@ def main():
     ap.add_argument("--ensaiar", metavar="ASSUNTO",
                     help="Mostra a escolha da IA para um assunto, sem fatiar nem importar")
     ap.add_argument("--disciplina", default="", help="Disciplina do assunto de --ensaiar")
+    ap.add_argument("--busca", choices=("nova", "antiga"), default="nova",
+                    help="--ensaiar com a busca por parte (nova) ou a de antes (antiga), para comparar")
+    ap.add_argument("--sem-ia", action="store_true", help="--ensaiar só lista os candidatos, sem chamar a IA")
     args = ap.parse_args()
 
     env = os.environ
@@ -240,7 +269,7 @@ def main():
         int(env.get("MAX_POR_CICLO", "10")),
     )
     if args.ensaiar:
-        worker.ensaiar(args.ensaiar, args.disciplina)
+        worker.ensaiar(args.ensaiar, args.disciplina, busca=args.busca, sem_ia=args.sem_ia)
         return
     # Sprint 24 do SGE: provas e gabaritos. Só liga se PROVAS_DIR existir (o volume `provas`).
     provas = None

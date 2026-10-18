@@ -19,6 +19,9 @@ COPY dias/montar_bloco.py dias/montar_dia.py dias/
 COPY integracao/acervo.py integracao/sge_api.py integracao/triagem_ia.py integracao/worker.py integracao/
 COPY integracao/ia_comum.py integracao/prova_pdf.py integracao/prova_questoes.py integracao/prova_gabarito.py \
      integracao/prova_atribuicao.py integracao/prova_julgamento.py integracao/prova_worker.py integracao/
+# Diagnóstico de prova, sem IA: onde se perdeu o conteúdo que a prova cobrou (rodado à mão).
+COPY integracao/diagnostico_prova.py integracao/
+COPY integracao/diagnostico/ integracao/diagnostico/
 
 # Sem root: os volumes do material e das provas são os únicos lugares onde escreve.
 RUN useradd --uid 1000 --create-home worker

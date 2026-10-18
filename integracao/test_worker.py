@@ -172,6 +172,70 @@ class AcervoTest(Base):
                          cursos_da_disciplina(cursos, "Noções de Direito Administrativo"))
         self.assertEqual([], cursos_da_disciplina(cursos, "Contabilidade"))
 
+    def _indice_redes(self):
+        """O caso da auditoria (2026-10-18): um curso afim pelo nome que só fala de OSI, e o
+        curso que ensina o resto ("Redes e Segurança") com um nome que não casa com a
+        disciplina, e palavras comuns ("redes", "protocolos") espalhadas por toda parte."""
+        db = self.dir / "redes.db"
+        conn = sqlite3.connect(db)
+        conn.executescript(SCHEMA_INDICE)
+        arquivos = [
+            ("Area Fiscal\\Ciencias da Computacao", "computacao.pdf",
+             {range(1, 21): "redes protocolos redes protocolos modelo osi camadas tcp ip"}),
+            ("TSE\\06 - Redes e Seguranca", "aula 04 vlan.pdf",
+             {range(1, 6): "introducao", range(6, 16): "vlan 802.1q trunk switch redes",
+              range(16, 26): "nat traducao de enderecos privados redes"}),
+            ("TSE\\06 - Redes e Seguranca", "aula 09 vpn.pdf",
+             {range(1, 16): "vpn ipsec tunel redes protocolos"}),
+            ("Direito\\Constitucional", "cf.pdf", {range(1, 31): "redes protocolos de intencoes"}),
+        ]
+        for i, (curso, nome, paginas) in enumerate(arquivos, start=1):
+            total = max(max(r) for r in paginas)
+            conn.execute("INSERT INTO arquivos (caminho, curso, nome_arquivo, n_paginas) VALUES (?, ?, ?, ?)",
+                         (f"x{i}", curso, nome, total))
+            for faixa, texto in paginas.items():
+                for p in faixa:
+                    conn.execute("INSERT INTO paginas (arquivo_id, pagina, texto) VALUES (?, ?, ?)", (i, p, texto))
+        conn.commit()
+        conn.close()
+        return Acervo(db, self.acervo_dir)
+
+    def test_busca_por_parte_traz_um_arquivo_para_cada_parte(self):
+        acervo = self._indice_redes()
+        nome = "Infraestrutura e redes: modelos OSI, protocolos, VLAN, NAT, VPN"
+        disciplina = "Conhecimentos Específicos - Ciências da Computação"
+        from triagem_ia import partes_do_assunto
+
+        antiga = [c["arquivo"] for c in acervo.candidatos(termos_de_busca(nome), disciplina=disciplina)]
+        nova = acervo.candidatos_por_partes(partes_do_assunto(nome), disciplina=disciplina)
+
+        self.assertEqual(["Area Fiscal/Ciencias da Computacao/computacao.pdf"], antiga,
+                         "a busca de antes: só o curso afim pelo nome (o defeito)")
+        por_arquivo = {c["arquivo"]: c["partes"] for c in nova}
+        self.assertIn("VLAN", por_arquivo["TSE/06 - Redes e Seguranca/aula 04 vlan.pdf"])
+        self.assertIn("NAT", por_arquivo["TSE/06 - Redes e Seguranca/aula 04 vlan.pdf"])
+        self.assertIn("VPN", por_arquivo["TSE/06 - Redes e Seguranca/aula 09 vpn.pdf"])
+        self.assertIn("Infraestrutura e redes: modelos OSI",
+                      por_arquivo["Area Fiscal/Ciencias da Computacao/computacao.pdf"],
+                      "o título antes dos dois-pontos não entra na busca da parte")
+        # "protocolos" sozinho continua genérico ("protocolos de intenções" no Direito): parte
+        # vaga do edital traz candidato errado, e é a IA que recusa. Por isso o nome do assunto
+        # precisa ser fiel ao edital (que dizia "TCP, UDP, DNS, DHCP...", não "protocolos").
+
+    def test_parte_com_varios_termos_exige_todos_na_pagina(self):
+        acervo = self._indice_redes()
+        nova = acervo.candidatos_por_partes(["modelos OSI"], disciplina=None)
+        self.assertEqual("Area Fiscal/Ciencias da Computacao/computacao.pdf", nova[0]["arquivo"],
+                         "'modelos OSI' em E: a página do OSI, não a que só diz 'modelo' ou 'redes'")
+
+    def test_mapa_cobre_cada_regiao_de_ocorrencias(self):
+        acervo = self._indice_redes()
+        nova = acervo.candidatos_por_partes(["VLAN", "NAT"])
+        aula = next(c for c in nova if c["arquivo"].endswith("aula 04 vlan.pdf"))
+        paginas = [m["pagina"] for m in aula["mapa"]]
+        self.assertIn(6, paginas)
+        self.assertIn(25, paginas, "a região do NAT, depois da do VLAN, também aparece no mapa")
+
     def test_inicio_da_pagina_sem_numeracao_de_rodape(self):
         from acervo import inicio_da_pagina
         self.assertEqual("acerca de / a cerca de", inicio_da_pagina("17 39 acerca de / a cerca de"))
@@ -209,18 +273,43 @@ class WorkerTest(Base):
         self.assertEqual([("chave-atos", "a apostila só cita o termo")], sge.lacunas)
         self.assertEqual([], sge.importados)
 
-    def test_recorte_por_disciplina_recusado_tenta_o_acervo_inteiro_antes_da_lacuna(self):
+    def test_curso_afim_e_acervo_inteiro_vao_juntos_numa_rodada_so(self):
         recusa = {"sem_material": True, "motivo": "nao ensina"}
-        sge = SgeFalso([assunto("Conectivos", disciplina="Língua Portuguesa")], [recusa, recusa])
+        sge = SgeFalso([assunto("Conectivos", disciplina="Língua Portuguesa")], [recusa])
         w = wk.Worker(sge, self._indice_com_dois_cursos(), self.material, self.dir / "trabalho")
 
         w.ciclo()
 
-        self.assertEqual(2, len(sge.pedidos_ia), "recorte da disciplina, depois o acervo inteiro")
+        self.assertEqual(1, len(sge.pedidos_ia), "o acervo inteiro não espera a recusa do recorte")
         self.assertIn("gramatica.pdf", sge.pedidos_ia[0])
-        self.assertNotIn("logica.pdf", sge.pedidos_ia[0])
-        self.assertIn("logica.pdf", sge.pedidos_ia[1])
+        self.assertIn("logica.pdf", sge.pedidos_ia[0])
+        self.assertLess(sge.pedidos_ia[0].index("gramatica.pdf"), sge.pedidos_ia[0].index("logica.pdf"),
+                        "o curso afim vem primeiro")
         self.assertEqual([("chave-atos", "nao ensina")], sge.lacunas)
+
+    def test_parte_sem_pagina_num_assunto_com_material_fica_registrada(self):
+        com_lacuna = {"fontes": [{"arquivo": "A1", "paginas": "3-20", "cobre": ["Atos administrativos"]}],
+                      "lacunas": [{"subitem": "requisitos", "motivo": "nenhuma apostila trata"}]}
+        sge = SgeFalso([assunto()], [com_lacuna])
+
+        self.worker(sge).ciclo()
+
+        self.assertEqual(1, len(sge.importados), "o assunto ganha o material que existe")
+        linhas = (self.dir / "trabalho" / "lacunas-parciais.jsonl").read_text(encoding="utf-8").splitlines()
+        registro = json.loads(linhas[0])
+        self.assertEqual(("chave-atos", "requisitos", "nenhuma apostila trata"),
+                         (registro["chaveExterna"], registro["parte"], registro["motivo"]))
+
+    def test_ensaiar_sem_ia_so_lista_os_candidatos(self):
+        sge = SgeFalso([])
+        saida = []
+
+        self.worker(sge).ensaiar("Atos administrativos, requisitos", "Direito Administrativo",
+                                 saida=saida.append, sem_ia=True)
+
+        self.assertEqual([], sge.pedidos_ia)
+        self.assertIn("aula 03.pdf", "\n".join(saida))
+        self.assertIn("partes sem nenhum candidato: nenhuma", "\n".join(saida))
 
     def test_sem_recorte_diferente_uma_rodada_so(self):
         sge = SgeFalso([assunto()], [{"sem_material": True, "motivo": "nao ensina"}])

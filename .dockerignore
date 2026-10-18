@@ -13,3 +13,6 @@
 !integracao/prova_atribuicao.py
 !integracao/prova_julgamento.py
 !integracao/prova_worker.py
+!integracao/diagnostico_prova.py
+!integracao/diagnostico/
+!integracao/diagnostico/*.json

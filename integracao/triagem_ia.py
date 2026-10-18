@@ -24,7 +24,10 @@ Regras:
 - Use o "Início de cada página" para achar onde o tema COMEÇA e onde TERMINA: a faixa começa na
   página em que o tema começa e termina na página anterior àquela em que começa outro tema.
   Apostilas-resumo e listas de questões misturam temas lado a lado — pegue só o trecho deste
-  assunto, mesmo que isso dê faixas curtas. Na dúvida sobre uma página, deixe-a de fora.
+  assunto, mesmo que isso dê faixas curtas. Dentro do tema, pegue a explicação inteira, do começo
+  ao fim, com as questões comentadas dela: deixe de fora só o que é de outro tema.
+- Os arquivos vêm de buscas feitas PARTE POR PARTE ("Achado para"). Procure cobrir CADA parte com a
+  melhor explicação disponível antes de declará-la lacuna.
 - Não inclua páginas que só citam o termo de passagem, sumário, capa ou propaganda.
 - "cobre" lista exatamente os nomes das partes (como vieram) que aquela faixa ensina.
 - Toda parte precisa estar em "cobre" de alguma fonte OU em "lacunas" com motivo.
@@ -49,6 +52,8 @@ def montar_pedido(assunto, disciplina, partes, candidatos, erros_anteriores=None
     linhas.append("\nArquivos candidatos:")
     for i, c in enumerate(candidatos, 1):
         linhas.append(f"\n[A{i}] {c['arquivo']} ({c['n_paginas']} páginas)")
+        if c.get("partes"):
+            linhas.append("Achado para: " + "; ".join(c["partes"]))
         if c.get("sumario"):
             linhas.append("Sumário: " + "; ".join(f"{s['titulo']} (p. {s['pagina']})" for s in c["sumario"]))
         linhas.append("Ocorrências dos termos:")
