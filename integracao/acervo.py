@@ -38,6 +38,34 @@ def termos_de_busca(*textos):
     return termos
 
 
+# Palavras que as pastas de curso e as disciplinas dos editais repetem sem dizer o assunto.
+GENERICAS_DE_CURSO = {
+    "conhecimentos", "especificos", "gerais", "nocoes", "nocao", "curso", "cursos", "basico",
+    "passo", "estrategico", "especialidade", "regulares", "area", "fiscal", "lingua", "completo",
+    "regular", "sem", "correcao", "discursiva", "para", "concursos", "pos", "edital",
+}
+
+
+def radicais(texto):
+    """'Língua Portuguesa' -> {'portug'}: os 6 primeiros caracteres de cada palavra que diz
+    algo, para 'Portuguesa' (edital) casar com 'Português' (pasta do curso)."""
+    palavras = re.findall(r"[a-z0-9]+", sem_acento(texto or "").lower())
+    return {p[:6] for p in palavras if len(p) >= 4 and p not in GENERICAS_DE_CURSO}
+
+
+def cursos_da_disciplina(cursos, disciplina):
+    """Das pastas de curso do acervo, as mais afins à disciplina do edital: as que dividem
+    pelo menos metade (arredondada para cima) dos radicais do melhor casamento. Vazio se
+    nenhuma divide palavra com a disciplina."""
+    alvo = radicais(disciplina)
+    pontos = {c: len(alvo & radicais(c)) for c in cursos}
+    melhor = max(pontos.values(), default=0)
+    if melhor == 0:
+        return []
+    corte = -(-melhor // 2)
+    return [c for c, p in pontos.items() if p >= corte]
+
+
 def caminho_relativo(curso, nome_arquivo):
     """Junta curso + nome no padrão POSIX, aceitando curso gravado com barra invertida (Windows)."""
     partes = [p for p in PureWindowsPath(curso or "").parts if p not in ("", ".")]
@@ -58,28 +86,31 @@ class Acervo:
         return self.raiz / Path(relativo)
 
     def candidatos(self, termos, max_arquivos=6, max_paginas_por_arquivo=12, limite_hits=150,
-                   margem_mapa=3, max_mapa=45):
+                   margem_mapa=3, max_mapa=45, disciplina=None):
         """Os arquivos com mais páginas citando os termos, cada um com as páginas que citam
         (e o trecho), o sumário (bookmarks) e o **mapa**: o início de cada página da região
         das ocorrências. Sem o mapa, a IA não via onde um tema termina e o vizinho começa, e
         as faixas transbordavam (acentuação dentro de crase — achado na primeira preparação
-        real, 2026-10-17). Ordem: mais relevante primeiro."""
+        real, 2026-10-17). Ordem: mais relevante primeiro.
+
+        Com `disciplina`, a busca se restringe primeiro aos cursos afins a ela (cursos_da_disciplina).
+        Sem isso, assunto de nome genérico ("Conectivos", "Morfossintaxe") trazia os 6 melhores
+        arquivos de outra disciplina e a IA, certa, devolvia "não ensina" — 12 falsos
+        sem-material na primeira preparação real (SEFAZ SC, 2026-10-17). Sem curso afim, ou se
+        a busca restrita não acha nada, vale a busca no acervo inteiro."""
         if not termos:
             return []
         query = " OR ".join(f'"{t}"*' for t in termos)
         # closing: o `with` de sqlite3 só faz commit, não fecha a conexão.
         with closing(self._conectar()) as conn:
-            linhas = conn.execute(
-                """SELECT a.id, a.curso, a.nome_arquivo, a.n_paginas, p.pagina,
-                          snippet(paginas_fts, 0, '[', ']', '…', 24) AS trecho,
-                          bm25(paginas_fts) AS score
-                   FROM paginas_fts
-                   JOIN paginas p ON p.id = paginas_fts.rowid
-                   JOIN arquivos a ON a.id = p.arquivo_id
-                   WHERE paginas_fts MATCH ?
-                   ORDER BY score LIMIT ?""",
-                (query, limite_hits),
-            ).fetchall()
+            linhas = []
+            if disciplina:
+                cursos = cursos_da_disciplina(
+                    [r[0] for r in conn.execute("SELECT DISTINCT curso FROM arquivos") if r[0]], disciplina)
+                if cursos:
+                    linhas = self._hits(conn, query, limite_hits, cursos)
+            if not linhas:
+                linhas = self._hits(conn, query, limite_hits)
             por_arquivo = {}
             for l in linhas:
                 item = por_arquivo.setdefault(l["id"], {
@@ -104,6 +135,21 @@ class Acervo:
                 item["mapa"] = self._mapa(conn, arquivo_id, sorted(item.pop("_todas")), item["n_paginas"], margem_mapa, max_mapa)
                 resultado.append(item)
             return resultado
+
+    @staticmethod
+    def _hits(conn, query, limite, cursos=None):
+        filtro = f"AND a.curso IN ({','.join('?' * len(cursos))})" if cursos else ""
+        return conn.execute(
+            f"""SELECT a.id, a.curso, a.nome_arquivo, a.n_paginas, p.pagina,
+                       snippet(paginas_fts, 0, '[', ']', '…', 24) AS trecho,
+                       bm25(paginas_fts) AS score
+                FROM paginas_fts
+                JOIN paginas p ON p.id = paginas_fts.rowid
+                JOIN arquivos a ON a.id = p.arquivo_id
+                WHERE paginas_fts MATCH ? {filtro}
+                ORDER BY score LIMIT ?""",
+            (query, *(cursos or ()), limite),
+        ).fetchall()
 
     def inicio(self, relativo, pagina):
         """Começo do texto de uma página de um arquivo do acervo (para conferir uma escolha)."""

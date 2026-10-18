@@ -100,6 +100,25 @@ class Base(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
+    def _indice_com_dois_cursos(self):
+        """Mesmas palavras em duas disciplinas: 'Conectivos' lógicos (muitas ocorrências, vence
+        o bm25 sozinho) e conectivos gramaticais, em pastas de curso diferentes."""
+        db = self.dir / "dois.db"
+        conn = sqlite3.connect(db)
+        conn.executescript(SCHEMA_INDICE)
+        for i, (curso, nome, texto, paginas) in enumerate([
+                ("10 - Cursos Regulares\\18 - Raciocínio Lógico e Matemática", "logica.pdf",
+                 "conectivos logicos conectivos conectivos conjuncao disjuncao", 20),
+                ("10 - Cursos Regulares\\17 - Curso Básico de Português", "gramatica.pdf",
+                 "conectivos conjuncoes preposicoes", 5)], start=1):
+            conn.execute("INSERT INTO arquivos (caminho, curso, nome_arquivo, n_paginas) VALUES (?, ?, ?, ?)",
+                         (f"x{i}", curso, nome, paginas))
+            for p in range(1, paginas + 1):
+                conn.execute("INSERT INTO paginas (arquivo_id, pagina, texto) VALUES (?, ?, ?)", (i, p, texto))
+        conn.commit()
+        conn.close()
+        return Acervo(db, self.acervo_dir)
+
     def worker(self, sge):
         return wk.Worker(sge, Acervo(self.indice, self.acervo_dir), self.material, self.dir / "trabalho")
 
@@ -124,6 +143,34 @@ class AcervoTest(Base):
         self.assertEqual(1, min(mapa))
         self.assertEqual(23, max(mapa))
         self.assertTrue(mapa[22].startswith("outro tema"), "o mapa mostra onde o tema vizinho começa")
+
+    def test_disciplina_restringe_a_busca_aos_cursos_afins(self):
+        acervo = self._indice_com_dois_cursos()
+        termos = termos_de_busca("Conectivos")
+        sem = [c["arquivo"] for c in acervo.candidatos(termos)]
+        self.assertTrue(sem[0].endswith("logica.pdf"), "sem disciplina, o tema vizinho vence (o defeito)")
+        com = [c["arquivo"] for c in acervo.candidatos(termos, disciplina="Língua Portuguesa")]
+        self.assertEqual(1, len(com))
+        self.assertTrue(com[0].endswith("gramatica.pdf"), "Portuguesa casa com Português")
+
+    def test_disciplina_sem_curso_afim_ou_sem_resultado_cai_na_busca_geral(self):
+        acervo = self._indice_com_dois_cursos()
+        termos = termos_de_busca("Conectivos")
+        geral = [c["arquivo"] for c in acervo.candidatos(termos)]
+        self.assertEqual(geral, [c["arquivo"] for c in acervo.candidatos(termos, disciplina="Contabilidade")])
+        # Curso afim existe, mas nele o termo não aparece: não devolve vazio, devolve o geral.
+        so_logica = termos_de_busca("conjuncao disjuncao")
+        self.assertEqual([c["arquivo"] for c in acervo.candidatos(so_logica)],
+                         [c["arquivo"] for c in acervo.candidatos(so_logica, disciplina="Língua Portuguesa")])
+
+    def test_radicais_e_afinidade(self):
+        from acervo import radicais, cursos_da_disciplina
+        self.assertEqual({"portug"}, radicais("Língua Portuguesa"))
+        self.assertEqual({"portug"}, radicais("10 - Área Fiscal\\17 - Curso Básico de Português"))
+        cursos = ["A\\Curso Básico de Direito Administrativo", "A\\Direito Constitucional", "A\\Português"]
+        self.assertEqual(["A\\Curso Básico de Direito Administrativo", "A\\Direito Constitucional"],
+                         cursos_da_disciplina(cursos, "Noções de Direito Administrativo"))
+        self.assertEqual([], cursos_da_disciplina(cursos, "Contabilidade"))
 
     def test_inicio_da_pagina_sem_numeracao_de_rodape(self):
         from acervo import inicio_da_pagina
@@ -161,6 +208,26 @@ class WorkerTest(Base):
 
         self.assertEqual([("chave-atos", "a apostila só cita o termo")], sge.lacunas)
         self.assertEqual([], sge.importados)
+
+    def test_recorte_por_disciplina_recusado_tenta_o_acervo_inteiro_antes_da_lacuna(self):
+        recusa = {"sem_material": True, "motivo": "nao ensina"}
+        sge = SgeFalso([assunto("Conectivos", disciplina="Língua Portuguesa")], [recusa, recusa])
+        w = wk.Worker(sge, self._indice_com_dois_cursos(), self.material, self.dir / "trabalho")
+
+        w.ciclo()
+
+        self.assertEqual(2, len(sge.pedidos_ia), "recorte da disciplina, depois o acervo inteiro")
+        self.assertIn("gramatica.pdf", sge.pedidos_ia[0])
+        self.assertNotIn("logica.pdf", sge.pedidos_ia[0])
+        self.assertIn("logica.pdf", sge.pedidos_ia[1])
+        self.assertEqual([("chave-atos", "nao ensina")], sge.lacunas)
+
+    def test_sem_recorte_diferente_uma_rodada_so(self):
+        sge = SgeFalso([assunto()], [{"sem_material": True, "motivo": "nao ensina"}])
+
+        self.worker(sge).ciclo()
+
+        self.assertEqual(1, len(sge.pedidos_ia), "mesmos candidatos: não gasta a IA duas vezes")
 
     def test_recusada_uma_vez_tenta_de_novo_com_os_erros(self):
         invalida = {"fontes": [{"arquivo": "A1", "paginas": "3-99", "cobre": ["Atos administrativos", "requisitos"]}]}

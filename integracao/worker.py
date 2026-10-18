@@ -94,10 +94,24 @@ class Worker:
 
     def preparar(self, assunto, edital):
         nome, disciplina, chave = assunto["assunto"], assunto["disciplina"], assunto["chaveExterna"]
-        candidatos = self.acervo.candidatos(termos_de_busca(nome))
-        if not candidatos:
+        termos = termos_de_busca(nome)
+        rodadas = [self.acervo.candidatos(termos, disciplina=disciplina)]
+        if not rodadas[0]:
             return self._lacuna(chave, nome, "nenhuma página do acervo cita os termos do assunto")
+        # A disciplina do edital nem sempre bate com o nome da pasta do curso ("Ciências da
+        # Computação" não acha "Auditoria"): se a IA recusa o recorte, uma segunda rodada com o
+        # acervo inteiro, quando for diferente, antes de marcar a lacuna.
+        geral = self.acervo.candidatos(termos)
+        if [c["arquivo"] for c in geral] != [c["arquivo"] for c in rodadas[0]]:
+            rodadas.append(geral)
+        for candidatos in rodadas:
+            resultado = self._rodada(chave, nome, disciplina, edital, candidatos)
+            if resultado is True:
+                return True
+        return self._lacuna(chave, nome, resultado)
 
+    def _rodada(self, chave, nome, disciplina, edital, candidatos):
+        """Uma rodada de triagem: True se importou os segmentos; senão, o motivo da lacuna."""
         partes = triagem_ia.partes_do_assunto(nome)
         erros = None
         for tentativa in range(1, TENTATIVAS_IA + 1):
@@ -112,7 +126,7 @@ class Worker:
                 erros = [f"resposta ilegível: {e}"]
                 continue
             if tipo == "sem_material":
-                return self._lacuna(chave, nome, valor)
+                return valor
             try:
                 segmentos = self._fatiar(chave, edital, disciplina, nome, partes, valor)
             except mb.ManifestoInvalido as e:
@@ -122,14 +136,13 @@ class Worker:
             self.sge.importar_segmentos(self._csv(chave, segmentos))
             log.info("%s: %d segmento(s) prontos.", nome, len(segmentos))
             return True
-        motivo = "a seleção de páginas da IA não passou na validação: " + "; ".join((erros or [])[:3])
-        return self._lacuna(chave, nome, motivo[:900])
+        return ("a seleção de páginas da IA não passou na validação: " + "; ".join((erros or [])[:3]))[:900]
 
     def ensaiar(self, nome, disciplina, saida=print):
         """Mostra a escolha da IA para um assunto, sem fatiar de verdade nem importar —
         para avaliar a qualidade da triagem (python worker.py --ensaiar)."""
         import re
-        candidatos = self.acervo.candidatos(termos_de_busca(nome))
+        candidatos = self.acervo.candidatos(termos_de_busca(nome), disciplina=disciplina)
         saida(f"== {disciplina} — {nome}: {len(candidatos)} arquivo(s) candidato(s)")
         if not candidatos:
             return
