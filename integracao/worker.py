@@ -31,6 +31,10 @@ Configuração (variáveis de ambiente):
     TRABALHO_DIR     manifestos gerados       (padrão: MATERIAL_DIR/.manifestos)
     INTERVALO_SEG    300
     MAX_POR_CICLO    10
+    PROVAS_DIR       volume `provas` do SGE (Sprint 24): entrada/ (o SGE grava) e paginas/ (o worker grava);
+                     sem ele, o worker só prepara o material e não lê provas
+    OCR_IDIOMA       por                      (Tesseract, para prova em imagem)
+    OCR_PSM          3                        (segmentação de página do Tesseract; 3 = automática)
 """
 
 import argparse
@@ -227,8 +231,9 @@ def main():
         log.error("Configure: %s", ", ".join(faltando))
         sys.exit(1)
     material = env["MATERIAL_DIR"]
+    sge = SgeApi(env.get("SGE_URL", "http://app:8080"), env["INTERNAL_TOKEN"])
     worker = Worker(
-        SgeApi(env.get("SGE_URL", "http://app:8080"), env["INTERNAL_TOKEN"]),
+        sge,
         Acervo(env["INDICE_DB"], env["ACERVO_DIR"]),
         material,
         env.get("TRABALHO_DIR", str(Path(material) / ".manifestos")),
@@ -237,12 +242,20 @@ def main():
     if args.ensaiar:
         worker.ensaiar(args.ensaiar, args.disciplina)
         return
+    # Sprint 24 do SGE: provas e gabaritos. Só liga se PROVAS_DIR existir (o volume `provas`).
+    provas = None
+    if env.get("PROVAS_DIR"):
+        from prova_pdf import Tesseract
+        from prova_worker import WorkerProvas
+        provas = WorkerProvas(sge, env["PROVAS_DIR"], material,
+                              Tesseract(env.get("OCR_IDIOMA", "por"), int(env.get("OCR_PSM", "3"))))
     intervalo = int(env.get("INTERVALO_SEG", "300"))
     while True:
-        try:
-            worker.ciclo()
-        except ErroSge as e:
-            log.warning("SGE indisponível: %s", e)
+        for ciclo in filter(None, (worker.ciclo, provas.ciclo if provas else None)):
+            try:
+                ciclo()
+            except ErroSge as e:
+                log.warning("SGE indisponível: %s", e)
         if args.uma_vez:
             break
         time.sleep(intervalo)

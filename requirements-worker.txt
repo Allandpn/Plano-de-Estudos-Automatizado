@@ -1,4 +1,6 @@
-# Dependências do worker do material (integracao/worker.py), o contêiner que roda no Pi
-# ao lado do SGE. Só o fatiador precisa delas; busca no índice e HTTP são biblioteca padrão.
+# Dependências do worker (integracao/worker.py), o contêiner que roda no Pi ao lado do SGE.
+# O fatiador e o leitor de provas precisam delas; busca no índice e HTTP são biblioteca padrão.
 pypdf==6.17.0
 reportlab==5.0.1
+# Ler o PDF da prova (texto e imagens das páginas) para o worker das provas — Sprint 24 do SGE.
+pymupdf==1.28.0

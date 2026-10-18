@@ -6,3 +6,10 @@
 !integracao/sge_api.py
 !integracao/triagem_ia.py
 !integracao/worker.py
+!integracao/ia_comum.py
+!integracao/prova_pdf.py
+!integracao/prova_questoes.py
+!integracao/prova_gabarito.py
+!integracao/prova_atribuicao.py
+!integracao/prova_julgamento.py
+!integracao/prova_worker.py
