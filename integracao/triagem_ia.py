@@ -16,28 +16,36 @@ import re
 
 SISTEMA = """Você faz a triagem de material de estudo para concurso público.
 Recebe um assunto do edital, dividido em partes, e trechos de apostilas encontrados por busca
-no acervo do usuário. Escolhe as páginas que ENSINAM cada parte do assunto.
+no acervo do usuário. Escolhe o material que ENSINA cada parte do assunto.
+
+O princípio: É MELHOR PECAR POR EXCESSO DO QUE POR FALTA. Um subtema que fica de fora pode custar a
+questão que reprova; uma página a mais custa só minutos de leitura.
 
 Regras:
-- Use só os arquivos e as páginas listados. Páginas são a posição no PDF (1 = primeira).
-- Prefira faixas contínuas ("12-30"). Não repita o mesmo conteúdo de duas apostilas: escolha a melhor.
-- Use o "Início de cada página" para achar onde o tema COMEÇA e onde TERMINA: a faixa começa na
-  página em que o tema começa e termina na página anterior àquela em que começa outro tema.
-  Apostilas-resumo e listas de questões misturam temas lado a lado — pegue só o trecho deste
-  assunto, mesmo que isso dê faixas curtas. Dentro do tema, pegue a explicação inteira, do começo
-  ao fim, com as questões comentadas dela: deixe de fora só o que é de outro tema.
-- Os arquivos vêm de buscas feitas PARTE POR PARTE ("Achado para"). Procure cobrir CADA parte com a
-  melhor explicação disponível antes de declará-la lacuna.
-- Não inclua páginas que só citam o termo de passagem, sumário, capa ou propaganda.
-- "cobre" lista exatamente os nomes das partes (como vieram) que aquela faixa ensina.
+- Use só os arquivos listados. Páginas são a posição no PDF (1 = primeira).
+- A unidade preferida é a AULA INTEIRA. Se o arquivo é uma aula sobre a parte (pela abertura, pelo
+  sumário ou porque o tema ocupa boa parte dela), devolva "inteira": true: entra a aula toda, com
+  teoria, questões comentadas, lista de exercícios e resumo. Não recorte uma aula que é do tema.
+- Faixa de páginas só em arquivo que mistura temas sem relação (resumo de várias matérias, simulado,
+  lei comentada, curso "passo estratégico"): a faixa começa onde o tema começa e vai até onde começa
+  outro tema, com as questões dele. Use o "Início de cada página" para achar esses pontos. Na dúvida
+  sobre uma página, INCLUA.
+- Os arquivos vêm de buscas feitas PARTE POR PARTE ("Achado para"). Cubra CADA parte; só declare
+  lacuna depois de olhar todos os arquivos.
+- Cursos diferentes costumam ter a mesma aula: não inclua duas vezes o mesmo conteúdo. Se uma segunda
+  aula traz algo que a primeira não traz, inclua as duas.
+- Não use arquivo que só cita o termo de passagem.
+- "cobre" lista exatamente os nomes das partes (como vieram) que aquela fonte ensina.
 - Toda parte precisa estar em "cobre" de alguma fonte OU em "lacunas" com motivo.
-- Questões comentadas e resumos entram com "tipo": "fixacao"; teoria com "tipo": "teoria".
+- Aula inteira e teoria: "tipo": "teoria". Faixa só de questões comentadas ou resumo: "tipo": "fixacao".
 - Se nada no material ensina o assunto, responda {"sem_material": true, "motivo": "..."}.
 
 Responda só JSON, neste formato:
-{"fontes": [{"arquivo": "<id do arquivo>", "paginas": "12-30", "rotulo": "<curto>",
-             "cobre": ["<parte>"], "tipo": "teoria"}],
- "lacunas": [{"subitem": "<parte>", "motivo": "<por que não há página>"}]}"""
+{"fontes": [{"arquivo": "<id do arquivo>", "inteira": true, "rotulo": "<curto>", "cobre": ["<parte>"],
+             "tipo": "teoria"},
+            {"arquivo": "<id do arquivo>", "paginas": "12-30", "rotulo": "<curto>", "cobre": ["<parte>"],
+             "tipo": "teoria"}],
+ "lacunas": [{"subitem": "<parte>", "motivo": "<por que não há material>"}]}"""
 
 
 def partes_do_assunto(nome):
@@ -54,6 +62,8 @@ def montar_pedido(assunto, disciplina, partes, candidatos, erros_anteriores=None
         linhas.append(f"\n[A{i}] {c['arquivo']} ({c['n_paginas']} páginas)")
         if c.get("partes"):
             linhas.append("Achado para: " + "; ".join(c["partes"]))
+        if c.get("abertura"):
+            linhas.append("Abertura (p. 1-2): " + c["abertura"])
         if c.get("sumario"):
             linhas.append("Sumário: " + "; ".join(f"{s['titulo']} (p. {s['pagina']})" for s in c["sumario"]))
         linhas.append("Ocorrências dos termos:")
@@ -81,9 +91,12 @@ def interpretar(conteudo, candidatos):
     if dados.get("sem_material"):
         return "sem_material", (dados.get("motivo") or "a IA não achou material que ensine o assunto").strip()
     ids = {f"A{i}": c["arquivo"] for i, c in enumerate(candidatos, 1)}
+    total = {f"A{i}": c.get("n_paginas") for i, c in enumerate(candidatos, 1)}
     fontes = []
     for f in dados.get("fontes") or []:
         ident = str(f.get("arquivo", "")).strip().strip("[]")
+        if f.get("inteira") is True and total.get(ident):
+            f = dict(f, paginas=f"1-{total[ident]}")  # aula inteira: da primeira à última página
         fontes.append({
             "arquivo": ids.get(ident, ident),  # id desconhecido: o validador recusa por arquivo inexistente
             "paginas": str(f.get("paginas", "")),

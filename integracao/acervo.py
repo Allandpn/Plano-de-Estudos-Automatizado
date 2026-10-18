@@ -215,9 +215,20 @@ class Acervo:
                     item["score"] += -l["score"]
                     item["_paginas"][l["pagina"]] = l["trecho"]
             limite = min(max_arquivos, max(min_arquivos, 2 * len(partes)))
-            ordenados = sorted(arquivos.items(), key=lambda kv: (-len(kv[1]["partes"]), not kv[1]["_afim"], -kv[1]["score"]))[:limite]
-            resultado = []
+            ordenados = sorted(arquivos.items(), key=lambda kv: (-len(kv[1]["partes"]), not kv[1]["_afim"], -kv[1]["score"]))
+            resultado, vistos = [], {}
             for arquivo_id, item in ordenados:
+                # A mesma aula aparece em vários cursos (mesmo PDF, nome diferente): fica a primeira,
+                # com as partes das duas, e a vaga vai para outro arquivo.
+                abertura = self._abertura(conn, arquivo_id)
+                gemea = vistos.get((item["n_paginas"], abertura)) if abertura else None
+                if gemea is not None:
+                    gemea["partes"] += [p for p in item["partes"] if p not in gemea["partes"]]
+                    continue
+                if len(resultado) >= limite:
+                    break
+                vistos[(item["n_paginas"], abertura)] = item
+                item["abertura"] = abertura
                 todas = sorted(item.pop("_paginas").items())
                 item["paginas"] = [{"pagina": p, "trecho": t} for p, t in todas[:max_paginas_por_arquivo]]
                 item["sumario"] = [
@@ -231,6 +242,13 @@ class Acervo:
                 del item["score"], item["_por_parte"], item["_afim"]
                 resultado.append(item)
             return resultado
+
+    @staticmethod
+    def _abertura(conn, arquivo_id, tamanho=110):
+        """O começo das páginas 1 e 2: título e apresentação da aula, para a IA saber do que ela trata."""
+        textos = [inicio_da_pagina(t, tamanho) for (t,) in conn.execute(
+            "SELECT texto FROM paginas WHERE arquivo_id = ? AND pagina IN (1, 2) ORDER BY pagina", (arquivo_id,))]
+        return " | ".join(t for t in textos if t)
 
     @staticmethod
     def _melhores(linhas, n):

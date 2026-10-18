@@ -236,6 +236,24 @@ class AcervoTest(Base):
         self.assertIn(6, paginas)
         self.assertIn(25, paginas, "a região do NAT, depois da do VLAN, também aparece no mapa")
 
+    def test_mesma_aula_em_dois_cursos_entra_uma_vez(self):
+        db = self.dir / "gemeas.db"
+        conn = sqlite3.connect(db)
+        conn.executescript(SCHEMA_INDICE)
+        for i, curso in enumerate(["00 - Curso Regular\\09 - Redes", "58 - Especialidade TI - Redes"], start=1):
+            conn.execute("INSERT INTO arquivos (caminho, curso, nome_arquivo, n_paginas) VALUES (?, ?, ?, 10)",
+                         (f"x{i}", curso, f"aula 04 ({i}).pdf"))
+            for p in range(1, 11):
+                conn.execute("INSERT INTO paginas (arquivo_id, pagina, texto) VALUES (?, ?, ?)",
+                             (i, p, "Aula 04 - VLAN e 802.1Q" if p == 1 else "vlan trunk 802.1q"))
+        conn.commit()
+        conn.close()
+
+        achados = Acervo(db, self.acervo_dir).candidatos_por_partes(["VLAN"])
+
+        self.assertEqual(1, len(achados), "a gêmea de outro curso não ocupa vaga")
+        self.assertTrue(achados[0]["abertura"].startswith("Aula 04 - VLAN"))
+
     def test_plural_do_edital_casa_o_singular_da_apostila(self):
         from acervo import radical_de_busca
         self.assertEqual(["modelo", "servidor", "conteiner", "configurac", "rede", "ataque", "processo", "acesso"],
@@ -310,6 +328,18 @@ class WorkerTest(Base):
         registro = json.loads(linhas[0])
         self.assertEqual(("chave-atos", "requisitos", "nenhuma apostila trata"),
                          (registro["chaveExterna"], registro["parte"], registro["motivo"]))
+
+    def test_aula_inteira_vira_da_primeira_a_ultima_pagina(self):
+        inteira = {"fontes": [{"arquivo": "A1", "inteira": True, "cobre": ["Atos administrativos", "requisitos"]}],
+                   "lacunas": []}
+        sge = SgeFalso([assunto()], [inteira])
+
+        self.worker(sge).ciclo()
+
+        self.assertEqual(1, len(sge.importados))
+        manifesto = json.loads((self.dir / "trabalho" / "chave-atos.json").read_text(encoding="utf-8"))
+        self.assertEqual("1-30", manifesto["fontes"][0]["paginas"], "a aula toda, com as questões e o resumo")
+        self.assertIn("MELHOR PECAR POR EXCESSO", __import__("triagem_ia").SISTEMA)
 
     def test_ensaiar_sem_ia_so_lista_os_candidatos(self):
         sge = SgeFalso([])
