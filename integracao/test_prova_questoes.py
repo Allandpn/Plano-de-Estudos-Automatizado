@@ -173,6 +173,39 @@ class OcrTest(unittest.TestCase):
             self.assertNotIn("TJUCE", q.alternativas[-1][1], "o rodapé repetido sai antes de grudar na alternativa E")
             self.assertNotIn("IIII", q.alternativas[-1][1], "o código de barras (baixa confiança) é ruído")
 
+    def test_marcador_que_o_ocr_leu_mal_vale_na_posicao_esperada(self):
+        # Achado na prova real da FCC: "(B)" lido como "(8)" e "(C)" como "(Cc)".
+        linhas = [L("1. Enunciado sobre o primeiro tema.", 1, 93.0, 1), L("(A) primeira", 1, 93.0, 1),
+                  L("(8) segunda", 1, 93.0, 1), L("(Cc) terceira", 1, 93.0, 1), L("(D) quarta", 1, 93.0, 1),
+                  L("(E) quinta", 1, 93.0, 1)]
+
+        q = pq.segmentar(linhas).questoes[0]
+
+        self.assertEqual(["A", "B", "C", "D", "E"], [l for l, _ in q.alternativas])
+        self.assertEqual("segunda", q.alternativas[1][1])
+
+    def test_numero_sozinho_com_ponto_abre_a_questao(self):
+        linhas = [L("1. Primeiro enunciado completo.", 1, 93.0, 1)] + alternativas(conf=93.0, imagem=1)
+        linhas += [L("2.", 1, 93.0, 1), L("Segundo enunciado diferente.", 1, 93.0, 1)] + alternativas(conf=93.0, imagem=1)
+
+        seg = pq.segmentar(linhas)
+
+        self.assertEqual([1, 2], [q.numero for q in seg.questoes])
+        self.assertEqual("Segundo enunciado diferente.", seg.questoes[1].enunciado)
+
+    def test_questao_com_numero_perdido_e_recuperada_do_fim_da_anterior(self):
+        # O OCR não leu "2.": o texto dela veio colado depois da alternativa E da questão 1.
+        linhas = [L("1. Primeiro enunciado completo.", 1, 93.0, 1)] + alternativas(conf=93.0, imagem=1)
+        linhas += [L("Segundo enunciado sem número lido.", 1, 93.0, 1)] + alternativas(conf=93.0, imagem=1)
+        linhas += [L("3. Terceiro enunciado diferente.", 1, 93.0, 1)] + alternativas(conf=93.0, imagem=1)
+
+        seg = pq.segmentar(linhas)
+
+        self.assertEqual([1, 2, 3], [q.numero for q in seg.questoes])
+        self.assertEqual(["Segundo enunciado sem número lido."], [seg.questoes[1].enunciado])
+        self.assertEqual(5, len(seg.questoes[1].alternativas))
+        self.assertNotIn("Segundo", seg.questoes[0].alternativas[-1][1], "a E da questão 1 não engole a questão 2")
+
     def test_pagina_origem_e_a_imagem_onde_a_questao_comeca(self):
         seg = pq.segmentar(self.prova_fcc())
 

@@ -36,7 +36,30 @@ MIN_ALTERNATIVAS = 4
 MIN_ALTERNATIVAS_PARA_FECHAR = 2
 
 R_ALT = re.compile(r"^\s*\(?([A-E])\)\s*(.*)$")
-R_NUM_SOZINHO = re.compile(r"^\s*(\d{1,3})\s*$")
+# O marcador como o OCR o escreve: "(8)" para B, "(Cc)" para C. Só vale em bloco de OCR e só na
+# posição esperada da sequência A, B, C... (achado na prova real da FCC, questão 10).
+R_MARCADOR_OCR = re.compile(r"^\s*[(\[]?\s*([A-Za-z0-9|@€]{1,2})\s*[)\]]\s*(.*)$")
+CONFUSOES_OCR = {
+    "A": {"A", "a", "4", "@"},
+    "B": {"B", "b", "8", "6"},
+    "C": {"C", "c", "Cc", "cc", "e", "G", "Gc", "€"},
+    "D": {"D", "d", "0", "O", "o", "Dl", "Di"},
+    "E": {"E", "e", "F"},
+}
+
+
+def _letras_possiveis(texto, ocr):
+    """As letras de alternativa que esta linha pode estar marcando: a letra, se está escrita direito;
+    num bloco de OCR, também as que o OCR costuma confundir com o que está escrito."""
+    m = R_ALT.match(texto)
+    if m:
+        return {m.group(1)}
+    if ocr:
+        m = R_MARCADOR_OCR.match(texto)
+        if m:
+            return {letra for letra, variantes in CONFUSOES_OCR.items() if m.group(1) in variantes}
+    return set()
+R_NUM_SOZINHO = re.compile(r"^\s*(\d{1,3})\s*[.)]?\s*$")
 R_NUM_PONTO = re.compile(r"^\s*(\d{1,3})\s*[.)\-–]\s+(\S.*)$")
 R_NUM_TEXTO = re.compile(r"^\s*(\d{1,3})\s+(\S.*)$")
 R_TITULO_TEXTO = re.compile(r"^\s*Texto\s+(CB\d+A\d+(?:-[IVX]+)?)\s*$", re.IGNORECASE)
@@ -120,22 +143,23 @@ def _inicio(texto, numero, formato=None):
     return False, ""
 
 
-def _alternativas_adiante(linhas, i, proximo, formato):
+def _alternativas_adiante(linhas, i, proximo, formato, minimo=3):
     """Há "A)" e "B)" logo adiante? Não para na linha que lembra a questão seguinte: uma lista
     numerada dentro do enunciado ("2. segundo item") tem o mesmo número e vem antes das alternativas.
     Para só depois do "E", quando as alternativas acabaram."""
     letras = set()
     for l in linhas[i + 1:i + 1 + JANELA_ALTERNATIVAS]:
-        m = R_ALT.match(l.texto)
-        if m:
-            letras.add(m.group(1))
-            if m.group(1) == "E":
-                break
-    return {"A", "B"} <= letras
+        letras |= _letras_possiveis(l.texto, l.ocr)
+        # Três letras distintas bastam: o OCR perde um marcador aqui e ali, e o texto de um gráfico
+        # pode trazer um "E)" solto (achado na questão 14 da prova real da FCC) — por isso não se
+        # para no primeiro "E)", e não se exige o par A e B.
+        if len(letras) >= minimo:
+            return True
+    return False
 
 
 def _alternativas_desde(linhas, desde, ate):
-    return sum(1 for l in linhas[desde:ate] if R_ALT.match(l.texto))
+    return sum(1 for l in linhas[desde:ate] if _letras_possiveis(l.texto, l.ocr))
 
 
 def _largadas(linhas, formato):
@@ -156,7 +180,11 @@ def _largadas(linhas, formato):
             if formato == "MULTIPLA_ESCOLHA":
                 # A anterior só "fecha" depois de chegar às alternativas (uma lista numerada no enunciado
                 # vem antes delas); se vieram poucas, a validação a declara incompleta — ela não engole a seguinte.
-                anterior_completa = not largadas or _alternativas_desde(linhas, largadas[-1][0], i) >= MIN_ALTERNATIVAS_PARA_FECHAR
+                # Se a anterior só tem uma alternativa legível (as outras eram código ou gráfico e saíram como
+                # ruído) mas a seguinte traz as cinco, a seguinte é questão (achado: Q54 e Q55 da FCC).
+                lidas = _alternativas_desde(linhas, largadas[-1][0], i) if largadas else MIN_ALTERNATIVAS_PARA_FECHAR
+                anterior_completa = lidas >= MIN_ALTERNATIVAS_PARA_FECHAR or (
+                    lidas >= 1 and _alternativas_adiante(linhas, i, candidato, formato, minimo=5))
                 if not (anterior_completa and _alternativas_adiante(linhas, i, candidato, formato)):
                     continue
             largadas.append((i, candidato, resto))
@@ -183,15 +211,16 @@ def _parece_cabecalho(linha, anterior):
             and anterior.rstrip().endswith((".", "?", "!", ";")))
 
 
-def _dividir(textos):
+def _dividir(textos, ocr=False):
     """(enunciado, [(letra, texto)], cabecalho_da_proxima). As alternativas só valem em ordem
-    A, B, C...: um "(A)" citado no meio do enunciado não conta."""
+    A, B, C...: um "(A)" citado no meio do enunciado não conta. Em bloco de OCR o marcador pode vir
+    como o OCR o escreveu ("(8)" para B), desde que seja o da vez."""
     enunciado, alternativas = [], []
     esperada = "A"
     for t in textos:
-        m = R_ALT.match(t)
-        if m and m.group(1) == esperada:
-            alternativas.append([m.group(1), [m.group(2)]])
+        if esperada in _letras_possiveis(t, ocr):
+            m = R_ALT.match(t) or R_MARCADOR_OCR.match(t)
+            alternativas.append([esperada, [m.group(2)]])
             esperada = chr(ord(esperada) + 1)
         elif alternativas:
             alternativas[-1][1].append(t)
@@ -203,6 +232,25 @@ def _dividir(textos):
         if _parece_cabecalho(ultima[-1].strip(), ultima[-2]):
             cabecalho = ultima.pop().strip()
     return _juntar(enunciado), [(letra, _juntar(ls)) for letra, ls in alternativas], cabecalho
+
+
+def _cortar_questao_perdida(textos, ocr):
+    """Índice onde começa uma questão cujo número o OCR não leu, dentro do bloco da anterior: depois
+    da alternativa E vem um segundo "A)", e o enunciado dele começa na primeira linha em maiúscula
+    que segue um fim de frase. None se o bloco não tem duas rodadas de alternativas."""
+    esperada, indice_e = "A", None
+    for i, t in enumerate(textos):
+        letras = _letras_possiveis(t, ocr)
+        if esperada in letras:
+            if esperada == "E":
+                indice_e = i
+            esperada = chr(ord(esperada) + 1)
+        elif indice_e is not None and "A" in letras:
+            for j in range(indice_e + 1, i):
+                if textos[j][:1].isupper() and textos[j - 1].rstrip().endswith((".", "?", "!")):
+                    return j
+            return None
+    return None
 
 
 def _romano_mal_lido(textos):
@@ -252,14 +300,28 @@ def segmentar(linhas, total_esperado=None):
         base_do_item = base_atual
         if formato == "CERTO_ERRADO":
             textos, base_atual = _cortar_preambulo(textos, base_atual, nomeados)
-        enunciado, alternativas, cabecalho_seguinte = _dividir(textos)
         todas = [linhas[inicio]] + corpo
         ocr = any(l.ocr for l in todas)
+        # Um único número sumiu entre esta largada e a próxima (o OCR não leu "21."): o texto dele está
+        # colado no fim desta, depois da alternativa E.
+        perdida = None
+        proximo_numero = largadas[k + 1][1] if k + 1 < len(largadas) else None
+        if formato == "MULTIPLA_ESCOLHA" and ocr and proximo_numero == numero + 2:
+            corte = _cortar_questao_perdida(textos, ocr)
+            if corte:
+                textos, perdida = textos[:corte], textos[corte:]
+        enunciado, alternativas, cabecalho_seguinte = _dividir(textos, ocr)
         imagem = linhas[inicio].imagem
         q = QuestaoBruta(numero, enunciado or None, alternativas, base_do_item, cabecalho_pendente, ocr, imagem)
         q.motivo = _validar(q, formato, todas, textos)
         achadas[numero] = q
         cabecalho_pendente = cabecalho_seguinte
+        if perdida:
+            enunciado, alternativas, cabecalho_seguinte = _dividir(perdida, ocr)
+            q = QuestaoBruta(numero + 1, enunciado or None, alternativas, None, None, ocr, imagem)
+            q.motivo = _validar(q, formato, todas, perdida)
+            achadas[numero + 1] = q
+            cabecalho_pendente = cabecalho_seguinte
 
     ultimo = max(max(achadas), total_esperado or 0)
     questoes = []
