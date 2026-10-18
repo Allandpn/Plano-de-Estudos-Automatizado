@@ -48,6 +48,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "dias"))
 import montar_bloco as mb  # noqa: E402
 import triagem_ia  # noqa: E402
 from acervo import Acervo, termos_de_busca  # noqa: E402
+from ia_comum import IaIndisponivel  # noqa: E402,F401  (também usada pelos testes)
 from sge_api import ErroSge, SgeApi  # noqa: E402
 
 log = logging.getLogger("worker")
@@ -55,11 +56,6 @@ log = logging.getLogger("worker")
 CAMPOS_SEGMENTOS = ["chaveExternaSegmento", "chaveExternaAssunto", "ordem", "arquivo",
                     "paginaInicial", "paginaFinal", "tempoEstimadoMin"]
 TENTATIVAS_IA = 2
-
-
-class IaIndisponivel(Exception):
-    """A IA não respondeu (sem chave, sem crédito, fora do ar). Não é lacuna do assunto:
-    o ciclo para e tenta de novo depois."""
 
 
 class Worker:

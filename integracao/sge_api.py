@@ -11,6 +11,13 @@ Rotas:
     POST /api/segmentos/importacoes/confirmar    o segmentos.csv de sempre (multipart)
     POST /internal/ia/completar                  IA com a chave e o modelo de Ajustes (token)
     POST /internal/material/lacunas              D-65: o acervo não ensina o assunto (token)
+    GET  /internal/provas/pendentes              provas que pedem trabalho (token)
+    GET  /internal/provas/{id}/leitura           o que ler: arquivos, assuntos do alvo (token)
+    POST /internal/provas/{id}/leitura           entrega as questões lidas (e o gabarito) (token)
+    POST /internal/provas/{id}/gabarito          entrega só o gabarito (token)
+    GET  /internal/provas/{id}/julgamento        as questões a julgar, com os segmentos (token)
+    POST /internal/provas/{id}/vereditos         entrega vereditos (token)
+    POST /internal/provas/{id}/falha             a leitura ou o julgamento falhou (token)
 """
 
 import json
@@ -62,6 +69,33 @@ class SgeApi:
     def registrar_lacuna(self, chave_externa, motivo):
         corpo = json.dumps({"chaveExterna": chave_externa, "motivo": motivo}).encode("utf-8")
         self._pedir("POST", "/internal/material/lacunas", corpo, "application/json", interno=True)
+
+    # ------------------------------------------------------------ prova (Sprint 24 do SGE, ADR-046)
+
+    def provas_pendentes(self):
+        return self._pedir("GET", "/internal/provas/pendentes", interno=True)[1]
+
+    def prova_dados_leitura(self, prova_id):
+        return self._pedir("GET", f"/internal/provas/{prova_id}/leitura", interno=True)[1]
+
+    def prova_entregar_leitura(self, prova_id, corpo):
+        return self._json("POST", f"/internal/provas/{prova_id}/leitura", corpo)
+
+    def prova_entregar_gabarito(self, prova_id, corpo):
+        return self._json("POST", f"/internal/provas/{prova_id}/gabarito", corpo)
+
+    def prova_para_julgar(self, prova_id):
+        return self._pedir("GET", f"/internal/provas/{prova_id}/julgamento", interno=True)[1]
+
+    def prova_vereditos(self, prova_id, corpo):
+        return self._json("POST", f"/internal/provas/{prova_id}/vereditos", corpo)
+
+    def prova_falha(self, prova_id, etapa, erro):
+        return self._json("POST", f"/internal/provas/{prova_id}/falha", {"etapa": etapa, "erro": erro})
+
+    def _json(self, metodo, caminho, corpo):
+        dados = json.dumps(corpo, ensure_ascii=False).encode("utf-8")
+        return self._pedir(metodo, caminho, dados, "application/json", interno=True)[1]
 
     # ------------------------------------------------------------ transporte
 
