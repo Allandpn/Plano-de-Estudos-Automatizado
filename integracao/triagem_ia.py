@@ -95,7 +95,9 @@ def interpretar(conteudo, candidatos):
     fontes = []
     for f in dados.get("fontes") or []:
         ident = str(f.get("arquivo", "")).strip().strip("[]")
-        if f.get("inteira") is True and total.get(ident):
+        inteira = f.get("inteira") in (True, "true", "sim", 1) or \
+            str(f.get("paginas", "")).strip().lower() in ("", "inteira", "toda", "todas", "tudo")
+        if inteira and total.get(ident):
             f = dict(f, paginas=f"1-{total[ident]}")  # aula inteira: da primeira à última página
         fontes.append({
             "arquivo": ids.get(ident, ident),  # id desconhecido: o validador recusa por arquivo inexistente
@@ -104,8 +106,11 @@ def interpretar(conteudo, candidatos):
             "cobre": [str(s) for s in f.get("cobre") or []],
             "tipo": f.get("tipo") if f.get("tipo") in ("teoria", "fixacao") else "teoria",
         })
+    # Parte que alguma fonte cobre não é lacuna: a IA às vezes declara as duas coisas, e o
+    # validador recusava a escolha inteira por isso (ensaio de 2026-10-18).
+    cobertas = {p for f in fontes for p in f["cobre"]}
     lacunas = [{"subitem": str(l.get("subitem", "")), "motivo": str(l.get("motivo", ""))}
-               for l in dados.get("lacunas") or []]
+               for l in dados.get("lacunas") or [] if str(l.get("subitem", "")) not in cobertas]
     if not fontes:
         return "sem_material", "; ".join(f"{l['subitem']}: {l['motivo']}" for l in lacunas) \
             or "a IA não indicou nenhuma página"

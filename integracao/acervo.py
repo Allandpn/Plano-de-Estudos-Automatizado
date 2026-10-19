@@ -182,7 +182,7 @@ class Acervo:
             if disciplina:
                 afins = cursos_da_disciplina(
                     [r[0] for r in conn.execute("SELECT DISTINCT curso FROM arquivos") if r[0]], disciplina)
-            arquivos = {}
+            arquivos, preferidos = {}, []
             for parte in partes:
                 termos = list(dict.fromkeys(radical_de_busca(t) for t in termos_de_busca(alvo[parte])))
                 for operador in (" AND ", " OR "):
@@ -196,6 +196,7 @@ class Acervo:
                 escolhidos = self._melhores(afim, por_parte - 1 if geral else por_parte)
                 escolhidos += [a for a in self._melhores(geral, por_parte) if a not in escolhidos]
                 escolhidos = escolhidos[:por_parte]
+                preferidos.append(escolhidos)
                 for l in afim + geral:
                     if l["id"] not in escolhidos:
                         continue
@@ -215,19 +216,32 @@ class Acervo:
                     item["score"] += -l["score"]
                     item["_paginas"][l["pagina"]] = l["trecho"]
             limite = min(max_arquivos, max(min_arquivos, 2 * len(partes)))
-            ordenados = sorted(arquivos.items(), key=lambda kv: (-len(kv[1]["partes"]), not kv[1]["_afim"], -kv[1]["score"]))
-            resultado, vistos = [], {}
-            for arquivo_id, item in ordenados:
-                # A mesma aula aparece em vários cursos (mesmo PDF, nome diferente): fica a primeira,
-                # com as partes das duas, e a vaga vai para outro arquivo.
+            # Cobertura primeiro: o melhor arquivo de CADA parte, depois o segundo de cada uma, e só
+            # então o resto pela pontuação. Ordenar só por pontuação deixava uma parte sem nenhum
+            # candidato quando as outras enchiam as vagas (contêineres sumiu no ensaio de 2026-10-18).
+            por_score = [a for a, _ in sorted(arquivos.items(),
+                                              key=lambda kv: (-len(kv[1]["partes"]), not kv[1]["_afim"], -kv[1]["score"]))]
+            ordem = []
+            for rodada in range(por_parte):
+                for ids in preferidos:
+                    if len(ids) > rodada and ids[rodada] not in ordem:
+                        ordem.append(ids[rodada])
+            ordem += [a for a in por_score if a not in ordem]
+            resultado, vistos = [], []
+            for arquivo_id in ordem:
+                item = arquivos[arquivo_id]
+                # A mesma aula aparece em vários cursos (o mesmo professor em TSE, TCE-SC, SEFAZ-CE, Curso
+                # Regular), com cabeçalho e capa diferentes: compara o miolo. Fica a primeira, com as
+                # partes das duas, e a vaga vai para outro arquivo.
                 abertura = self._abertura(conn, arquivo_id)
-                gemea = vistos.get((item["n_paginas"], abertura)) if abertura else None
+                miolo = self._miolo(conn, arquivo_id)
+                gemea = next((v for v, m in vistos if self._gemeas(miolo, m)), None)
                 if gemea is not None:
                     gemea["partes"] += [p for p in item["partes"] if p not in gemea["partes"]]
                     continue
                 if len(resultado) >= limite:
                     break
-                vistos[(item["n_paginas"], abertura)] = item
+                vistos.append((item, miolo))
                 item["abertura"] = abertura
                 todas = sorted(item.pop("_paginas").items())
                 item["paginas"] = [{"pagina": p, "trecho": t} for p, t in todas[:max_paginas_por_arquivo]]
@@ -242,6 +256,18 @@ class Acervo:
                 del item["score"], item["_por_parte"], item["_afim"]
                 resultado.append(item)
             return resultado
+
+    @staticmethod
+    def _miolo(conn, arquivo_id, de=3, ate=14):
+        """Assinatura do conteúdo: o texto normalizado (sem números nem espaços) das páginas 3 a 14."""
+        return {re.sub(r"[\d\s]+", "", (t or "").lower())[:400]
+                for (t,) in conn.execute("SELECT texto FROM paginas WHERE arquivo_id = ? AND pagina BETWEEN ? AND ?",
+                                         (arquivo_id, de, ate))} - {""}
+
+    @staticmethod
+    def _gemeas(a, b):
+        """Mesma aula: metade ou mais das páginas do miolo iguais."""
+        return bool(a) and bool(b) and len(a & b) >= max(2, min(len(a), len(b)) // 2)
 
     @staticmethod
     def _abertura(conn, arquivo_id, tamanho=110):

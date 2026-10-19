@@ -236,6 +236,25 @@ class AcervoTest(Base):
         self.assertIn(6, paginas)
         self.assertIn(25, paginas, "a região do NAT, depois da do VLAN, também aparece no mapa")
 
+    def test_toda_parte_leva_pelo_menos_um_candidato(self):
+        db = self.dir / "muitos.db"
+        conn = sqlite3.connect(db)
+        conn.executescript(SCHEMA_INDICE)
+        arquivos = [(f"Redes\\aula {i:02d}", "vlan trunk switch quadro") for i in range(1, 15)] + \
+                   [("Dev\\aula 09", "docker conteiner imagem")]
+        for i, (curso, texto) in enumerate(arquivos, start=1):
+            conn.execute("INSERT INTO arquivos (caminho, curso, nome_arquivo, n_paginas) VALUES (?, ?, 'a.pdf', 5)",
+                         (f"x{i}", curso))
+            for p in range(1, 6):
+                conn.execute("INSERT INTO paginas (arquivo_id, pagina, texto) VALUES (?, ?, ?)",
+                             (i, p, f"{texto} {'vlan ' * (20 - i) if i <= 14 else ''} p{i}-{p}"))
+        conn.commit()
+        conn.close()
+
+        achados = Acervo(db, self.acervo_dir).candidatos_por_partes(["VLAN", "contêineres"], max_arquivos=2, min_arquivos=2)
+
+        self.assertEqual(["VLAN", "contêineres"], [a["partes"][0] for a in achados])
+
     def test_mesma_aula_em_dois_cursos_entra_uma_vez(self):
         db = self.dir / "gemeas.db"
         conn = sqlite3.connect(db)
@@ -245,14 +264,15 @@ class AcervoTest(Base):
                          (f"x{i}", curso, f"aula 04 ({i}).pdf"))
             for p in range(1, 11):
                 conn.execute("INSERT INTO paginas (arquivo_id, pagina, texto) VALUES (?, ?, ?)",
-                             (i, p, "Aula 04 - VLAN e 802.1Q" if p == 1 else "vlan trunk 802.1q"))
+                             (i, p, f"{'TSE' if i == 1 else 'Curso Regular'} - Aula 04 - VLAN e 802.1Q" if p == 1
+                                    else f"vlan trunk 802.1q secao {'abcdefghij'[p - 1]} do miolo"))
         conn.commit()
         conn.close()
 
         achados = Acervo(db, self.acervo_dir).candidatos_por_partes(["VLAN"])
 
         self.assertEqual(1, len(achados), "a gêmea de outro curso não ocupa vaga")
-        self.assertTrue(achados[0]["abertura"].startswith("Aula 04 - VLAN"))
+        self.assertIn("Aula 04 - VLAN", achados[0]["abertura"], "capas diferentes, miolo igual: é a mesma aula")
 
     def test_plural_do_edital_casa_o_singular_da_apostila(self):
         from acervo import radical_de_busca
@@ -340,6 +360,16 @@ class WorkerTest(Base):
         manifesto = json.loads((self.dir / "trabalho" / "chave-atos.json").read_text(encoding="utf-8"))
         self.assertEqual("1-30", manifesto["fontes"][0]["paginas"], "a aula toda, com as questões e o resumo")
         self.assertIn("MELHOR PECAR POR EXCESSO", __import__("triagem_ia").SISTEMA)
+
+    def test_aula_inteira_sem_faixa_e_lacuna_de_parte_coberta_nao_derrubam_a_escolha(self):
+        resposta = {"fontes": [{"arquivo": "A1", "inteira": "true", "paginas": "", "cobre": ["Atos administrativos"]},
+                               {"arquivo": "A1", "paginas": "inteira", "cobre": ["requisitos"]}],
+                    "lacunas": [{"subitem": "requisitos", "motivo": "só de passagem"}]}
+        from triagem_ia import interpretar
+        tipo, valor = interpretar(json.dumps(resposta), [{"arquivo": "x.pdf", "n_paginas": 30}])
+        self.assertEqual("manifesto", tipo)
+        self.assertEqual(["1-30", "1-30"], [f["paginas"] for f in valor["fontes"]])
+        self.assertEqual([], valor["lacunas"], "parte coberta por uma fonte não fica como lacuna")
 
     def test_ensaiar_sem_ia_so_lista_os_candidatos(self):
         sge = SgeFalso([])
