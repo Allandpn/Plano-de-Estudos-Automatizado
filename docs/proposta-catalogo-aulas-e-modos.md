@@ -1,6 +1,6 @@
 # Proposta: catálogo de aulas, modos completo e compacto, apostila própria
 
-**Versão** 0.3.0 · **Data** 2026-10-19 · **Natureza:** proposta em discussão com o usuário. Não é decisão
+**Versão** 0.4.0 · **Data** 2026-10-19 · **Natureza:** proposta em discussão com o usuário. Não é decisão
 fechada nem especificação. Nada aqui vira código antes de aprovado; o que tocar o SGE nasce lá, pelo
 documento (`01_DOMINIO.md`, ADR), na regra deles.
 
@@ -46,12 +46,24 @@ Para cada PDF do acervo, uma ficha:
 
 | Campo | De onde vem |
 |---|---|
-| curso, aula, páginas | índice |
-| temas que a aula ensina (lista curta, com a faixa de páginas de cada um quando a aula tem mais de um) | IA, a partir do sumário (seções por regra) e da primeira linha de cada página da teoria (§4.2) |
+| curso, arquivo, páginas, hash do PDF | índice |
+| número da aula, formato do sumário, páginas ilegíveis | regra (R1–R10) |
+| seções: tema, tipo, faixa de páginas, confirmada | regra (R1–R6) |
+| natureza: aula, revisão, apresentação, outro | IA |
+| temas: nome como num edital, **disciplina**, **termos** (sinônimos, siglas, outros nomes) | IA |
+| seções de teoria de cada tema → faixa de páginas do tema | IA aponta as seções; a faixa sai da regra |
+| subtemas de cada tema, com a **página onde começa** | IA; a regra confere (dentro da faixa do tema, palavras do subtema na página) |
 | questões de cada tema (faixas, banca) | regra: nome do tema no sumário; senão "questões da aula" |
-| seções: teoria, questões comentadas, lista, gabarito, resumo (faixas) | regra, se o passo 0 mostrar que os títulos de seção são padronizados; senão, IA |
-| banca das questões (contagem por banca) | regra (contagem no texto) |
-| gêmeas: outras cópias da mesma aula em outros cursos | regra (miolo igual, já implementado em `acervo.py`) |
+| banca da aula, incidência por subassunto | regra (R7, R8) |
+| gêmeas: outras cópias da mesma aula em outros cursos | regra (miolo igual, `acervo.py`) |
+| origem: acervo ou apostila do aluno | regra (pasta) |
+| resposta crua da IA, contexto e versão do pedido | gravadas, para refazer a parte da regra sem chamar a IA |
+
+Campo da IA custa uma rodada inteira do acervo se for esquecido; campo da regra se refaz com
+`--reprocessar`. A ficha fica num `catalogo.db` (SQLite) na pasta do material do Pi; a resposta crua
+guardada permite reconstruí-lo. Antes do acervo inteiro (1.570 aulas únicas, 1.033 gêmeas que não
+precisam de chamada, 36 arquivos que não são aula), um ensaio de 8 aulas mede as páginas de subtema
+confirmadas pela regra; se forem poucas, a regra procura o subtema nas páginas do tema e a IA não dá página.
 
 Catálogo incremental: aula nova ou alterada (o `indexador.py` já sabe quais) ganha ficha; o resto não é
 refeito.
@@ -215,3 +227,4 @@ edital continua sendo trabalho do catálogo, igual aos cursos regulares.
 | 0.1.0 | 2026-10-19 | Primeira versão, a partir da conversa com o usuário e dos ensaios no Pi |
 | 0.2.0 | 2026-10-19 | Resultado do passo 0: formatos de sumário, regras R1–R10, incidência, OCR ilegível; compacto = recorte do completo + Passo/Bizu do tema (opção "b") |
 | 0.3.0 | 2026-10-19 | Decisão 7 (questões fora); resultado do ensaio com IA e do teste de contexto |
+| 0.4.0 | 2026-10-19 | Formato da ficha: disciplina, termos, página do subtema, gêmeas, origem, hash; catalogo.db; números do acervo |
