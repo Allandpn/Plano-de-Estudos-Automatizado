@@ -201,6 +201,10 @@ CREATE TABLE IF NOT EXISTS paginas (
     FOREIGN KEY (arquivo_id) REFERENCES arquivos(id)
 );
 
+-- Páginas de uma aula: sem este índice, cada consulta por arquivo varre o banco inteiro.
+CREATE INDEX IF NOT EXISTS idx_paginas_arquivo ON paginas(arquivo_id, pagina);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_arquivo ON bookmarks(arquivo_id);
+
 CREATE VIRTUAL TABLE IF NOT EXISTS paginas_fts USING fts5(
     texto,
     content='paginas',
