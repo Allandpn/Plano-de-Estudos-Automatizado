@@ -144,8 +144,8 @@ Nenhuma aula tem marcadores. O sumário fica na p. 2 (e na p. 3, nas aulas longa
   primeira letra.
 - O Passo e o Bizu trazem tabela de incidência por subassunto, com banca e período ("Tipologia textual
   45,5%… FGV, FCC e Cebraspe, 2023 a 2026"; "Despesa Pública 13,20%… banca FCC").
-- Páginas de imagem com OCR ilegível existem (Bizu de Direito Financeiro, SEFAZ-CE: 14 de 47) e não
-  aparecem como "vazias".
+- Páginas de imagem com OCR ilegível existem (Bizu de Direito Financeiro, SEFAZ-CE: 8 de 47 ilegíveis,
+  outras com OCR falho mas legível; uma com texto invertido) e não aparecem como "vazias".
 - A "lei" da amostra (`04 - SEFAZ-SC\09 - Legislação Tributária de Santa Catarina - Parte 01`) é aula
   comum (formato B: teoria comentada, bateria de questões, lista, gabarito), não lei seca. O número da aula
   sai do conteúdo ("AULA 14" no arquivo `aula-00`).
@@ -155,18 +155,21 @@ Regras:
 - **R1 (formato A):** se a linha crua tinha pontilhada, os dígitos do fim são a página, com ou sem espaço;
   a banca é o que sobra depois do tipo, sem o número.
 - **R2 (formatos B e C):** `N. Título NN` e `Título ..... NN`. Página do sumário que diminui começa uma
-  nova sequência, com deslocamento medido à parte.
+  nova sequência, com deslocamento medido à parte. Um sumário A seguido de um detalhado (B, C) são duas
+  listas da mesma aula, conferidas e fechadas à parte.
 - **R3 (formato D):** lê a tabela "assunto → faixa de bizus" e acha no corpo a página que começa com o
   primeiro número da faixa (`N.`).
 - **R4 (conferir no corpo):** o deslocamento de cada aula (ou sequência) é o que mais se repete entre as
   entradas. A página é "confirmada" quando traz o tema como linha própria, ou as três primeiras linhas
   trazem o tema ou os pedaços das palavras do tema sem a primeira letra (`ROTOCOLO`, `ABARITO`).
+  No formato A, o texto do tipo também confirma ("L Q / ISTA DE UESTÕES"). Entrada sem página no
+  sumário é procurada no corpo, em ordem, só como título (linha própria ou começo de linha).
 - **R5 (fim da seção):** a página antes da próxima entrada; o que não está no sumário (gabarito,
   referências) fica dentro da seção em que cai.
 - **R6 (tipos):** `Bateria de Questões` e `Questões estratégicas` → questões comentadas; `Roteiro de
   Revisão` e `Aposta Estratégica` → resumo; novo `incidencia` ("O que é mais cobrado", "Análise
-  estatística"); novo `questionario` ("Perguntas e respostas"); `bibliografia`. Entrada sem tipo (B, C)
-  herda o tipo da anterior; a primeira é teoria.
+  estatística"); novo `questionario` ("Perguntas e respostas"); `bibliografia`. Entrada sem tipo herda o
+  da anterior nos formatos B e C (a primeira é teoria); no A, é título de teoria.
 - **R7 (incidência):** linhas `Subassunto NN,N%`, com a banca e o período citados na mesma página.
 - **R8 (banca da aula):** a do sumário; senão a da incidência; senão a contagem no texto (CESPE =
   Cebraspe).
