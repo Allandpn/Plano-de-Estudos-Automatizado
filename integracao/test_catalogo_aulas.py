@@ -204,6 +204,13 @@ class AcervoTest(CatalogoTest):
         primeira = json.loads(db.conn.execute("SELECT ficha FROM fichas WHERE caminho = ?", (gemea[0]["gemea_de"],)).fetchone()[0])
         self.assertEqual([gemea[0]["caminho"]], primeira["gemeas"])
         self.assertEqual((0, None), ca.catalogar_acervo(ia, self.conn, db, log=lambda m: None), "nada a refazer")
+        from datetime import datetime, timedelta
+        texto = ca.progresso(self.conn, db, agora=datetime.now() + timedelta(minutes=5))
+        self.assertIn("Arquivos processados: 6 de 6 (100%)", texto)
+        self.assertIn("Aulas lidas pela IA: 4 de ~4 (100%)", texto)
+        self.assertIn("Sem chamada: 1 gêmeas, 1 não são aula", texto)
+        self.assertIn("~0 aulas", texto)
+        self.assertIn("(há 5 min)", texto)
         db.conn.execute("UPDATE fichas SET versao_pedido = 1 WHERE situacao = 'ok'")
         ia.respostas = list(respostas)
         self.assertEqual(4, ca.catalogar_acervo(ia, self.conn, db, log=lambda m: None)[0], "pedido novo refaz as fichas")

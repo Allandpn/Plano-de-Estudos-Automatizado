@@ -28,6 +28,7 @@ Uso (contêiner do worker: índice, rede e token do SGE):
         python integracao/catalogo_aulas.py --saida /saida
     docker compose run --rm --no-deps -T planejamento \
         python integracao/catalogo_aulas.py --acervo --db /dados/material/catalogo.db --limite 200
+    python3 integracao/catalogo_aulas.py --progresso --db /mnt/ssd/material/catalogo.db --indice /mnt/ssd/acervo/indice.db
 """
 
 import argparse
@@ -477,7 +478,9 @@ class CatalogoDb:
     """catalogo.db: uma ficha por arquivo (JSON), com hash e versão do pedido para saber o que refazer."""
 
     def __init__(self, caminho):
-        self.conn = sqlite3.connect(caminho)
+        self.conn = sqlite3.connect(caminho, uri=caminho.startswith("file:"))
+        if "mode=ro" in caminho:
+            return
         self.conn.execute("CREATE TABLE IF NOT EXISTS fichas (arquivo_id INTEGER PRIMARY KEY, caminho TEXT NOT NULL, "
                           "hash TEXT, versao_pedido INTEGER, situacao TEXT NOT NULL, ficha TEXT NOT NULL, "
                           "atualizado_em TEXT NOT NULL)")
@@ -538,6 +541,40 @@ def catalogar_acervo(sge, conn, db, limite=None, log=print, contexto=CONTEXTO_PA
     return chamadas, parou
 
 
+def progresso(conn, db, agora=None):
+    """Quanto do acervo já foi catalogado e quanto falta, com a previsão pelo ritmo médio desde a primeira
+    aula lida (que já inclui as pausas da assinatura). As aulas para a IA são as únicas menos as que já se viu que não
+    são aula; as que ainda não foram vistas contam como aula, então o 'faltam' é um teto."""
+    from datetime import datetime
+    agora = agora or datetime.now()
+    total = conn.execute("SELECT count(*) FROM arquivos").fetchone()[0]
+    dono = grupos_de_gemeas(conn, log=lambda m: None)
+    unicas = sum(1 for a, d in dono.items() if a == d)
+    por = dict(db.conn.execute("SELECT situacao, count(*) FROM fichas GROUP BY situacao").fetchall())
+    ok, falha, fora, gemea = (por.get(k, 0) for k in ("ok", "falha", "fora", "gemea"))
+    para_ia, feitas = unicas - fora, ok + falha
+    faltam = max(0, para_ia - feitas)
+    primeira = db.conn.execute("SELECT min(atualizado_em) FROM fichas WHERE situacao IN ('ok', 'falha')").fetchone()[0]
+    ultima = db.conn.execute("SELECT caminho, atualizado_em FROM fichas WHERE situacao IN ('ok', 'falha') "
+                             "ORDER BY atualizado_em DESC LIMIT 1").fetchone()
+    linhas = [f"Catálogo do acervo — {agora:%Y-%m-%d %H:%M}",
+              f"Arquivos processados: {sum(por.values())} de {total} ({100 * sum(por.values()) // max(1, total)}%)",
+              f"Aulas lidas pela IA: {feitas} de ~{para_ia} ({100 * feitas // max(1, para_ia)}%)"
+              + (f" — {falha} com falha (refeitas na próxima rodada)" if falha else ""),
+              f"Sem chamada: {gemea} gêmeas, {fora} não são aula"]
+    horas = (agora - datetime.strptime(primeira, "%Y-%m-%d %H:%M:%S")).total_seconds() / 3600 if primeira else 0
+    if feitas and horas > 0.1:
+        ritmo = feitas / horas
+        linhas.append(f"Ritmo médio desde {primeira[11:16]} ({horas:.0f} h, com as pausas da assinatura): {ritmo:.0f} aulas/h "
+                      f"→ faltam ~{faltam} aulas, ~{faltam / ritmo:.0f} h")
+    else:
+        linhas.append(f"Faltam ~{faltam} aulas")
+    if ultima:
+        minutos = int((agora - datetime.strptime(ultima[1], "%Y-%m-%d %H:%M:%S")).total_seconds() // 60)
+        linhas.append(f"Última aula: {ultima[0]} às {ultima[1][11:16]} (há {minutos} min)")
+    return "\n".join(linhas)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Ensaio do catálogo de aulas (estrutura por regra, temas pela IA).")
     ap.add_argument("--saida", help="pasta do catalogo-ensaio.json e .md (ensaio)")
@@ -552,8 +589,15 @@ def main():
     ap.add_argument("--acervo", action="store_true", help="catalogar o acervo inteiro no --db (aulas únicas)")
     ap.add_argument("--db", help="catalogo.db (com --acervo)")
     ap.add_argument("--limite", type=int, help="com --acervo: no máximo N chamadas à IA nesta rodada")
+    ap.add_argument("--progresso", action="store_true", help="com --db: quanto do acervo já foi catalogado e quanto falta")
     ap.add_argument("--indice", default=os.environ.get("INDICE_DB"))
     args = ap.parse_args()
+    if args.progresso:
+        if not args.db:
+            ap.error("--progresso pede --db")
+        with closing(sqlite3.connect(f"file:{args.indice}?mode=ro", uri=True)) as conn:
+            print(progresso(conn, CatalogoDb(f"file:{args.db}?mode=ro")))
+        return
     if not args.acervo and not args.saida:
         ap.error("--saida é obrigatório fora do --acervo")
     if args.acervo and not args.db:
