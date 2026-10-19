@@ -130,6 +130,7 @@ class CatalogoTest(unittest.TestCase):
                                        "secoes": [1],
                                        "subtemas": [{"nome": "Teoria do NAT", "pagina": 3},
                                                     {"nome": "Protocolo IPv6", "pagina": 4},
+                                                    {"nome": "Mais", "pagina": 5},
                                                     {"nome": "NAT reverso", "pagina": 10},
                                                     {"nome": "PAT", "pagina": None}]}]}, a, textos)
         t = f["temas"][0]
@@ -137,9 +138,12 @@ class CatalogoTest(unittest.TestCase):
                          (t["disciplina"], t["termos"]))
         self.assertEqual([{"nome": "Teoria do NAT", "pagina": 3, "confirmada": True},
                           {"nome": "Protocolo IPv6", "pagina": 4, "confirmada": False},
+                          {"nome": "Mais", "pagina": 4, "confirmada": True, "pagina_ia": 5},
                           {"nome": "NAT reverso", "pagina": None, "confirmada": False},
                           {"nome": "PAT", "pagina": None, "confirmada": False}], t["subtemas"],
-                         "página fora da faixa do tema (p. 10) é descartada; palavras ausentes não confirmam")
+                         "página fora da faixa do tema (p. 10) é descartada; palavras ausentes não confirmam; "
+                         "a IA errou por uma página e a regra corrigiu (guarda a dela)")
+        self.assertEqual(["RDP", "SQL", "PROTOCOLO"], ca.palavras_de("RDP, T-SQL e o protocolo"))
         md = ca.relatorio([dict(ca.ficha(None, self.conn, (1, AULAS[0][0], "aula 06.pdf"),
                                          resposta={"temas": [{"tema": "NAT e PAT", "disciplina": "Redes", "secoes": [1],
                                                               "subtemas": [{"nome": "Teoria do NAT", "pagina": 3}]}]}))])

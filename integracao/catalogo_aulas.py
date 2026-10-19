@@ -199,26 +199,45 @@ def _juntar(faixas):
 
 
 def palavras_de(texto):
-    return [w for w in (ea.chave(p, 10 ** 6) for p in re.findall(r"\w+", texto or "")) if len(w) >= 4 and w not in GENERICAS]
+    """As palavras que identificam um subtema: 4 letras ou mais, ou sigla em maiúsculas ('RDP', 'SQL' de 'T-SQL')."""
+    saida = []
+    for p in re.findall(r"\w+", texto or ""):
+        w = ea.chave(p, 10 ** 6)
+        if (len(w) >= 4 and w not in GENERICAS) or (len(w) == 3 and p.isupper()):
+            saida.append(w)
+    return saida
 
 
-def _subtemas(lista, faixas, textos):
-    """[{nome, pagina, confirmada}]. A página da IA é confirmada se cai na faixa do tema e metade ou mais das
-    palavras do subtema estão nela ou na seguinte (o título pode ficar no pé da página). Aceita a resposta
-    antiga, em que o subtema era só o nome."""
+def _subtemas(lista, faixas, textos, perto=3):
+    """[{nome, pagina, confirmada[, pagina_ia]}]. A página da IA é confirmada se cai na faixa do tema e metade
+    ou mais das palavras do subtema estão nela ou na seguinte (o título pode ficar no pé da página). Se não,
+    vale a página mais próxima, até 'perto' antes ou depois e dentro da faixa, que confirma (a IA erra por
+    pouco: ensaio de 2026-10-19); a página que ela deu fica em 'pagina_ia'. Aceita a resposta antiga, em que
+    o subtema era só o nome."""
+    def confirma(pagina, palavras):
+        texto = ea.chave((textos.get(pagina) or "") + " " + (textos.get(pagina + 1) or ""), 10 ** 6)
+        return bool(palavras) and sum(w in texto for w in palavras) / len(palavras) >= 0.5
+
+    def na_faixa(pagina):
+        return any(i <= pagina <= f for i, f in faixas)
     saida = []
     for s in (lista or [])[:8]:
         nome, pagina = (s.get("nome"), s.get("pagina")) if isinstance(s, dict) else (s, None)
         nome = str(nome or "").strip()
         if not nome:
             continue
-        pagina = pagina if isinstance(pagina, int) and any(i <= pagina <= f for i, f in faixas) else None
-        confirmada = False
+        pagina = pagina if isinstance(pagina, int) and na_faixa(pagina) else None
+        item = {"nome": nome, "pagina": pagina, "confirmada": False}
         if pagina is not None and textos:
             palavras = palavras_de(nome)
-            perto = ea.chave((textos.get(pagina) or "") + " " + (textos.get(pagina + 1) or ""), 10 ** 6)
-            confirmada = bool(palavras) and sum(w in perto for w in palavras) / len(palavras) >= 0.5
-        saida.append({"nome": nome, "pagina": pagina, "confirmada": confirmada})
+            vizinhas = sorted((q for q in range(pagina - perto, pagina + perto + 1) if na_faixa(q)),
+                              key=lambda q: (abs(q - pagina), q))
+            achada = next((q for q in vizinhas if confirma(q, palavras)), None)
+            if achada is not None:
+                item.update(pagina=achada, confirmada=True)
+                if achada != pagina:
+                    item["pagina_ia"] = pagina
+        saida.append(item)
     return saida
 
 
