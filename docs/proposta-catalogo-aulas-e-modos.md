@@ -1,6 +1,6 @@
 # Proposta: catálogo de aulas, modos completo e compacto, apostila própria
 
-**Versão** 0.1.0 · **Data** 2026-10-19 · **Natureza:** proposta em discussão com o usuário. Não é decisão
+**Versão** 0.2.0 · **Data** 2026-10-19 · **Natureza:** proposta em discussão com o usuário. Não é decisão
 fechada nem especificação. Nada aqui vira código antes de aprovado; o que tocar o SGE nasce lá, pelo
 documento (`01_DOMINIO.md`, ADR), na regra deles.
 
@@ -71,14 +71,18 @@ teoria, questões comentadas, lista e resumo.
 
 ### 3.4 Modo compacto
 
-Recorte **de dentro do completo** (nunca traz algo que o completo não tem), que cabe na janela:
+Recorte **de dentro do completo, mais o material de revisão do mesmo tema** (nunca traz teoria que o
+completo não tem), que cabe na janela:
 
 - **Janela parametrizável**: um percentual do completo, ou as horas disponíveis até a prova distribuídas
   por peso — o parâmetro escolhe a regra.
 - **Toda parte do assunto tem pelo menos um trecho no compacto** (nenhuma parte zera).
-- **Prioridade dentro da janela**: (1) resumo da aula; (2) teoria dos subtemas com mais questões
+- **Prioridade dentro da janela**: (1) resumo da aula; (2) teoria dos subtemas de maior incidência — a
+  tabela de incidência da própria apostila (Passo, Bizu) quando existir, senão a contagem de questões
   comentadas da banca; (3) questões comentadas da banca; (4) o resto da teoria.
-- Onde existir Passo Estratégico ou Bizu do tema, ele é candidato ao compacto e passa pela mesma régua.
+- **Passo Estratégico e Bizu** do tema não entram no completo (o completo são as aulas) e entram no
+  compacto como material de revisão, pela mesma régua: foram feitos para a reta final (decisão do
+  usuário, 2026-10-19, opção "b").
 - Cada segmento diz de onde veio (aula/faixa), para o aluno saber o que está relendo.
 
 ### 3.5 No SGE (proposta a levar para lá — documento primeiro, decisão deles com o usuário)
@@ -120,6 +124,63 @@ As respostas que o passo 0 tem de dar antes de escrever as regras do catálogo:
 Depois do passo 0: um ensaio do catálogo com IA em ~30 aulas de cursos diferentes, conferido pelo aluno,
 antes de rodar no acervo inteiro (~90 chamadas).
 
+### 4.1 O que o passo 0 mostrou (amostra de 12 cursos; texto cru de 4 aulas)
+
+Nenhuma aula tem marcadores. O sumário fica na p. 2 (e na p. 3, nas aulas longas), em quatro formatos:
+
+| Formato | Exemplo | Entrada | Página |
+|---|---|---|---|
+| A: regular e pós-edital | `00 - Curso Regular\09 - Redes de Computadores\aula 06.pdf` | `N) Tema - Tipo [- Banca]` + pontilhada + página grudada (`Cesgranrio17`) | posição no PDF |
+| B: aulas mais antigas | `04 - SEFAZ-SC\09 - Legislação Tributária de Santa Catarina - Parte 01` | `SUMÁRIO PÁGINA` / `N. Título 02` | impressa, +1 |
+| C: Passo Estratégico | `39 - Passo Estratégico Básico de Português`, aula 06 | `Título ..... N`, sem número de entrada | impressa, +1; **a numeração recomeça** no questionário anexado (Perguntas 3 → p. 36, +33) |
+| D: Bizu | `SEFAZ-CE 2026\22 - Bizu Estratégico`, aula 11 | sem sumário com página; tabela "assunto → bizus 1 a 4 → link do caderno" | o assunto abre a página, seguido do primeiro bizu da faixa (`5. Classificações…` na p. 9) |
+
+- Formato A: tirados os pontos, a página fica grudada na última palavra ("Teoria4", "Cesgranrio17") e é a
+  posição no PDF (9 de 9 conferidas em `00 - Curso Regular\09 - Redes de Computadores\aula 06.pdf`). A
+  banca vem escrita "Cebraspe", "Cesgranrio", "FCC", "FGV"; no corpo, "CESPE".
+- Formatos B e C: página impressa, deslocamento +1; o C pode ter mais de uma sequência de numeração.
+- Títulos de seção no corpo saem mutilados (letra inicial grande numa linha, o resto na seguinte:
+  "Q C – NAT E PAT - CESGRANRIO / UESTÕES OMENTADAS"); a conferência usa pedaços das palavras sem a
+  primeira letra.
+- O Passo e o Bizu trazem tabela de incidência por subassunto, com banca e período ("Tipologia textual
+  45,5%… FGV, FCC e Cebraspe, 2023 a 2026"; "Despesa Pública 13,20%… banca FCC").
+- Páginas de imagem com OCR ilegível existem (Bizu de Direito Financeiro, SEFAZ-CE: 14 de 47) e não
+  aparecem como "vazias".
+- A "lei" da amostra (`04 - SEFAZ-SC\09 - Legislação Tributária de Santa Catarina - Parte 01`) é aula
+  comum (formato B: teoria comentada, bateria de questões, lista, gabarito), não lei seca. O número da aula
+  sai do conteúdo ("AULA 14" no arquivo `aula-00`).
+
+Regras:
+
+- **R1 (formato A):** se a linha crua tinha pontilhada, os dígitos do fim são a página, com ou sem espaço;
+  a banca é o que sobra depois do tipo, sem o número.
+- **R2 (formatos B e C):** `N. Título NN` e `Título ..... NN`. Página do sumário que diminui começa uma
+  nova sequência, com deslocamento medido à parte.
+- **R3 (formato D):** lê a tabela "assunto → faixa de bizus" e acha no corpo a página que começa com o
+  primeiro número da faixa (`N.`).
+- **R4 (conferir no corpo):** o deslocamento de cada aula (ou sequência) é o que mais se repete entre as
+  entradas. A página é "confirmada" quando traz o tema como linha própria, ou as três primeiras linhas
+  trazem o tema ou os pedaços das palavras do tema sem a primeira letra (`ROTOCOLO`, `ABARITO`).
+- **R5 (fim da seção):** a página antes da próxima entrada; o que não está no sumário (gabarito,
+  referências) fica dentro da seção em que cai.
+- **R6 (tipos):** `Bateria de Questões` e `Questões estratégicas` → questões comentadas; `Roteiro de
+  Revisão` e `Aposta Estratégica` → resumo; novo `incidencia` ("O que é mais cobrado", "Análise
+  estatística"); novo `questionario` ("Perguntas e respostas"); `bibliografia`. Entrada sem tipo (B, C)
+  herda o tipo da anterior; a primeira é teoria.
+- **R7 (incidência):** linhas `Subassunto NN,N%`, com a banca e o período citados na mesma página.
+- **R8 (banca da aula):** a do sumário; senão a da incidência; senão a contagem no texto (CESPE =
+  Cebraspe).
+- **R9 (página ilegível):** marcada quando a maior parte das palavras é longa e colada ou cheia de
+  símbolos.
+- **R10 (número da aula):** do conteúdo ("AULA 14"); o nome do arquivo só na falta.
+
+Respostas às perguntas do §4: (1) o título e o sumário dão o tema nos formatos A–C; no B o nome da lei só
+aparece na abertura (p. 3) → o catálogo lê o sumário e a abertura; (2) sim, nos formatos A–D, com a
+conferência por pedaços; (3) sai da próxima rodada — aulas com mais de um tema no sumário (Redes aula 06
+tem 7); (4) a banca vem do sumário no A; a contagem no texto fica como reserva. O compacto sai por regra
+na estrutura (seções, faixas e incidência do Passo e do Bizu); casar os subtemas deles com os assuntos do
+edital continua sendo trabalho do catálogo, igual aos cursos regulares.
+
 ## 5. Riscos conhecidos
 
 - O casamento assunto ↔ aula ainda depende do texto do assunto; nome resumido pelo edital por IA continua
@@ -135,3 +196,4 @@ antes de rodar no acervo inteiro (~90 chamadas).
 | Versão | Data | Mudança |
 |---|---|---|
 | 0.1.0 | 2026-10-19 | Primeira versão, a partir da conversa com o usuário e dos ensaios no Pi |
+| 0.2.0 | 2026-10-19 | Resultado do passo 0: formatos de sumário, regras R1–R10, incidência, OCR ilegível; compacto = recorte do completo + Passo/Bizu do tema (opção "b") |
