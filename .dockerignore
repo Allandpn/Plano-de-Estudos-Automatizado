@@ -16,3 +16,4 @@
 !integracao/diagnostico_prova.py
 !integracao/diagnostico/
 !integracao/diagnostico/*.json
+!integracao/estrutura_apostilas.py
