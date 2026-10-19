@@ -210,7 +210,8 @@ class EstruturaTest(unittest.TestCase):
         self.assertEqual((0, 3, 3), res[0])
         self.assertEqual((1, 3, 3), res[1])
         ea.fechar_secoes(e, 10)
-        self.assertEqual([(4, 8), (9, 9), (10, 10), (4, 5), (6, 7), (8, 10)], [(x["inicio"], x["fim"]) for x in e])
+        # o último item do detalhado para no fim da teoria do índice principal (p. 8), não engole as questões
+        self.assertEqual([(4, 8), (9, 9), (10, 10), (4, 5), (6, 7), (8, 8)], [(x["inicio"], x["fim"]) for x in e])
 
     def test_entrada_sem_pagina_e_procurada_no_corpo(self):
         """Bizu de Economia (SEFAZ-CE, aula 22): '1) Conceitos fundamentais' sem página no índice."""
@@ -280,6 +281,24 @@ class EstruturaTest(unittest.TestCase):
         self.assertEqual([("Despesa Pública", 13.2), ("Instrumentos Orçamentários", 11.17),
                           ("Créditos Ordinários e Adicionais", 5.59)], a["incidencia"]["subassuntos"])
         self.assertEqual((["FCC"], "incidência"), a["banca"])
+
+    def test_bizu_com_nome_partido_na_tabela_e_bizu_no_meio_da_pagina(self):
+        """Bizu de Contabilidade Geral (SEFAZ-CE, aula 12): o nome ocupa várias linhas em volta da faixa e os
+        bizus 2 a 4 começam no meio da página."""
+        tabela = "\n".join(["Contabilidade Geral", "Assunto Bizus Caderno de Questões",
+                            "Estoques: Componentes do custo. Critérios de", "valoração, apuração do custo das mercadorias",
+                            "vendidas e métodos de avaliação (Preço específico,", "1 http://questo.es/xi8xnp",
+                            "PEPS, Média Ponderada Móvel). Tipos de inventário.", "Tratamento contábil dos tributos incidentes em",
+                            "operações comerciais.", "Ativo imobilizado: Reconhecimento. Mensuração",
+                            "inicial e mensuração subsequente. Depreciação:", "2 http://questo.es/joa6f5",
+                            "cálculo e contabilização. Tratamento do resultado na", "venda e da baixa do ativo."])
+        paginas = [(1, "capa"), (2, "bizu"), (3, "análise"), (4, tabela), (5, "Apresentação"),
+                   (6, "1. Estoques: Componentes do custo. Critérios de valoração,\napuração do custo"),
+                   (7, "texto\n2) a lista de exemplos não conta\n2. depois de minúscula também não"),
+                   (8, "• lucro maior\ntexto\nmais texto\n2. Ativo imobilizado: Reconhecimento. Mensuração inicial"),
+                   (9, "texto")]
+        e = ea.secoes_do_bizu(paginas, ea.tabela_bizus(paginas))
+        self.assertEqual([("Estoques", 6), ("Ativo imobilizado", 8)], [(x["tema"], x["inicio"]) for x in e])
 
     def test_r9_pagina_ilegivel(self):
         self.assertTrue(ea.ilegivel("r\ns*ptppi|dnpsesepinpxa\n(cid:127)"))

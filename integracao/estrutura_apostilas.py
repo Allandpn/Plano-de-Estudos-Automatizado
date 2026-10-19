@@ -292,12 +292,20 @@ def deslocamentos(paginas, entradas, alcance=3):
 
 def fechar_secoes(entradas, n_paginas):
     """Cada seção vai até a página antes da próxima da mesma lista que começa depois dela; a última, até o
-    fim (R5)."""
+    fim, ou até o fim da seção do índice principal que a contém (R5)."""
     for lista in {e.get("lista", 0) for e in entradas}:
         com_inicio = [e for e in entradas if e.get("inicio") and e.get("lista", 0) == lista]
         for i, e in enumerate(com_inicio):
             prox = next((x["inicio"] for x in com_inicio[i + 1:] if x["inicio"] > e["inicio"]), n_paginas + 1)
             e["fim"] = max(e["inicio"], prox - 1)
+    # O sumário detalhado não passa do fim da seção do índice principal onde cai (Ciência de Dados, aula 07:
+    # o último item da teoria não engole as questões e a lista).
+    principal = [e for e in entradas if e.get("inicio") and e.get("lista", 0) == 0]
+    for e in entradas:
+        if e.get("inicio") and e.get("lista", 0) > 0:
+            dono = next((x for x in principal if x["inicio"] <= e["inicio"] <= x["fim"]), None)
+            if dono:
+                e["fim"] = min(e["fim"], dono["fim"])
 
 
 def tabela_bizus(paginas, primeiras=6):
@@ -328,14 +336,24 @@ def tabela_bizus(paginas, primeiras=6):
 
 
 def secoes_do_bizu(paginas, itens):
-    """No corpo, cada assunto do Bizu abre a página com o primeiro bizu da faixa ('5. Classificações…')
-    numa das três primeiras linhas."""
+    """No corpo, cada assunto do Bizu começa com o primeiro bizu da faixa, número e letra maiúscula, no topo
+    ('5. Classificações…') ou no meio da página ('2. Ativo imobilizado: Reconhecimento…'). Quando a tabela parte o nome em várias linhas em volta da faixa, o pedaço montado
+    começa com minúscula; aí o nome vem do título no corpo, até os dois-pontos."""
     entradas, depois = [], 1
     for item in itens:
-        ini = item["bizus"][0]
-        achada = next((p for p, t in paginas if p > depois and any(
-            re.match(rf"{ini}\.\s", l.strip()) for l in (t or "").splitlines()[:3])), None)
-        entradas.append({"n": ini, "tema": item["tema"], "tipo": "resumo", "banca": None,
+        ini, achada, titulo = item["bizus"][0], None, None
+        for p, t in paginas:
+            if p <= depois:
+                continue
+            linhas = [l.strip() for l in (t or "").splitlines()]
+            titulo = next((l for l in linhas if re.match(rf"{ini}\.\s+[A-ZÀ-Ú]", l)), None)
+            if titulo:
+                achada = p
+                break
+        tema = item["tema"]
+        if titulo and (not tema or not tema[0].isupper()):
+            tema = re.sub(rf"^{ini}\.\s+", "", titulo).split(":")[0].strip()
+        entradas.append({"n": ini, "tema": tema, "tipo": "resumo", "banca": None,
                          "rotulo": "bizus {}–{}".format(*item["bizus"]), "pagina": None, "formato": "D", "seq": 0,
                          "inicio": achada, "confirmada": achada is not None})
         depois = achada or depois
