@@ -87,8 +87,8 @@ def entrada_do_sumario(linha):
             break
     tema = " - ".join(partes[:i_tipo]) if i_tipo else (partes[0] if partes else "")
     resto = " ".join(partes[i_tipo + 1:]) if i_tipo is not None else ""
-    banca = next((b for b, r in BANCAS.items() if re.search(r, resto)), None) if resto else None
-    return {"n": int(m.group(1)), "tema": tema, "tipo": tipo, "banca": banca,
+    banca = next((b for b, r in BANCAS.items() if re.search(r, resto, re.IGNORECASE)), None) if resto else None
+    return {"n": int(m.group(1)), "tema": tema, "tipo": tipo, "banca": banca, "rotulo": resto or None,
             "pagina": int(m.group(3)) if m.group(3) else None}
 
 
@@ -183,7 +183,8 @@ def relatorio(conn, cursos, aulas_por_curso):
                       f"- sumário: {len(e)} entradas; página do sumário = página do PDF {d:+d} "
                       f"({conf} de {test} conferidas)" if test else f"- sumário: {len(e)} entradas, nenhuma conferível"]
             for x in e[:40]:
-                saida.append(f"    - {x['n']}) {x['tema'][:60]} | {x['tipo'] or '?'} | {x['banca'] or ''} | p. {x['pagina'] or '?'}")
+                saida.append(f"    - {x['n']}) {x['tema'][:60]} | {x['tipo'] or '?'} | {x['banca'] or x['rotulo'] or ''}"
+                             f" | p. {x['pagina'] or '?'}")
             if len(e) > 40:
                 saida.append(f"    - … mais {len(e) - 40}")
             saida.append(f"- bancas no texto: {a['bancas_texto'] or '—'}")
@@ -200,14 +201,35 @@ def relatorio(conn, cursos, aulas_por_curso):
     return "\n".join(saida)
 
 
+def bruto(conn, trecho, paginas_max=80, linhas_sumario=40):
+    """O texto como está no índice, para escrever as regras: p. 2-4 inteiras (cruas e decodificadas)
+    e as 3 primeiras linhas de cada página (onde ficam os títulos de seção)."""
+    linha = conn.execute("SELECT id, curso, nome_arquivo FROM arquivos WHERE curso || '/' || nome_arquivo LIKE ? "
+                         "ORDER BY curso, nome_arquivo LIMIT 1", (f"%{trecho}%",)).fetchone()
+    if not linha:
+        return f"_nenhum arquivo casou com {trecho!r}_"
+    paginas = conn.execute("SELECT pagina, texto FROM paginas WHERE arquivo_id = ? ORDER BY pagina", (linha[0],)).fetchall()
+    saida = [f"# {linha[1]}/{linha[2]} — {len(paginas)} págs", ""]
+    for p, t in paginas[1:4]:
+        saida += [f"## p. {p} (crua → decodificada)", ""]
+        for l in (t or "").splitlines()[:linhas_sumario]:
+            saida.append(f"    {l[:160]!r}  →  {decodificar(l)[:120]!r}")
+        saida.append("")
+    saida += ["## Começo de cada página", ""]
+    for p, t in paginas[:paginas_max]:
+        saida.append(f"- p. {p}: " + " ⏎ ".join(l.strip()[:70] for l in (t or "").splitlines()[:3]))
+    return "\n".join(saida)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Estrutura das apostilas (amostra, sem IA).")
     ap.add_argument("--curso", action="append", help="trecho do nome da pasta (repetível); padrão: a amostra")
     ap.add_argument("--aulas", type=int, default=3, help="aulas por curso (padrão 3: primeira, meio, última)")
     ap.add_argument("--indice", default=os.environ.get("INDICE_DB"))
+    ap.add_argument("--bruto", metavar="TRECHO", help="mostra o texto cru de UMA aula (trecho de curso/arquivo)")
     args = ap.parse_args()
     with closing(sqlite3.connect(f"file:{args.indice}?mode=ro", uri=True)) as conn:
-        print(relatorio(conn, args.curso or AMOSTRA, args.aulas))
+        print(bruto(conn, args.bruto) if args.bruto else relatorio(conn, args.curso or AMOSTRA, args.aulas))
 
 
 if __name__ == "__main__":

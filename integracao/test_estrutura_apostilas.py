@@ -46,7 +46,9 @@ class EstruturaTest(unittest.TestCase):
     def test_decodifica_a_linha_pontilhada_do_sumario(self):
         self.assertEqual("1) NAT e PAT - Teoria 3", ea.decodificar(pontilhar("1). NAT e PAT - Teoria", 3)))
         e = ea.entrada_do_sumario(pontilhar("2). NAT e PAT - Questões Comentadas - CEBRASPE", 6))
-        self.assertEqual({"n": 2, "tema": "NAT e PAT", "tipo": "questoes_comentadas", "banca": "CEBRASPE", "pagina": 6}, e)
+        self.assertEqual({"n": 2, "tema": "NAT e PAT", "tipo": "questoes_comentadas", "banca": "CEBRASPE",
+                          "rotulo": "CEBRASPE", "pagina": 6}, e)
+        self.assertEqual("CEBRASPE", ea.entrada_do_sumario("3) Redes - Questões Comentadas - Cebraspe 9")["banca"])
         self.assertIsNone(ea.entrada_do_sumario("texto corrido da aula"))
 
     def test_aula_le_tema_tipo_banca_e_confere_a_pagina(self):
@@ -55,6 +57,12 @@ class EstruturaTest(unittest.TestCase):
         self.assertEqual("FCC", a["entradas"][2]["banca"])
         self.assertEqual((0, 4, 4), a["deslocamento"], "a página do sumário é a do PDF; o tema está escrito nela")
         self.assertFalse(a["fora"])
+
+    def test_bruto_mostra_a_pagina_crua_e_decodificada(self):
+        md = ea.bruto(self.conn, "aula 06")
+        self.assertIn("NAT e PAT - Teoria 3", md)
+        self.assertIn("- p. 6: NAT e PAT - Q C - UESTÕES OMENTADAS", md)
+        self.assertIn("nenhum arquivo casou", ea.bruto(self.conn, "nao existe"))
 
     def test_arquivo_curto_sem_sumario_fica_fora(self):
         self.assertTrue(ea.analisar_aula(self.conn, 2)["fora"])
