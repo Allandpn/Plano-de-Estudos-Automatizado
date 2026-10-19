@@ -95,6 +95,9 @@ def escolher_aulas(conn, cursos, total=30):
 
 
 CONTEXTOS = ("inicio", "primeira_linha", "titulos")
+# Teste de 2026-10-19 (proposta §4.2): com a primeira linha de cada página da teoria a IA tira subtemas
+# específicos do texto; só com o começo de cada seção, poucos (ou completa pelo que o tema costuma ter).
+CONTEXTO_PADRAO = "primeira_linha"
 
 
 def _e_de_questao(linha):
@@ -134,10 +137,10 @@ def _contexto_da_teoria(a, paginas, contexto, max_linhas=260):
     return linhas[:max_linhas]
 
 
-def montar_pedido(conn, arquivo_id, curso, nome, trecho=160, max_mapa=150, contexto="inicio"):
+def montar_pedido(conn, arquivo_id, curso, nome, trecho=160, max_mapa=150, contexto=CONTEXTO_PADRAO):
     """A ficha por regra e o texto do pedido à IA. Seção = posição na lista do sumário (1, 2, …).
-    'contexto' (ensaio de 2026-10-19): além do começo de cada seção, a primeira linha de cada página da
-    teoria ('primeira_linha') ou as linhas de título dela ('titulos')."""
+    'contexto': além do começo de cada seção, a primeira linha de cada página da teoria ('primeira_linha',
+    o padrão) ou as linhas de título dela ('titulos'); 'inicio' é só o começo de cada seção."""
     a = ea.analisar_aula(conn, arquivo_id)
     paginas = dict(conn.execute("SELECT pagina, texto FROM paginas WHERE arquivo_id = ?", (arquivo_id,)).fetchall())
     linhas = [f"Curso: {curso}", f"Arquivo: {nome} ({a['n']} páginas)",
@@ -227,7 +230,7 @@ def interpretar(resposta, a):
             "observacao": str(resposta.get("observacao") or "").strip() or None}
 
 
-def ficha(sge, conn, arquivo, simular=False, contexto="inicio", resposta=None):
+def ficha(sge, conn, arquivo, simular=False, contexto=CONTEXTO_PADRAO, resposta=None):
     """Uma ficha: a estrutura por regra e os temas pela IA. Resposta ilegível ganha uma segunda chance com
     o erro; IaIndisponivel sobe (o ensaio para e grava o que tem). Com 'resposta' (a que a IA já deu),
     só refaz a parte da regra, sem perguntar de novo."""
@@ -264,9 +267,9 @@ def resposta_gravada(f):
                       for t in f.get("temas", [])]}
 
 
-def reprocessar(conn, saida, contexto="inicio", log=print):
+def reprocessar(conn, saida, contexto=CONTEXTO_PADRAO, log=print):
     """Refaz a parte da regra das fichas já gravadas (regra nova, mesma resposta da IA), sem chamar a IA."""
-    sufixo = "" if contexto == "inicio" else f"-{contexto}"
+    sufixo = "" if contexto == CONTEXTO_PADRAO else f"-{contexto}"
     arquivo_json = Path(saida) / f"catalogo-ensaio{sufixo}.json"
     fichas = []
     for f in json.loads(arquivo_json.read_text(encoding="utf-8")):
@@ -328,12 +331,12 @@ def relatorio(fichas):
     return "\n".join(saida)
 
 
-def ensaio(sge, conn, saida, cursos, total=30, simular=False, log=print, contexto="inicio", so=None):
+def ensaio(sge, conn, saida, cursos, total=30, simular=False, log=print, contexto=CONTEXTO_PADRAO, so=None):
     """Pergunta à IA pelas aulas que ainda não têm ficha em saida/catalogo-ensaio.json e regrava o .json e
     o .md a cada aula. Devolve (fichas, parou_por) — parou_por é a mensagem se a IA parou."""
     saida = Path(saida)
     saida.mkdir(parents=True, exist_ok=True)
-    sufixo = "" if contexto == "inicio" else f"-{contexto}"
+    sufixo = "" if contexto == CONTEXTO_PADRAO else f"-{contexto}"
     arquivo_json = saida / (f"catalogo-simulado{sufixo}.json" if simular else f"catalogo-ensaio{sufixo}.json")
     fichas = json.loads(arquivo_json.read_text(encoding="utf-8")) if arquivo_json.exists() and not simular else []
     feitas = {f["caminho"] for f in fichas if not f.get("falha")}
@@ -364,8 +367,8 @@ def main():
     ap.add_argument("--total", type=int, default=30)
     ap.add_argument("--curso", action="append", help="trecho do nome da pasta (repetível); padrão: a amostra do passo 0")
     ap.add_argument("--simular", action="store_true", help="monta os pedidos (catalogo-simulado.json) sem chamar a IA")
-    ap.add_argument("--contexto", choices=CONTEXTOS, default="inicio",
-                    help="o que a IA vê além do começo de cada seção (padrão: só ele)")
+    ap.add_argument("--contexto", choices=CONTEXTOS, default=CONTEXTO_PADRAO,
+                    help="o que a IA vê das páginas da teoria além do começo de cada seção (padrão: a primeira linha)")
     ap.add_argument("--so", action="append", help="só as aulas cujo caminho tem este trecho (repetível)")
     ap.add_argument("--reprocessar", action="store_true",
                     help="refaz a parte da regra das fichas gravadas, com a mesma resposta da IA (sem chamá-la)")

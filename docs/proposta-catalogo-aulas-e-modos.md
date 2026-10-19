@@ -1,6 +1,6 @@
 # Proposta: catálogo de aulas, modos completo e compacto, apostila própria
 
-**Versão** 0.2.0 · **Data** 2026-10-19 · **Natureza:** proposta em discussão com o usuário. Não é decisão
+**Versão** 0.3.0 · **Data** 2026-10-19 · **Natureza:** proposta em discussão com o usuário. Não é decisão
 fechada nem especificação. Nada aqui vira código antes de aprovado; o que tocar o SGE nasce lá, pelo
 documento (`01_DOMINIO.md`, ADR), na regra deles.
 
@@ -34,6 +34,9 @@ Medições que sustentam a mudança:
 6. **O sistema aponta o que o acervo não cobre**, e o aluno pode **incluir a própria apostila** (feita por
    ele com IA e outras fontes, em PDF), que é indexada e passa a servir para este e para os próximos
    editais.
+7. **Questões fora da apostila de teoria.** As sessões de questões são feitas no QConcursos/TEC; questões
+   comentadas, lista e gabarito não entram nos segmentos. O catálogo registra as faixas de questões à parte,
+   para uma eventual apostila de questões (sessões com o material do Estratégia), se for o caso.
 
 ## 3. Desenho proposto
 
@@ -44,7 +47,8 @@ Para cada PDF do acervo, uma ficha:
 | Campo | De onde vem |
 |---|---|
 | curso, aula, páginas | índice |
-| temas que a aula ensina (lista curta, com a faixa de páginas de cada um quando a aula tem mais de um) | IA, a partir do título, sumário/marcadores e, se o passo 0 mostrar necessário, do começo das seções |
+| temas que a aula ensina (lista curta, com a faixa de páginas de cada um quando a aula tem mais de um) | IA, a partir do sumário (seções por regra) e da primeira linha de cada página da teoria (§4.2) |
+| questões de cada tema (faixas, banca) | regra: nome do tema no sumário; senão "questões da aula" |
 | seções: teoria, questões comentadas, lista, gabarito, resumo (faixas) | regra, se o passo 0 mostrar que os títulos de seção são padronizados; senão, IA |
 | banca das questões (contagem por banca) | regra (contagem no texto) |
 | gêmeas: outras cópias da mesma aula em outros cursos | regra (miolo igual, já implementado em `acervo.py`) |
@@ -67,7 +71,7 @@ refeito.
 ### 3.3 Modo completo
 
 Os segmentos de ~60 min das aulas/faixas do §3.2, na ordem pedagógica (a ordem das aulas no curso), com
-teoria, questões comentadas, lista e resumo.
+teoria e resumo (sem questões, decisão 7).
 
 ### 3.4 Modo compacto
 
@@ -79,7 +83,7 @@ completo não tem), que cabe na janela:
 - **Toda parte do assunto tem pelo menos um trecho no compacto** (nenhuma parte zera).
 - **Prioridade dentro da janela**: (1) resumo da aula; (2) teoria dos subtemas de maior incidência — a
   tabela de incidência da própria apostila (Passo, Bizu) quando existir, senão a contagem de questões
-  comentadas da banca; (3) questões comentadas da banca; (4) o resto da teoria.
+  comentadas da banca; (3) o resto da teoria.
 - **Passo Estratégico e Bizu** do tema não entram no completo (o completo são as aulas) e entram no
   compacto como material de revisão, pela mesma régua: foram feitos para a reta final (decisão do
   usuário, 2026-10-19, opção "b").
@@ -184,6 +188,16 @@ tem 7); (4) a banca vem do sumário no A; a contagem no texto fica como reserva.
 na estrutura (seções, faixas e incidência do Passo e do Bizu); casar os subtemas deles com os assuntos do
 edital continua sendo trabalho do catálogo, igual aos cursos regulares.
 
+### 4.2 Ensaio do catálogo com IA (30 aulas, 2026-10-19)
+
+- 30 de 30 respondidas, 98 temas; natureza (aula/revisão) certa em todas; nenhuma página vem da IA.
+- Só com o começo de cada seção, a IA completava os subtemas "pelo conteúdo típico" (16 de 30). Teste em
+  8 aulas: proibida de completar, dá poucos subtemas (48); com a primeira linha de cada página da teoria,
+  131, específicos (DNSSEC, mensagens DHCP, tipos de XSS); com as linhas de título, 117 (ruído de código).
+  → a primeira linha de cada página entra no pedido.
+- Regras corrigidas no ensaio: item do sumário detalhado limitado à seção principal; bizu que começa no
+  meio da página.
+
 ## 5. Riscos conhecidos
 
 - O casamento assunto ↔ aula ainda depende do texto do assunto; nome resumido pelo edital por IA continua
@@ -200,3 +214,4 @@ edital continua sendo trabalho do catálogo, igual aos cursos regulares.
 |---|---|---|
 | 0.1.0 | 2026-10-19 | Primeira versão, a partir da conversa com o usuário e dos ensaios no Pi |
 | 0.2.0 | 2026-10-19 | Resultado do passo 0: formatos de sumário, regras R1–R10, incidência, OCR ilegível; compacto = recorte do completo + Passo/Bizu do tema (opção "b") |
+| 0.3.0 | 2026-10-19 | Decisão 7 (questões fora); resultado do ensaio com IA e do teste de contexto |
