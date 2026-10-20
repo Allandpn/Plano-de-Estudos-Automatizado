@@ -1,6 +1,6 @@
 # Proposta: catálogo de aulas, modos completo e compacto, apostila própria
 
-**Versão** 0.4.0 · **Data** 2026-10-19 · **Natureza:** proposta em discussão com o usuário. Não é decisão
+**Versão** 0.5.0 · **Data** 2026-10-20 · **Natureza:** proposta em discussão com o usuário. Não é decisão
 fechada nem especificação. Nada aqui vira código antes de aprovado; o que tocar o SGE nasce lá, pelo
 documento (`01_DOMINIO.md`, ADR), na regra deles.
 
@@ -71,7 +71,9 @@ refeito.
 ### 3.2 Mapeamento de um edital
 
 1. Cada assunto (com o **texto integral do item do edital**, não só o nome curto — pendente no SGE) é
-   casado com as fichas cujos temas o ensinam, de qualquer curso.
+   classificado nos nós da árvore do QConcursos (§3.7); as fichas cujos temas caem nos mesmos nós o ensinam,
+   de qualquer curso. A classificação das fichas é feita uma vez para o acervo; a cada edital só se
+   classificam os assuntos dele (~100 nomes, poucas chamadas em lote).
 2. Entre gêmeas, fica **uma** versão: a com mais questões comentadas da banca do concurso; empate, a mais
    recente.
 3. Aula quase toda do assunto → inteira. Aula com um pedaço do assunto → a faixa daquele tema (da ficha).
@@ -122,6 +124,31 @@ completo não tem), que cabe na janela:
 
 Risco: material feito com IA pode ter erro. A ficha marca a origem ("apostila do aluno") e o segmento
 mostra isso; o aluno decide se confia.
+
+### 3.7 Árvore do QConcursos como língua comum (2026-10-20)
+
+O aluno resolve as questões no QConcursos (assinatura vitalícia) e às vezes no TEC. As árvores de assuntos
+dos dois ficam em `integracao/taxonomia/` (`exportar_taxonomia.py`; QConcursos: 259 disciplinas, 19.623 nós,
+baixada sem login; TEC: 145 disciplinas, 16.811 nós, importada do JSON exportado). A do **QConcursos é a
+referência**: é onde as sessões de questões acontecem.
+
+1. **Disciplina da ficha → disciplina do QConcursos**: as 127 disciplinas que a IA deu às fichas são ligadas
+   às 259 do QConcursos por nome; as que não casarem vão numa chamada só, para a IA escolher, e a tabela
+   fica para o aluno conferir (é curta).
+2. **Tema e subtema → assunto e subassunto**: dentro da disciplina, por regra (palavras do nome, termos e
+   subtemas contra os nomes da árvore); os ambíguos vão para a IA em lote, com a lista de assuntos da
+   disciplina (só nomes, sem ler apostila; ~40 temas por chamada → da ordem de 100 chamadas para os 3.548
+   temas). Cada ligação guarda a origem (regra ou IA) e o grau de confiança.
+3. **Assunto do edital → nós**: mesmo método, a cada edital.
+4. **O que isso dá**: (a) o casamento edital ↔ fichas por nó (§3.2); (b) para cada assunto do edital, o
+   **caminho do filtro no QConcursos** (disciplina > assunto > subassunto) para a sessão de questões — e o do
+   TEC, ligado ao do QConcursos por nome; (c) lacuna por parte = nó do edital sem ficha (§3.5); (d)
+   identidade do assunto entre editais (o nó, além do UUID do `canonico.db`).
+5. **Árvore que muda**: a exportação nova mostra nós novos, removidos, renomeados e movidos; só as ligações
+   desses nós são refeitas.
+
+Ensaio antes do acervo inteiro: as fichas de ~30 aulas e os 97 assuntos do SEFAZ SC 2026 (concurso-alvo no
+SGE), medindo quantas ligações a regra resolve sozinha e conferindo uma amostra com o aluno.
 
 ## 4. Passo 0 — medir a estrutura das apostilas, sem IA
 
@@ -228,3 +255,4 @@ edital continua sendo trabalho do catálogo, igual aos cursos regulares.
 | 0.2.0 | 2026-10-19 | Resultado do passo 0: formatos de sumário, regras R1–R10, incidência, OCR ilegível; compacto = recorte do completo + Passo/Bizu do tema (opção "b") |
 | 0.3.0 | 2026-10-19 | Decisão 7 (questões fora); resultado do ensaio com IA e do teste de contexto |
 | 0.4.0 | 2026-10-19 | Formato da ficha: disciplina, termos, página do subtema, gêmeas, origem, hash; catalogo.db; números do acervo |
+| 0.5.0 | 2026-10-20 | Árvore do QConcursos como língua comum (§3.7); casamento edital ↔ fichas por nó (§3.2) |
