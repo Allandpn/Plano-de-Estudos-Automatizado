@@ -156,6 +156,14 @@ class CatalogoTest(unittest.TestCase):
         self.assertEqual(("h1", "acervo", ["outro\\aula 06.pdf"], ca.VERSAO_PEDIDO),
                          (f["hash"], f["origem"], f["gemeas"], f["versao_pedido"]))
 
+    def test_espera_ate_a_hora_em_que_a_assinatura_volta(self):
+        from datetime import datetime
+        agora = datetime(2026, 10, 19, 20, 31)
+        msg = "Limite de uso da assinatura atingido nesta janela. (You've hit your session limit · resets 8:40pm (America/Sao_Paulo))"
+        self.assertEqual(9 * 60 + 120, ca.segundos_ate_liberar(msg, agora))
+        self.assertEqual((13 * 60 + 29) * 60 + 120, ca.segundos_ate_liberar("resets 10am", agora), "amanhã às 10h")
+        self.assertEqual(1800, ca.segundos_ate_liberar("IA fora do ar", agora))
+
     def test_so_questoes(self):
         entrada = {"tipo": "questoes_comentadas"}
         self.assertIn("todas as seções", ca.so_questoes({"entradas": [entrada, {"tipo": "gabarito"}]}, {}, "aula 04.pdf"))

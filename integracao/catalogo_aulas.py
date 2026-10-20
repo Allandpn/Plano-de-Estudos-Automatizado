@@ -28,6 +28,8 @@ Uso (contêiner do worker: índice, rede e token do SGE):
         python integracao/catalogo_aulas.py --saida /saida
     docker compose run --rm --no-deps -T planejamento \
         python integracao/catalogo_aulas.py --acervo --db /dados/material/catalogo.db --limite 200
+    docker compose run -d --no-deps --name catalogo-acervo planejamento \\
+        python -u integracao/catalogo_aulas.py --acervo --db /dados/material/catalogo.db --esperar
     python3 integracao/catalogo_aulas.py --progresso --db /mnt/ssd/material/catalogo.db --indice /mnt/ssd/acervo/indice.db
 """
 
@@ -571,6 +573,21 @@ def catalogar_acervo(sge, conn, db, limite=None, log=print, contexto=CONTEXTO_PA
     return chamadas, parou
 
 
+def segundos_ate_liberar(mensagem, agora=None, folga=120, padrao=1800):
+    """Quanto esperar quando a assinatura para: até o horário que a mensagem dá ('resets 8:40pm',
+    'resets 10am'), mais 'folga'; sem horário legível, 'padrao'."""
+    from datetime import datetime, timedelta
+    agora = agora or datetime.now()
+    m = re.search(r"resets\s+(\d{1,2})(?::(\d{2}))?\s*([ap]m)", mensagem or "", re.IGNORECASE)
+    if not m:
+        return padrao
+    hora = int(m.group(1)) % 12 + (12 if m.group(3).lower() == "pm" else 0)
+    alvo = agora.replace(hour=hora, minute=int(m.group(2) or 0), second=0, microsecond=0)
+    if alvo <= agora:
+        alvo += timedelta(days=1)
+    return int((alvo - agora).total_seconds()) + folga
+
+
 def reclassificar(conn, db, log=print):
     """Aplica a regra de 'só questões' às fichas já gravadas (lidas pela IA ou com falha), sem chamar a IA: a
     resposta fica na ficha, a situação muda. Devolve quantas mudaram."""
@@ -640,6 +657,8 @@ def main():
     ap.add_argument("--acervo", action="store_true", help="catalogar o acervo inteiro no --db (aulas únicas)")
     ap.add_argument("--db", help="catalogo.db (com --acervo)")
     ap.add_argument("--limite", type=int, help="com --acervo: no máximo N chamadas à IA nesta rodada")
+    ap.add_argument("--esperar", action="store_true",
+                    help="com --acervo: quando a assinatura parar, espera até a hora em que ela volta e continua")
     ap.add_argument("--progresso", action="store_true", help="com --db: quanto do acervo já foi catalogado e quanto falta")
     ap.add_argument("--reclassificar", action="store_true",
                     help="com --db: aplica a regra de 'só questões' às fichas gravadas, sem chamar a IA")
@@ -671,7 +690,14 @@ def main():
         sge = SgeApi(os.environ.get("SGE_URL", "http://app:8080"), os.environ["INTERNAL_TOKEN"])
     with closing(sqlite3.connect(f"file:{args.indice}?mode=ro", uri=True)) as conn:
         if args.acervo:
-            _, parou = catalogar_acervo(sge, conn, CatalogoDb(args.db), args.limite, contexto=args.contexto)
+            db = CatalogoDb(args.db)
+            while True:
+                _, parou = catalogar_acervo(sge, conn, db, args.limite, contexto=args.contexto)
+                if not (parou and args.esperar):
+                    break
+                espera = segundos_ate_liberar(parou)
+                print(f"{time.strftime('%Y-%m-%d %H:%M')} assinatura parada: nova tentativa em {espera // 60} min", flush=True)
+                time.sleep(espera)
         else:
             _, parou = ensaio(sge, conn, args.saida, args.curso or ea.AMOSTRA, args.total, args.simular,
                               contexto=args.contexto, so=args.so)
