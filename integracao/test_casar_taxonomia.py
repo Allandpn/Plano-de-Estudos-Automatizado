@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+"""Testes de integracao/casar_taxonomia.py com uma árvore pequena no formato normalizado e uma IA falsa."""
+
+import json
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import casar_taxonomia as ct  # noqa: E402
+
+ARVORE = [
+    {"id": 1, "nome": "Português", "ordem": 1, "filhos": [
+        {"id": 11, "nome": "Sintaxe", "ordem": 1, "filhos": [
+            {"id": 111, "nome": "Vozes Verbais", "ordem": 1, "filhos": []}]},
+        {"id": 12, "nome": "Pontuação", "ordem": 2, "filhos": []}]},
+    {"id": 2, "nome": "Espanhol", "ordem": 2, "filhos": [{"id": 21, "nome": "Verbos", "ordem": 1, "filhos": []}]},
+    {"id": 3, "nome": "Redes de Computadores", "ordem": 3, "filhos": [
+        {"id": 31, "nome": "NAT (Network Address Translation)", "ordem": 1, "filhos": []},
+        {"id": 32, "nome": "Protocolos de Roteamento", "ordem": 2, "filhos": [
+            {"id": 321, "nome": "OSPF", "ordem": 1, "filhos": []}]}]}]
+
+
+class IaFalsa:
+    def __init__(self, respostas):
+        self.respostas, self.pedidos = list(respostas), []
+
+    def completar(self, sistema, usuario):
+        self.pedidos.append(usuario)
+        return json.dumps(self.respostas.pop(0))
+
+
+class CasarTaxonomiaTest(unittest.TestCase):
+    def setUp(self):
+        self.arvore = ct.Arvore(ARVORE)
+
+    def test_palavras_sem_acento_vazias_e_plural(self):
+        self.assertEqual(["voze", "verbai"], ct.palavras("Vozes Verbais"))
+        self.assertEqual(["protocolo", "roteamento"], ct.palavras("Noções de Protocolos de Roteamento"))
+
+    def test_candidatos_restritos_a_disciplina(self):
+        sem = [i for _, i in self.arvore.candidatos("Vozes do verbo")]
+        com = [i for _, i in self.arvore.candidatos("Vozes do verbo", raizes={1})]
+        self.assertIn(111, com)
+        self.assertNotIn(21, com, "Espanhol fica de fora quando a disciplina é Português")
+        self.assertTrue(set(sem) >= set(com))
+        self.assertEqual(31, self.arvore.candidatos("NAT", ["Network Address Translation"], raizes={3})[0][1])
+        self.assertEqual([], self.arvore.candidatos("de da do"))
+
+    def test_casam_por_no_ou_dentro_dele_mas_nao_pela_disciplina(self):
+        self.assertTrue(ct.casam(self.arvore, 32, 321))
+        self.assertTrue(ct.casam(self.arvore, 321, 32))
+        self.assertFalse(ct.casam(self.arvore, 31, 321), "irmãos na mesma disciplina não casam")
+        self.assertFalse(ct.casam(self.arvore, 3, 31), "a disciplina inteira não conta")
+
+    def test_regra_decide_so_com_candidato_forte_e_isolado(self):
+        self.assertEqual(31, ct.regra_decide({"candidatos": [(0.9, 31), (0.5, 32)]}))
+        self.assertIsNone(ct.regra_decide({"candidatos": [(0.9, 31), (0.85, 32)]}))
+        self.assertIsNone(ct.regra_decide({"candidatos": [(0.6, 31)]}))
+
+    def test_ia_escolhe_so_entre_os_candidatos(self):
+        itens = [{"nome": "NAT e PAT", "disciplina": "Redes", "termos": [], "candidatos": [(0.9, 31), (0.4, 32)]},
+                 {"nome": "Lei 6.745/1985", "disciplina": "Regionais", "termos": [], "candidatos": [(0.3, 12)]}]
+        ia = IaFalsa([{"ligacoes": [{"item": 1, "nos": [31, 999], "confianca": "alta"}, {"item": 2, "nos": []}]}])
+        ct.ligar_com_ia(ia, itens, self.arvore, log=lambda m: None)
+        self.assertEqual(([31], "alta"), (itens[0]["ia"], itens[0]["confianca"]), "id fora dos candidatos é descartado")
+        self.assertEqual([], itens[1]["ia"])
+        self.assertIn("31: Redes de Computadores > NAT (Network Address Translation)", ia.pedidos[0])
+
+    def test_disciplinas_ligadas_numa_chamada(self):
+        ia = IaFalsa([{"disciplinas": {"Língua Portuguesa": [1], "Ciências da Computação": [3, 77]}}])
+        m = ct.mapear_disciplinas(ia, ["Língua Portuguesa", "Ciências da Computação", "Regionais de SC"], self.arvore)
+        self.assertEqual({"Língua Portuguesa": [1], "Ciências da Computação": [3], "Regionais de SC": []}, m)
+
+    def test_edital_usa_a_disciplina_ligada(self):
+        itens = ct.itens_do_edital({"assuntos": [{"assunto": "Vozes do verbo", "disciplina": "Língua Portuguesa",
+                                                  "chaveExterna": "x"}]}, self.arvore, {"Língua Portuguesa": [1]})
+        self.assertIn(111, [i for _, i in itens[0]["candidatos"]])
+        self.assertNotIn(21, [i for _, i in itens[0]["candidatos"]])
+
+
+if __name__ == "__main__":
+    unittest.main()

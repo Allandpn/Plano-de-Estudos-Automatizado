@@ -1,0 +1,272 @@
+#!/usr/bin/env python3
+"""
+casar_taxonomia.py — Liga assuntos do edital e temas das fichas aos nós da árvore do QConcursos e casa um
+com o outro pelos nós (`docs/proposta-catalogo-aulas-e-modos.md` §3.2 e §3.7).
+
+1. Regra: para cada item (assunto do edital ou tema de ficha), os nós candidatos da árvore, por palavras em
+   comum com o nome e os termos (palavra rara pesa mais; o caminho do nó dá contexto).
+2. IA em lote: escolhe, só entre os candidatos, até 3 nós por item (ou nenhum) — só nomes, sem apostila.
+3. Casamento: assunto e tema casam quando caem no mesmo nó ou um dentro do outro (assunto ↔ subassunto);
+   nunca só pela disciplina.
+
+Ensaio (este script): os assuntos do concurso-alvo no SGE e os temas das fichas de algumas aulas; todos vão
+para a IA, para comparar com a escolha da regra e calibrar quando a regra decide sozinha.
+
+    docker compose run --rm --no-deps -T -v ~/casamento:/saida planejamento \\
+        python integracao/casar_taxonomia.py --concurso 1 --db /dados/material/catalogo.db --saida /saida
+"""
+
+import argparse
+import json
+import math
+import os
+import re
+import sqlite3
+import sys
+import unicodedata
+from collections import Counter
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ia_comum import IaIndisponivel, completar_json  # noqa: E402
+
+PASTA_TAXONOMIA = Path(__file__).resolve().parent / "taxonomia"
+VAZIAS = set("de da do das dos e em a o as os para com por no na nos nas ao aos um uma sua seu suas seus ou "
+             "outros outras demais assuntos questoes variadas mescladas topicos aspectos gerais nocoes conceitos "
+             "basicos basicas introducao principais geral".split())
+CANDIDATOS = 8
+LOTE = 25
+
+
+def palavras(texto):
+    """Palavras sem acento, minúsculas, sem as vazias; plural simples tirado ('protocolos' -> 'protocolo')."""
+    t = unicodedata.normalize("NFKD", texto or "").encode("ascii", "ignore").decode().lower()
+    saida = []
+    for w in re.findall(r"[a-z0-9]+", t):
+        if w in VAZIAS or len(w) < 2:
+            continue
+        saida.append(w[:-1] if len(w) > 4 and w.endswith("s") else w)
+    return saida
+
+
+def carregar_arvore(pasta=PASTA_TAXONOMIA, fonte="qconcursos"):
+    arquivo = sorted(pasta.glob(f"{fonte}-*.json"))[-1]
+    return json.loads(arquivo.read_text(encoding="utf-8"))["disciplinas"], arquivo.name
+
+
+class Arvore:
+    """Os nós da árvore com caminho, pai e um índice invertido de palavras para achar candidatos."""
+
+    def __init__(self, disciplinas):
+        self.nos = {}
+        def andar(n, pai, caminho):
+            c = caminho + [n["nome"]]
+            self.nos[n["id"]] = {"id": n["id"], "nome": n["nome"], "pai": pai, "caminho": c, "nivel": len(c),
+                                 "palavras": set(palavras(n["nome"])), "contexto": set(palavras(" ".join(c)))}
+            for f in n["filhos"]:
+                andar(f, n["id"], c)
+        for d in disciplinas:
+            andar(d, None, [])
+        freq = Counter(w for n in self.nos.values() for w in n["contexto"])
+        self.idf = {w: math.log(len(self.nos) / f) for w, f in freq.items()}
+        self.indice = {}
+        for i, n in self.nos.items():
+            for w in n["contexto"]:
+                self.indice.setdefault(w, set()).add(i)
+
+    def ancestrais(self, i):
+        saida = []
+        while i is not None:
+            saida.append(i)
+            i = self.nos[i]["pai"]
+        return saida
+
+    def candidatos(self, nome, extras=(), disciplina="", n=CANDIDATOS, raizes=None):
+        """Os n nós mais parecidos: quanto das palavras do nó o item cobre (o nó inteiro achado vale mais) e
+        quanto do item o caminho do nó cobre; a disciplina só desempata. 'raizes': só nós destas disciplinas
+        do QConcursos (as ligadas à disciplina do item); sem elas, a árvore toda. Devolve [(nota, id)]."""
+        q = set(palavras(nome)) | set(w for e in extras for w in palavras(e))
+        qd = set(palavras(disciplina))
+        if not q:
+            return []
+        peso = lambda ws: sum(self.idf.get(w, 0) for w in ws) or 1e-9  # noqa: E731
+        possiveis = set().union(*(self.indice.get(w, set()) for w in q))
+        notas = []
+        for i in possiveis:
+            no = self.nos[i]
+            if no["nivel"] == 1 or not no["palavras"]:
+                continue
+            if raizes and self.ancestrais(i)[-1] not in raizes:
+                continue
+            cobre_no = peso(no["palavras"] & q) / peso(no["palavras"])
+            cobre_item = peso(no["contexto"] & q) / peso(q)
+            raiz = self.nos[self.ancestrais(i)[-1]]
+            bonus = 0.05 if qd and qd & raiz["palavras"] else 0
+            notas.append((round(0.6 * cobre_no + 0.4 * cobre_item + bonus, 3), i))
+        return sorted(notas, reverse=True)[:n]
+
+
+SISTEMA_DISCIPLINAS = """Você liga disciplinas de editais e de apostilas de concurso às disciplinas do QConcursos.
+Responda só com JSON, sem texto fora dele."""
+
+
+def mapear_disciplinas(sge, nomes, arvore):
+    """{disciplina do edital ou da ficha: [ids das disciplinas do QConcursos]}, numa chamada só: uma disciplina
+    larga ('Conhecimentos Específicos - Ciências da Computação') liga a várias."""
+    raizes = sorted((n["nome"], i) for i, n in arvore.nos.items() if n["nivel"] == 1)
+    pedido = ("Disciplinas do QConcursos (id: nome):\n" + "\n".join(f"{i}: {nome}" for nome, i in raizes)
+              + "\n\nDisciplinas a ligar:\n" + "\n".join(f"- {n}" for n in nomes)
+              + "\n\nPara cada uma, os ids das disciplinas do QConcursos que cobrem o mesmo conteúdo (uma larga liga a "
+                "várias; nenhuma se não houver).\nResponda: {\"disciplinas\": {\"nome exatamente como veio\": [ids]}}")
+    resposta = completar_json(sge, SISTEMA_DISCIPLINAS, pedido)
+    validos = {i for _, i in raizes}
+    return {n: [i for i in (resposta.get("disciplinas") or {}).get(n, []) if i in validos] for n in nomes}
+
+
+SISTEMA = """Você liga assuntos de concurso público aos nós da árvore de assuntos do QConcursos.
+Responda só com JSON, sem texto fora dele."""
+
+INSTRUCOES = """Para cada item, escolha entre os candidatos dele os nós que correspondem ao MESMO assunto (até 3:
+use mais de um só quando o item junta assuntos que a árvore separa). Prefira o nó mais específico que cobre
+o item inteiro. Se nenhum candidato corresponde, devolva lista vazia. Não invente id fora dos candidatos.
+
+Responda: {"ligacoes": [{"item": número do item, "nos": [ids], "confianca": "alta" | "media" | "baixa"}]}"""
+
+
+def pedido_do_lote(itens, arvore):
+    linhas = []
+    for k, it in enumerate(itens, 1):
+        extra = f" (termos: {', '.join(it['termos'][:6])})" if it.get("termos") else ""
+        linhas.append(f"{k}. [{it['disciplina'] or '?'}] {it['nome']}{extra}")
+        for _, i in it["candidatos"]:
+            linhas.append(f"   - {i}: {' > '.join(arvore.nos[i]['caminho'])}")
+    return "\n".join(linhas) + "\n\n" + INSTRUCOES
+
+
+def ligar_com_ia(sge, itens, arvore, log=print):
+    """Grava em cada item 'ia': [ids] e 'confianca'. Ids fora dos candidatos são descartados."""
+    for ini in range(0, len(itens), LOTE):
+        lote = itens[ini:ini + LOTE]
+        resposta = completar_json(sge, SISTEMA, pedido_do_lote(lote, arvore))
+        por_item = {r.get("item"): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
+        for k, it in enumerate(lote, 1):
+            r = por_item.get(k) or {}
+            validos = {i for _, i in it["candidatos"]}
+            it["ia"] = [i for i in (r.get("nos") or []) if i in validos][:3]
+            it["confianca"] = r.get("confianca")
+        log(f"... {min(ini + LOTE, len(itens))} de {len(itens)} itens")
+
+
+def regra_decide(it, minimo=0.75, margem=0.15):
+    """A regra decide sozinha quando o primeiro candidato é forte e o segundo bem atrás (ou é o mesmo ramo)."""
+    c = it["candidatos"]
+    if not c or c[0][0] < minimo:
+        return None
+    return c[0][1] if len(c) == 1 or c[0][0] - c[1][0] >= margem else None
+
+
+def casam(arvore, a, b):
+    """a e b (ids) casam se um é o outro ou está dentro dele, abaixo do nível de disciplina."""
+    return a == b or (a in arvore.ancestrais(b) and arvore.nos[a]["nivel"] > 1) or \
+        (b in arvore.ancestrais(a) and arvore.nos[b]["nivel"] > 1)
+
+
+def itens_do_edital(planejamento, arvore, disciplinas=None):
+    itens = []
+    for a in planejamento["assuntos"]:
+        raizes = set((disciplinas or {}).get(a["disciplina"]) or [])
+        itens.append({"tipo": "edital", "nome": a["assunto"], "disciplina": a["disciplina"], "termos": [],
+                      "chave": a["chaveExterna"],
+                      "candidatos": arvore.candidatos(a["assunto"], (), a["disciplina"], raizes=raizes)})
+    return itens
+
+
+def itens_das_fichas(db, caminhos, arvore, disciplinas=None):
+    itens = []
+    for caminho in caminhos:
+        linha = db.execute("SELECT ficha FROM fichas WHERE caminho = ? AND situacao = 'ok'", (caminho,)).fetchone()
+        if not linha:
+            continue
+        for t in json.loads(linha[0])["temas"]:
+            extras = list(t.get("termos") or []) + [s["nome"] for s in t.get("subtemas", [])][:4]
+            itens.append({"tipo": "ficha", "nome": t["tema"], "disciplina": t.get("disciplina"), "termos": t.get("termos") or [],
+                          "caminho": caminho, "paginas": t.get("paginas"),
+                          "candidatos": arvore.candidatos(t["tema"], extras, t.get("disciplina") or "",
+                                                          raizes=set((disciplinas or {}).get(t.get("disciplina")) or []))})
+    return itens
+
+
+def relatorio(itens, arvore, nome_arvore):
+    nomes = lambda ids: "; ".join(" > ".join(arvore.nos[i]["caminho"]) for i in ids) or "**nenhum nó**"  # noqa: E731
+    total = len(itens)
+    decide = [it for it in itens if regra_decide(it)]
+    acerta = [it for it in decide if it.get("ia") and any(casam(arvore, regra_decide(it), i) for i in it["ia"])]
+    sem_no = [it for it in itens if "ia" in it and not it["ia"]]
+    saida = [f"# Ensaio: edital e fichas na árvore do QConcursos ({nome_arvore})", "",
+             f"Itens: {total} ({sum(it['tipo'] == 'edital' for it in itens)} assuntos do edital, "
+             f"{sum(it['tipo'] == 'ficha' for it in itens)} temas de fichas).",
+             f"A regra decidiria sozinha {len(decide)}; desses, a IA concordou (mesmo nó ou um dentro do outro) em "
+             f"{len(acerta)}. A IA não achou nó para {len(sem_no)}.", "",
+             "Marque `[x]` se a ligação confere, ou escreva ao lado o nó certo.", ""]
+    edital = [it for it in itens if it["tipo"] == "edital"]
+    fichas = [it for it in itens if it["tipo"] == "ficha"]
+    saida += ["## Assuntos do edital → nós", ""]
+    for it in edital:
+        regra = regra_decide(it)
+        saida.append(f"- [ ] **{it['nome']}** _({it['disciplina']})_ → {nomes(it.get('ia', []))}"
+                     + (f" · confiança {it['confianca']}" if it.get("confianca") else "")
+                     + (" · regra concorda" if regra and any(casam(arvore, regra, i) for i in it.get("ia", [])) else
+                        f" · regra diria: {nomes([regra])}" if regra else ""))
+    saida += ["", "## Casamento: assunto do edital → temas das fichas (só as aulas do ensaio)", ""]
+    for it in edital:
+        achados = [f for f in fichas if any(casam(arvore, a, b) for a in it.get("ia", []) for b in f.get("ia", []))]
+        if achados:
+            saida.append(f"- **{it['nome']}**: " + "; ".join(f"{f['nome']} — `{f['caminho']}` p. "
+                                                           + ", ".join(f"{i}–{j}" for i, j in (f.get('paginas') or []))
+                                                           for f in achados))
+    saida += ["", "## Temas das fichas → nós", ""]
+    for it in fichas:
+        saida.append(f"- [ ] {it['nome']} _({it['disciplina']})_ → {nomes(it.get('ia', []))}")
+    return "\n".join(saida)
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Ensaio: assuntos do edital e temas das fichas na árvore do QConcursos.")
+    ap.add_argument("--concurso", type=int, required=True)
+    ap.add_argument("--db", required=True, help="catalogo.db")
+    ap.add_argument("--fichas", help="JSON com a lista de caminhos das aulas do ensaio (padrão: as do catalogo-ensaio)")
+    ap.add_argument("--saida", required=True)
+    args = ap.parse_args()
+    from sge_api import SgeApi
+    sge = SgeApi(os.environ.get("SGE_URL", "http://app:8080"), os.environ["INTERNAL_TOKEN"])
+    disciplinas, nome_arvore = carregar_arvore()
+    arvore = Arvore(disciplinas)
+    db = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
+    caminhos = json.loads(Path(args.fichas).read_text(encoding="utf-8")) if args.fichas else []
+    planejamento = sge.planejamento(args.concurso)
+    saida = Path(args.saida)
+    saida.mkdir(parents=True, exist_ok=True)
+    nomes = sorted({a["disciplina"] for a in planejamento["assuntos"]} | {
+        t.get("disciplina") for c in caminhos for (f,) in db.execute("SELECT ficha FROM fichas WHERE caminho = ? AND "
+                                                                     "situacao = 'ok'", (c,)) for t in json.loads(f)["temas"]} - {None})
+    arquivo_disc = saida / "disciplinas.json"
+    disciplinas = json.loads(arquivo_disc.read_text(encoding="utf-8")) if arquivo_disc.exists() else {}
+    faltam = [n for n in nomes if n not in disciplinas]
+    if faltam:
+        disciplinas.update(mapear_disciplinas(sge, faltam, arvore))
+        arquivo_disc.write_text(json.dumps(disciplinas, ensure_ascii=False, indent=1), encoding="utf-8")
+    itens = itens_do_edital(planejamento, arvore, disciplinas) + itens_das_fichas(db, caminhos, arvore, disciplinas)
+    try:
+        ligar_com_ia(sge, itens, arvore)
+    except IaIndisponivel as e:
+        print(f"A IA parou: {e}")
+    (saida / "disciplinas.md").write_text("# Disciplinas → QConcursos\n\n" + "\n".join(
+        f"- [ ] **{n}** → {'; '.join(arvore.nos[i]['nome'] for i in ids) or '**nenhuma**'}" for n, ids in sorted(disciplinas.items())),
+        encoding="utf-8")
+    (saida / "casamento-ensaio.json").write_text(json.dumps(itens, ensure_ascii=False, indent=1), encoding="utf-8")
+    (saida / "casamento-ensaio.md").write_text(relatorio(itens, arvore, nome_arvore), encoding="utf-8")
+    print(f"{len(itens)} itens; relatório em {saida / 'casamento-ensaio.md'}")
+
+
+if __name__ == "__main__":
+    main()
