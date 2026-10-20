@@ -71,14 +71,32 @@ class CasarTaxonomiaTest(unittest.TestCase):
         itens = [{"nome": "Coordenação e subordinação", "disciplina": "Língua Portuguesa", "termos": [], "raizes": [1],
                   "candidatos": []},
                  {"nome": "NAT", "disciplina": "?", "termos": [], "raizes": [], "candidatos": [(0.9, 31)]}]
-        ia = IaFalsa([{"ligacoes": [{"item": 1, "nos": [11, 31], "confianca": "media"}]},
-                      {"ligacoes": [{"item": 1, "nos": [31]}]}])
+        ia = IaFalsa([{"ligacoes": [{"item": "1", "nos": ["11", 31], "confianca": "media"}]},
+                      {"ligacoes": [{"item": 1, "nos": [31]}]},
+                      {"ligacoes": []}])
         ct.ligar_com_ia(ia, itens, self.arvore, log=lambda m: None)
         self.assertEqual([11], itens[0]["ia"], "nó de outra disciplina (31) é descartado")
         self.assertIn("111: Português > Sintaxe > Vozes Verbais", ia.pedidos[0])
         self.assertNotIn("Espanhol", ia.pedidos[0])
         self.assertEqual([31], itens[1]["ia"], "sem disciplina ligada, vai pelos candidatos")
         self.assertEqual([11, 111, 12], self.arvore.subarvore([1]))
+
+    def test_segunda_passada_na_arvore_inteira_para_quem_ficou_sem_no(self):
+        itens = [{"nome": "Vozes Verbais", "disciplina": "Redes", "termos": [], "raizes": [3], "candidatos": []}]
+        ia = IaFalsa([{"ligacoes": [{"item": 1, "nos": []}]}, {"ligacoes": [{"item": 1, "nos": [111], "confianca": "alta"}]}])
+        ct.ligar_com_ia(ia, itens, self.arvore, log=lambda m: None)
+        self.assertEqual(([111], True), (itens[0]["ia"], itens[0]["segunda_passada"]))
+        self.assertIn("111: Português > Sintaxe > Vozes Verbais", ia.pedidos[1])
+
+    def test_disciplina_enorme_so_com_os_ramos_da_disciplina_do_item(self):
+        estados = [{"id": 900 + k, "nome": f"Legislação do Estado de {uf}", "ordem": k, "filhos": [
+            {"id": 9000 + k * 400 + j, "nome": f"Lei {j}", "ordem": j, "filhos": []} for j in range(200)]}
+            for k, uf in enumerate(["Santa Catarina", "Paraná"], 1)]
+        a = ct.Arvore([{"id": 9, "nome": "Legislação Estadual", "ordem": 1, "filhos": estados}])
+        ids = a.subarvore([9], "Conhecimentos Regionais de Santa Catarina")
+        self.assertIn(901, ids)
+        self.assertNotIn(902, ids)
+        self.assertEqual(201, len(ids))
 
     def test_disciplinas_ligadas_numa_chamada(self):
         ia = IaFalsa([{"disciplinas": {"Língua Portuguesa": [1], "Ciências da Computação": [3, 77]}}])

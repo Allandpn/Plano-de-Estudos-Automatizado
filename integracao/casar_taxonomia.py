@@ -40,7 +40,11 @@ LOTE_ARVORE = 20
 # Ensaio de 2026-10-20: a busca por palavras deixa o nó certo de fora quando o nome muda ('Coordenação e
 # subordinação' x 'orações coordenadas'); as árvores das disciplinas são pequenas (mediana 32 nós), então a IA
 # vê a árvore inteira das disciplinas ligadas. Só as maiores (legislação municipal e estadual) ficam na busca.
-MAX_NOS_ARVORE = 300
+MAX_NOS_ARVORE = 1200
+# Disciplina enorme (Legislação Estadual: 969 nós, todos os estados): entram só os ramos cujo nome tem palavra
+# da disciplina do item ('Conhecimentos Regionais de Santa Catarina' -> 'Legislação do Estado de Santa Catarina').
+MAX_NOS_DISCIPLINA = 300
+CANDIDATOS_SEGUNDA = 15
 
 
 def palavras(texto):
@@ -79,10 +83,23 @@ class Arvore:
             for w in n["contexto"]:
                 self.indice.setdefault(w, set()).add(i)
 
-    def subarvore(self, raizes):
-        """Os ids dos nós abaixo das disciplinas 'raizes' (sem as próprias disciplinas), na ordem da árvore."""
-        raizes = set(raizes)
-        return [i for i in self.nos if self.nos[i]["nivel"] > 1 and self.ancestrais(i)[-1] in raizes]
+    def subarvore(self, raizes, disciplina=""):
+        """Os ids dos nós abaixo das disciplinas 'raizes' (sem as próprias disciplinas), na ordem da árvore. De
+        disciplina com mais de MAX_NOS_DISCIPLINA nós, só os ramos cujo nome tem palavra de 'disciplina'."""
+        raizes, chave = set(raizes), set(palavras(disciplina))
+        por_raiz = {}
+        for i in self.nos:
+            if self.nos[i]["nivel"] > 1:
+                anc = self.ancestrais(i)
+                if anc[-1] in raizes:
+                    por_raiz.setdefault(anc[-1], []).append((i, anc))
+        saida = []
+        for r, membros in por_raiz.items():
+            if len(membros) > MAX_NOS_DISCIPLINA:
+                ramos = {a[-2] for _, a in membros if len(a) >= 2 and self.nos[a[-2]]["palavras"] & chave - self.nos[r]["palavras"]}
+                membros = [(i, a) for i, a in membros if len(a) >= 2 and a[-2] in ramos]
+            saida += [i for i, _ in membros]
+        return saida
 
     def ancestrais(self, i):
         saida = []
@@ -141,7 +158,9 @@ Responda só com JSON, sem texto fora dele."""
 
 INSTRUCOES = """Para cada item, escolha entre os candidatos dele os nós que correspondem ao MESMO assunto (até 3:
 use mais de um só quando o item junta assuntos que a árvore separa). Prefira o nó mais específico que cobre
-o item inteiro. Se nenhum candidato corresponde, devolva lista vazia. Não invente id fora dos candidatos.
+o item inteiro. Se não houver nó específico para o assunto, escolha o nó mais próximo que o CONTÉM (o ramo onde
+as questões desse assunto estariam) e marque confiança "baixa". Lista vazia só se nada da árvore trata do
+assunto. Não invente id fora dos candidatos.
 
 Responda: {"ligacoes": [{"item": número do item, "nos": [ids], "confianca": "alta" | "media" | "baixa"}]}"""
 
@@ -167,31 +186,61 @@ def pedido_do_lote(itens, arvore):
     return "\n".join(linhas) + "\n\n" + INSTRUCOES
 
 
-def ligar_com_ia(sge, itens, arvore, log=print):
+def _inteiro(x):
+    """A IA às vezes devolve número como texto ('12345', ' 3'): aceita os dois."""
+    try:
+        return int(str(x).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def ligar_com_ia(sge, itens, arvore, log=print, respostas=None):
     """Grava em cada item 'ia': [ids] e 'confianca'. Itens com disciplinas ligadas de árvore pequena vão em
     lotes por disciplina, com a árvore inteira; os outros, com os candidatos da busca por palavras. Id que a
     IA não recebeu é descartado."""
     grupos = {}
     for it in itens:
-        ids = arvore.subarvore(it.get("raizes") or [])
-        chave = tuple(sorted(it.get("raizes") or [])) if ids and len(ids) <= MAX_NOS_ARVORE else None
+        ids = arvore.subarvore(it.get("raizes") or [], it.get("disciplina") or "")
+        chave = (tuple(sorted(it.get("raizes") or [])), it.get("disciplina") or "") if ids and len(ids) <= MAX_NOS_ARVORE else None
         grupos.setdefault(chave, []).append(it)
     feitos = 0
     for chave, membros in grupos.items():
-        ids = arvore.subarvore(chave) if chave else None
+        ids = arvore.subarvore(*chave) if chave else None
         passo = LOTE_ARVORE if chave else LOTE
         for ini in range(0, len(membros), passo):
             lote = membros[ini:ini + passo]
             pedido = pedido_com_arvore(lote, arvore, ids) if chave else pedido_do_lote(lote, arvore)
             resposta = completar_json(sge, SISTEMA, pedido)
-            por_item = {r.get("item"): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
+            if respostas is not None:
+                respostas.append(resposta)
+            por_item = {_inteiro(r.get("item")): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
             for k, it in enumerate(lote, 1):
                 r = por_item.get(k) or {}
                 validos = set(ids) if chave else {i for _, i in it["candidatos"]}
-                it["ia"] = [i for i in (r.get("nos") or []) if i in validos][:3]
+                it["ia"] = [i for i in map(_inteiro, r.get("nos") or []) if i in validos][:3]
                 it["confianca"] = r.get("confianca")
             feitos += len(lote)
             log(f"... {feitos} de {len(itens)} itens")
+    # Segunda passada: item sem nó (lei que mora em 'Legislação Federal', assunto fora das disciplinas ligadas)
+    # ganha candidatos por palavras na árvore inteira.
+    sem = [it for it in itens if not it.get("ia")]
+    for it in sem:
+        it["candidatos"] = arvore.candidatos(it["nome"], it.get("termos") or [], it.get("disciplina") or "",
+                                             n=CANDIDATOS_SEGUNDA)
+    sem = [it for it in sem if it["candidatos"]]
+    for ini in range(0, len(sem), LOTE):
+        lote = sem[ini:ini + LOTE]
+        resposta = completar_json(sge, SISTEMA, pedido_do_lote(lote, arvore))
+        if respostas is not None:
+            respostas.append(resposta)
+        por_item = {_inteiro(r.get("item")): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
+        for k, it in enumerate(lote, 1):
+            r = por_item.get(k) or {}
+            validos = {i for _, i in it["candidatos"]}
+            it["ia"] = [i for i in map(_inteiro, r.get("nos") or []) if i in validos][:3]
+            it["confianca"] = r.get("confianca")
+            it["segunda_passada"] = True
+        log(f"... segunda passada: {min(ini + LOTE, len(sem))} de {len(sem)} itens sem nó")
 
 
 def regra_decide(it, minimo=0.75, margem=0.15):
@@ -294,10 +343,12 @@ def main():
         disciplinas.update(mapear_disciplinas(sge, faltam, arvore))
         arquivo_disc.write_text(json.dumps(disciplinas, ensure_ascii=False, indent=1), encoding="utf-8")
     itens = itens_do_edital(planejamento, arvore, disciplinas) + itens_das_fichas(db, caminhos, arvore, disciplinas)
+    respostas = []
     try:
-        ligar_com_ia(sge, itens, arvore)
+        ligar_com_ia(sge, itens, arvore, respostas=respostas)
     except IaIndisponivel as e:
         print(f"A IA parou: {e}")
+    (saida / "respostas-ia.json").write_text(json.dumps(respostas, ensure_ascii=False, indent=1), encoding="utf-8")
     (saida / "disciplinas.md").write_text("# Disciplinas → QConcursos\n\n" + "\n".join(
         f"- [ ] **{n}** → {'; '.join(arvore.nos[i]['nome'] for i in ids) or '**nenhuma**'}" for n, ids in sorted(disciplinas.items())),
         encoding="utf-8")
