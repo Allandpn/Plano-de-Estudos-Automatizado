@@ -99,14 +99,18 @@ def palavras(texto):
     return saida
 
 
-def trechos_sem_assunto(texto_disciplina, assuntos, minimo=3):
+def trechos_sem_assunto(texto_disciplina, assuntos, minimo=3, cabecalho=""):
     """O texto da disciplina que nenhum assunto cobre (por posição na forma normalizada), em pedaços com pelo
-    menos `minimo` palavras relevantes. Assunto que não é trecho do texto não cobre nada."""
+    menos `minimo` palavras relevantes. Assunto que não é trecho do texto não cobre nada; assunto repetido no
+    edital cobre a próxima ocorrência ainda livre (a ALESC repete 'Linguagem PHP (versão 8+)'). O cabeçalho
+    da disciplina (nome e restrição de cargo) não é assunto e não conta como sobra."""
     base = normalizar(texto_disciplina)
     coberto = [False] * len(base)
     for a in assuntos:
         alvo = normalizar(a)
         i = base.find(alvo) if alvo else -1
+        while i >= 0 and all(coberto[i:i + len(alvo)]):
+            i = base.find(alvo, i + 1)
         if i >= 0:
             for k in range(i, i + len(alvo)):
                 coberto[k] = True
@@ -119,11 +123,13 @@ def trechos_sem_assunto(texto_disciplina, assuntos, minimo=3):
             atual = []
     if atual:
         sobras.append("".join(atual))
-    return [s.strip() for s in sobras if len(palavras(s)) >= minimo]
+    do_cabecalho = palavras(cabecalho)
+    return [s.strip() for s in sobras if len(palavras(s) - do_cabecalho) >= minimo]
 
 
-def conferir_assunto(assunto, texto_disciplina):
-    """Erros de um assunto e das partes dele (lista vazia = aceito)."""
+def conferir_assunto(assunto, texto_disciplina, cabecalho=""):
+    """Erros de um assunto e das partes dele (lista vazia = aceito). As palavras do cabeçalho da disciplina
+    (nome e restrição de cargo) não precisam de parte: o assunto às vezes vem com o título junto."""
     erros = []
     if normalizar(assunto["texto"]) not in normalizar(texto_disciplina):
         erros.append("o assunto não é trecho do edital (foi reescrito ou juntou pedaços)")
@@ -143,7 +149,7 @@ def conferir_assunto(assunto, texto_disciplina):
         if contexto - do_assunto:
             erros.append(f"contexto {p.get('contexto')!r} não está no assunto")
         cobertas |= palavras(p.get("texto")) | contexto | herdado
-    faltam = {w for w in do_assunto - cobertas if not (w.isdigit() and len(w) <= 2)}   # numeração: 4.1, 5.3
+    faltam = {w for w in do_assunto - cobertas - palavras(cabecalho) if not (w.isdigit() and len(w) <= 2)}  # 4.1, 5.3
     if faltam:
         erros.append(f"palavras do assunto sem parte: {', '.join(sorted(faltam))}")
     return erros
@@ -217,6 +223,19 @@ def organizar(sge, extraido, cargo):
     return saida
 
 
+def cabecalho(disciplina):
+    return f"{disciplina.get('nome') or ''} {disciplina.get('restricao') or ''}"
+
+
+def reconferir(disciplina):
+    """Refaz a conferência por regra sobre os assuntos já gravados (regra nova, mesma resposta da IA)."""
+    for a in disciplina["assuntos"]:
+        a["erros"] = conferir_assunto(a, disciplina["texto"], cabecalho(disciplina))
+    disciplina["trechos_sem_assunto"] = trechos_sem_assunto(disciplina["texto"], [a["texto"] for a in disciplina["assuntos"]],
+                                                            cabecalho=cabecalho(disciplina))
+    return disciplina
+
+
 def quebrar_disciplina(sge, disciplina):
     """Quebra, confere e refaz uma vez com os erros. Devolve a disciplina com assuntos, erros e trechos."""
     from ia_comum import completar_json
@@ -226,15 +245,16 @@ def quebrar_disciplina(sge, disciplina):
         texto = pedido
         if resposta is not None:
             problemas = [f"- assunto {a['texto'][:80]!r}: {e}" for a in resposta.get("assuntos", [])
-                         for e in conferir_assunto(a, disciplina["texto"])]
-            sobras = trechos_sem_assunto(disciplina["texto"], [a["texto"] for a in resposta.get("assuntos", [])])
+                         for e in conferir_assunto(a, disciplina["texto"], cabecalho(disciplina))]
+            sobras = trechos_sem_assunto(disciplina["texto"], [a["texto"] for a in resposta.get("assuntos", [])],
+                                         cabecalho=cabecalho(disciplina))
             texto += "\n\nSua resposta anterior falhou na conferência. Corrija:\n" + "\n".join(problemas[:30]) + \
                 ("\n- trechos do edital sem assunto: " + " | ".join(sobras[:10]) if sobras else "")
         resposta = completar_json(sge, SISTEMA, texto)
         assuntos = [a for a in (resposta.get("assuntos") or []) if isinstance(a, dict) and a.get("texto")]
         resposta["assuntos"] = assuntos
-        erros = {i: conferir_assunto(a, disciplina["texto"]) for i, a in enumerate(assuntos)}
-        sobras = trechos_sem_assunto(disciplina["texto"], [a["texto"] for a in assuntos])
+        erros = {i: conferir_assunto(a, disciplina["texto"], cabecalho(disciplina)) for i, a in enumerate(assuntos)}
+        sobras = trechos_sem_assunto(disciplina["texto"], [a["texto"] for a in assuntos], cabecalho=cabecalho(disciplina))
         if not any(erros.values()) and not sobras:
             break
     for i, a in enumerate(resposta["assuntos"]):
@@ -285,7 +305,18 @@ def main():
     q.add_argument("extraido")
     q.add_argument("--cargo", required=True)
     q.add_argument("--saida", required=True)
+    r = sub.add_parser("reconferir", help="refaz a conferência por regra sobre um <nome>-partes.json, sem IA")
+    r.add_argument("partes")
+    r.add_argument("--cargo", required=True)
     args = ap.parse_args()
+    if args.cmd == "reconferir":
+        arquivo = Path(args.partes)
+        feitas = [reconferir(d) for d in json.loads(arquivo.read_text(encoding="utf-8"))]
+        arquivo.write_text(json.dumps(feitas, ensure_ascii=False, indent=1), encoding="utf-8")
+        nome = arquivo.name.replace("-partes.json", "")
+        arquivo.with_name(f"{nome}-partes.md").write_text(relatorio(nome, args.cargo, feitas), encoding="utf-8")
+        print(relatorio(nome, args.cargo, feitas).splitlines()[2])
+        return
     if args.cmd == "extrair":
         dados = extrair(args.pdf)
         Path(args.saida).write_text(json.dumps(dados, ensure_ascii=False, indent=1), encoding="utf-8")

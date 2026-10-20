@@ -47,6 +47,16 @@ class PartesEditalTest(unittest.TestCase):
         self.assertEqual(1, len(sobras))
         self.assertIn("mvc", sobras[0])
 
+    def test_repeticao_e_cabecalho_da_disciplina(self):
+        texto = ("Desenvolvimento de software: Linguagem PHP (versão 8+); Linguagem Java (versão 8+); "
+                 "Linguagem PHP (versão 8+); HTML5.")
+        assuntos = ["Linguagem PHP (versão 8+)", "Linguagem Java (versão 8+)", "Linguagem PHP (versão 8+)", "HTML5"]
+        self.assertEqual([], pe.trechos_sem_assunto(texto, assuntos, cabecalho="Desenvolvimento de software"))
+        self.assertEqual(1, len(pe.trechos_sem_assunto(texto, assuntos[:2] + assuntos[3:], minimo=2,
+                                                       cabecalho="Desenvolvimento de software")))
+        assunto = {"texto": "RACIOCÍNIO LÓGICO MATEMÁTICO: Proposições", "partes": [{"texto": "Proposições"}]}
+        self.assertEqual([], pe.conferir_assunto(assunto, assunto["texto"], "RACIOCÍNIO LÓGICO MATEMÁTICO"))
+
     def test_numeracao_nao_precisa_de_parte(self):
         texto = "4 Domínio dos mecanismos de coesão textual: 4.1 Emprego de elementos de referenciação. 4.2 Emprego de tempos e modos verbais."
         assunto = {"texto": texto, "partes": [
