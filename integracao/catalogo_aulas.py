@@ -447,6 +447,27 @@ def ensaio(sge, conn, saida, cursos, total=30, simular=False, log=print, context
     return fichas, parou
 
 
+NOME_SO_QUESTOES = re.compile(r"simulado|prova[\s_-]*comentada|quest[õo]es[\s_-]*recentes", re.IGNORECASE)
+TIPOS_DE_QUESTAO_OU_MOLDURA = TIPOS_QUESTOES | {"apresentacao", "bibliografia"}
+
+
+def so_questoes(a, paginas, nome):
+    """Motivo, se o arquivo é só questões (simulado, prova comentada, caderno de questões) e não vale chamar a
+    IA: questão não entra em tema (decisão 7). None se é aula. As 14 falhas da primeira rodada (2026-10-20)
+    eram todas assim."""
+    tipos = {e["tipo"] for e in a["entradas"]}
+    if tipos and tipos <= TIPOS_DE_QUESTAO_OU_MOLDURA and tipos & TIPOS_QUESTOES:
+        return "todas as seções do sumário são questões, lista ou gabarito"
+    if NOME_SO_QUESTOES.search(nome or ""):
+        return "o nome do arquivo diz simulado, prova comentada ou questões recentes"
+    for p in (1, 2, 3):
+        chaves = [ea.chave(l, 10 ** 6) for l in (paginas.get(p) or "").splitlines() if l.strip()][:6]
+        juntas = chaves + [a + b for a, b in zip(chaves, chaves[1:])]   # 'S' / 'IMULADO': inicial grande separada
+        if any(c.startswith("SIMULADO") for c in juntas):
+            return f"título SIMULADO na p. {p}"
+    return None
+
+
 def grupos_de_gemeas(conn, log=print):
     """{arquivo_id: id da primeira cópia} para o acervo inteiro: mesma aula = metade ou mais das páginas 3 a 14
     iguais (a regra de acervo.py), numa passada só pelo índice (consulta por aula varreria tudo de novo)."""
@@ -491,7 +512,7 @@ class CatalogoDb:
                                   (arquivo_id,)).fetchone()
         if not linha or linha[0] != hash_pdf:
             return False
-        return linha[2] in ("fora", "gemea") or (linha[2] == "ok" and linha[1] == VERSAO_PEDIDO)
+        return linha[2] in ("fora", "gemea", "so_questoes") or (linha[2] == "ok" and linha[1] == VERSAO_PEDIDO)
 
     def gravar(self, arquivo_id, f, situacao):
         self.conn.execute("INSERT OR REPLACE INTO fichas VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -504,8 +525,8 @@ class CatalogoDb:
 
 
 def catalogar_acervo(sge, conn, db, limite=None, log=print, contexto=CONTEXTO_PADRAO):
-    """Uma ficha por aula única do acervo. Arquivo que não é aula e gêmea são gravados sem chamar a IA (a
-    gêmea aponta a primeira cópia, que lista todas). Para quando a IA para ou depois de 'limite' chamadas.
+    """Uma ficha por aula única do acervo. Arquivo que não é aula, arquivo só de questões (simulado, prova
+    comentada) e gêmea são gravados sem chamar a IA (a gêmea aponta a primeira cópia, que lista todas). Para quando a IA para ou depois de 'limite' chamadas.
     Devolve (chamadas, parou_por)."""
     dono = grupos_de_gemeas(conn, log)
     copias = {}
@@ -522,8 +543,17 @@ def catalogar_acervo(sge, conn, db, limite=None, log=print, contexto=CONTEXTO_PA
         if dono.get(aid, aid) != aid:
             db.gravar(aid, dict(base, gemea_de=caminhos[dono[aid]]), "gemea")
             continue
-        if ea.analisar_aula(conn, aid)["fora"]:
+        a = ea.analisar_aula(conn, aid)
+        if a["fora"]:
             db.gravar(aid, dict(base, fora="curto e sem sumário: não é aula"), "fora")
+            continue
+        primeiras = dict(conn.execute("SELECT pagina, texto FROM paginas WHERE arquivo_id = ? AND pagina <= 3", (aid,)).fetchall())
+        motivo = so_questoes(a, primeiras, nome)
+        if motivo:
+            questoes = [{"tipo": e["tipo"], "banca": e["banca"], "paginas": [e.get("inicio"), e.get("fim")]}
+                        for e in a["entradas"] if e["tipo"] in TIPOS_QUESTOES]
+            db.gravar(aid, dict(base, so_questoes=motivo, paginas=a["n"], questoes=questoes, gemeas=copias.get(aid, [])),
+                      "so_questoes")
             continue
         if limite is not None and chamadas >= limite:
             log(f"limite de {limite} chamadas: pare aqui e rode de novo para continuar")
@@ -541,6 +571,27 @@ def catalogar_acervo(sge, conn, db, limite=None, log=print, contexto=CONTEXTO_PA
     return chamadas, parou
 
 
+def reclassificar(conn, db, log=print):
+    """Aplica a regra de 'só questões' às fichas já gravadas (lidas pela IA ou com falha), sem chamar a IA: a
+    resposta fica na ficha, a situação muda. Devolve quantas mudaram."""
+    mudaram = 0
+    linhas = db.conn.execute("SELECT arquivo_id, situacao, ficha FROM fichas WHERE situacao IN ('ok', 'falha')").fetchall()
+    for aid, situacao, texto in linhas:
+        nome = conn.execute("SELECT nome_arquivo FROM arquivos WHERE id = ?", (aid,)).fetchone()
+        if not nome:
+            continue
+        a = ea.analisar_aula(conn, aid)
+        primeiras = dict(conn.execute("SELECT pagina, texto FROM paginas WHERE arquivo_id = ? AND pagina <= 3", (aid,)).fetchall())
+        motivo = so_questoes(a, primeiras, nome[0])
+        if motivo:
+            f = json.loads(texto)
+            f["so_questoes"] = motivo
+            db.gravar(aid, f, "so_questoes")
+            mudaram += 1
+    log(f"{mudaram} de {len(linhas)} fichas passaram a 'só questões'")
+    return mudaram
+
+
 def progresso(conn, db, agora=None):
     """Quanto do acervo já foi catalogado e quanto falta, com a previsão pelo ritmo médio desde a primeira
     aula lida (que já inclui as pausas da assinatura). As aulas para a IA são as únicas menos as que já se viu que não
@@ -551,8 +602,8 @@ def progresso(conn, db, agora=None):
     dono = grupos_de_gemeas(conn, log=lambda m: None)
     unicas = sum(1 for a, d in dono.items() if a == d)
     por = dict(db.conn.execute("SELECT situacao, count(*) FROM fichas GROUP BY situacao").fetchall())
-    ok, falha, fora, gemea = (por.get(k, 0) for k in ("ok", "falha", "fora", "gemea"))
-    para_ia, feitas = unicas - fora, ok + falha
+    ok, falha, fora, gemea, questoes = (por.get(k, 0) for k in ("ok", "falha", "fora", "gemea", "so_questoes"))
+    para_ia, feitas = unicas - fora - questoes, ok + falha
     faltam = max(0, para_ia - feitas)
     primeira = db.conn.execute("SELECT min(atualizado_em) FROM fichas WHERE situacao IN ('ok', 'falha')").fetchone()[0]
     ultima = db.conn.execute("SELECT caminho, atualizado_em FROM fichas WHERE situacao IN ('ok', 'falha') "
@@ -560,8 +611,8 @@ def progresso(conn, db, agora=None):
     linhas = [f"Catálogo do acervo — {agora:%Y-%m-%d %H:%M}",
               f"Arquivos processados: {sum(por.values())} de {total} ({100 * sum(por.values()) // max(1, total)}%)",
               f"Aulas lidas pela IA: {feitas} de ~{para_ia} ({100 * feitas // max(1, para_ia)}%)"
-              + (f" — {falha} com falha (refeitas na próxima rodada)" if falha else ""),
-              f"Sem chamada: {gemea} gêmeas, {fora} não são aula"]
+              + (f" — {falha} com falha (refeitas quando o --acervo rodar de novo)" if falha else ""),
+              f"Sem chamada: {gemea} gêmeas, {fora} não são aula, {questoes} só questões (simulado, prova comentada)"]
     horas = (agora - datetime.strptime(primeira, "%Y-%m-%d %H:%M:%S")).total_seconds() / 3600 if primeira else 0
     if feitas and horas > 0.1:
         ritmo = feitas / horas
@@ -590,6 +641,8 @@ def main():
     ap.add_argument("--db", help="catalogo.db (com --acervo)")
     ap.add_argument("--limite", type=int, help="com --acervo: no máximo N chamadas à IA nesta rodada")
     ap.add_argument("--progresso", action="store_true", help="com --db: quanto do acervo já foi catalogado e quanto falta")
+    ap.add_argument("--reclassificar", action="store_true",
+                    help="com --db: aplica a regra de 'só questões' às fichas gravadas, sem chamar a IA")
     ap.add_argument("--indice", default=os.environ.get("INDICE_DB"))
     args = ap.parse_args()
     if args.progresso:
@@ -597,6 +650,12 @@ def main():
             ap.error("--progresso pede --db")
         with closing(sqlite3.connect(f"file:{args.indice}?mode=ro", uri=True)) as conn:
             print(progresso(conn, CatalogoDb(f"file:{args.db}?mode=ro")))
+        return
+    if args.reclassificar:
+        if not args.db:
+            ap.error("--reclassificar pede --db")
+        with closing(sqlite3.connect(f"file:{args.indice}?mode=ro", uri=True)) as conn:
+            reclassificar(conn, CatalogoDb(args.db))
         return
     if not args.acervo and not args.saida:
         ap.error("--saida é obrigatório fora do --acervo")

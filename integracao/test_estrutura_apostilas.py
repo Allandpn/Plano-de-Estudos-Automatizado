@@ -222,6 +222,13 @@ class EstruturaTest(unittest.TestCase):
         self.assertEqual({0: (None, 2, 2)}, ea.deslocamentos(paginas, e))
         self.assertEqual([4, 6], [x["inicio"] for x in e])
 
+    def test_formato_c_com_numero_e_travessao(self):
+        """Simulado da Legislação de SC: '1 – Questões com comentários ......'."""
+        e = ea.entrada_do_sumario(leader("1 – Questões com comentários", 4))
+        self.assertEqual(("C", 1, "Questões com comentários", "questoes_comentadas", 4),
+                         (e["formato"], e["n"], e["tema"], e["tipo"], e["pagina"]))
+        self.assertEqual("questoes_comentadas", ea.entrada_do_sumario(leader("Simulado AFO ME 1-5", 3))["tipo"])
+
     def test_r4_confere_titulo_mutilado(self):
         self.assertTrue(ea.conferir("Protocolo IPv6", "P IP 6\nROTOCOLO V\nO protocolo IPv6 surgiu como evolução"))
         self.assertTrue(ea.conferir("NAT e PAT", "Q C – NAT E PAT - CESGRANRIO\nUESTÕES OMENTADAS\n1. CESGRANRIO - 2018"))

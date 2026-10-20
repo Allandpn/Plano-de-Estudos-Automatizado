@@ -156,6 +156,17 @@ class CatalogoTest(unittest.TestCase):
         self.assertEqual(("h1", "acervo", ["outro\\aula 06.pdf"], ca.VERSAO_PEDIDO),
                          (f["hash"], f["origem"], f["gemeas"], f["versao_pedido"]))
 
+    def test_so_questoes(self):
+        entrada = {"tipo": "questoes_comentadas"}
+        self.assertIn("todas as seções", ca.so_questoes({"entradas": [entrada, {"tipo": "gabarito"}]}, {}, "aula 04.pdf"))
+        self.assertIsNone(ca.so_questoes({"entradas": [entrada, {"tipo": "teoria"}]}, {}, "aula 04.pdf"))
+        self.assertIn("nome do arquivo", ca.so_questoes({"entradas": []}, {}, "curso-384771-2-simulado-especial.pdf"))
+        self.assertIn("nome do arquivo", ca.so_questoes({"entradas": []}, {}, "curso-383452-prova-comentada-sefaz-mt.pdf"))
+        self.assertEqual("título SIMULADO na p. 2",
+                         ca.so_questoes({"entradas": []}, {2: "Filipe Magalhães, Júlio Cardozo\nS\nIMULADO"}, "aula-11.pdf"))
+        self.assertIsNone(ca.so_questoes({"entradas": []}, {2: "Olá! No fim da aula há um simulado para treinar."}, "aula.pdf"),
+                          "a palavra no meio do texto não basta")
+
     def test_reprocessar_refaz_a_regra_sem_chamar_a_ia(self):
         ia = IaFalsa([REDES])
         ca.ensaio(ia, self.conn, self.saida, CURSOS, total=1, log=lambda m: None)
@@ -211,6 +222,12 @@ class AcervoTest(CatalogoTest):
         self.assertIn("Sem chamada: 1 gêmeas, 1 não são aula", texto)
         self.assertIn("~0 aulas", texto)
         self.assertIn("(há 5 min)", texto)
+        self.conn.execute("UPDATE arquivos SET nome_arquivo = 'simulado-01.pdf' WHERE id = 1")
+        self.assertEqual(1, ca.reclassificar(self.conn, db, log=lambda m: None))
+        self.assertIn("só questões", ca.progresso(self.conn, db))
+        self.assertEqual("so_questoes", db.conn.execute("SELECT situacao FROM fichas WHERE arquivo_id = 1").fetchone()[0])
+        self.conn.execute("UPDATE arquivos SET nome_arquivo = 'aula 06.pdf' WHERE id = 1")
+        db.conn.execute("UPDATE fichas SET situacao = 'ok' WHERE arquivo_id = 1")
         db.conn.execute("UPDATE fichas SET versao_pedido = 1 WHERE situacao = 'ok'")
         ia.respostas = list(respostas)
         self.assertEqual(4, ca.catalogar_acervo(ia, self.conn, db, log=lambda m: None)[0], "pedido novo refaz as fichas")

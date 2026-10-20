@@ -71,7 +71,8 @@ TIPOS = [("teoria", r"teoria"), ("resumo", r"resumo|roteiro\s+de\s+revis|aposta\
          ("incidencia", r"o\s+que\s+[ée]\s+mais\s+cobrado|an[áa]lise\s+estat[íi]stica"),
          ("questionario", r"perguntas|question[áa]rio"),
          ("lista_questoes", r"lista\s+de\s+(quest|exerc)"),
-         ("questoes_comentadas", r"(bateria\s+de\s+)?quest[õo]es(\s+comentadas|\s+estrat[ée]gicas)?|exerc[íi]cios\s+comentados"),
+         ("questoes_comentadas", r"(bateria\s+de\s+)?quest[õo]es(\s+comentadas|\s+estrat[ée]gicas)?|exerc[íi]cios\s+comentados"
+                                 r"|simulado"),
          ("gabarito", r"gabarito"), ("apresentacao", r"apresenta[çc][ãa]o"), ("flashcards", r"flash\s*cards?"),
          ("bibliografia", r"bibliografia|refer[êe]ncias")]
 FAIXA_BIZU = re.compile(r"^(.*?)\s*\b(\d{1,3})(?:\s+(?:a|e)\s+(\d{1,3}))?\s+https?://\S+$")
@@ -132,7 +133,9 @@ def entrada_do_sumario(linha, anterior=None, n_paginas=None, historico=()):
         if m:
             formato, n, corpo = "B", int(m.group(1)), m.group(2)
         elif com_pontos and re.search(r"[A-Za-zÀ-ú]{3}", l):
-            formato, n, corpo = "C", None, l
+            # '1 – Questões com comentários ......' (simulado da Legislação de SC): o número com travessão sai do título.
+            m = re.match(r"^(\d{1,3})\s*[–-]\s+(\D.*)$", l)
+            formato, n, corpo = ("C", int(m.group(1)), m.group(2)) if m else ("C", None, l)
         else:
             return None
     pagina = None
