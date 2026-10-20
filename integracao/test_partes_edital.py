@@ -57,6 +57,19 @@ class PartesEditalTest(unittest.TestCase):
         assunto = {"texto": "RACIOCÍNIO LÓGICO MATEMÁTICO: Proposições", "partes": [{"texto": "Proposições"}]}
         self.assertEqual([], pe.conferir_assunto(assunto, assunto["texto"], "RACIOCÍNIO LÓGICO MATEMÁTICO"))
 
+    def test_referencia_e_contexto_do_assunto_anterior(self):
+        ref = "Todo o conteúdo completo das disciplinas de Auditoria, de contabilidade Geral e de Legislação Tributária"
+        assunto = {"texto": "Auditoria Fiscal: " + ref + ".", "partes": []}
+        self.assertEqual([], pe.conferir_assunto(assunto, assunto["texto"], "Auditoria", [ref]))
+        disciplina = "Gestão ágil de produtos e projetos digitais: Gerenciamento de Produto Digital. Gestão de Portfólios e Produtos."
+        assunto = {"texto": "Gestão de Portfólios e Produtos.", "partes": [
+            {"texto": "Gestão de Portfólios e Produtos", "contexto": "Gestão ágil de produtos e projetos digitais"}]}
+        avisos = []
+        self.assertEqual([], pe.conferir_assunto(assunto, disciplina, "", [], avisos))
+        self.assertEqual(1, len(avisos))
+        assunto["partes"][0]["contexto"] = "Kanban"
+        self.assertTrue(pe.conferir_assunto(assunto, disciplina, "", [], []), "contexto que não está em lugar nenhum é erro")
+
     def test_numeracao_nao_precisa_de_parte(self):
         texto = "4 Domínio dos mecanismos de coesão textual: 4.1 Emprego de elementos de referenciação. 4.2 Emprego de tempos e modos verbais."
         assunto = {"texto": texto, "partes": [

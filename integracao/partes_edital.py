@@ -127,10 +127,17 @@ def trechos_sem_assunto(texto_disciplina, assuntos, minimo=3, cabecalho=""):
     return [s.strip() for s in sobras if len(palavras(s) - do_cabecalho) >= minimo]
 
 
-def conferir_assunto(assunto, texto_disciplina, cabecalho=""):
+def conferir_assunto(assunto, texto_disciplina, cabecalho="", referencias=(), alertas=None):
     """Erros de um assunto e das partes dele (lista vazia = aceito). As palavras do cabeçalho da disciplina
-    (nome e restrição de cargo) não precisam de parte: o assunto às vezes vem com o título junto."""
+    (nome e restrição de cargo) não precisam de parte: o assunto às vezes vem com o título junto. Assunto que
+    é inteiro uma referência ('todo o conteúdo das disciplinas X e Y') não precisa de parte. Contexto que vem
+    de fora do assunto mas está no texto da disciplina (a cabeça de uma lista partida em vários assuntos) não
+    é erro: vira alerta em 'alertas', para a revisão."""
     erros = []
+    alertas = alertas if alertas is not None else []
+    if any(normalizar(r) and normalizar(r) in normalizar(assunto["texto"])
+           and len(palavras(r)) >= 0.8 * len(palavras(assunto["texto"]) - palavras(cabecalho)) for r in referencias):
+        return erros
     if normalizar(assunto["texto"]) not in normalizar(texto_disciplina):
         erros.append("o assunto não é trecho do edital (foi reescrito ou juntou pedaços)")
     do_assunto = palavras(assunto["texto"])
@@ -147,7 +154,12 @@ def conferir_assunto(assunto, texto_disciplina, cabecalho=""):
         if herdado - do_assunto:
             erros.append(f"prefixo herdado {p.get('herdado')!r} não está no assunto")
         if contexto - do_assunto:
-            erros.append(f"contexto {p.get('contexto')!r} não está no assunto")
+            if contexto <= palavras(texto_disciplina):
+                aviso = f"contexto {p.get('contexto')!r} vem de fora do assunto (de um assunto anterior)"
+                if aviso not in alertas:
+                    alertas.append(aviso)
+            else:
+                erros.append(f"contexto {p.get('contexto')!r} não está no assunto nem no texto da disciplina")
         cobertas |= palavras(p.get("texto")) | contexto | herdado
     faltam = {w for w in do_assunto - cobertas - palavras(cabecalho) if not (w.isdigit() and len(w) <= 2)}  # 4.1, 5.3
     if faltam:
@@ -191,7 +203,8 @@ PARTE = cada assunto de estudo distinto dentro do assunto:
 - elemento que depende do anterior herda o prefixo: "Windows Server 2019 e 2022" → partes "Windows Server
   2019" e "2022" com "herdado": "Windows Server"; nunca uma parte só "2022" sem o herdado;
 - número de lei, versão, decimal, abreviatura (art., nº), URL, código ("0000, 0150"), faixa de artigos e edição
-  ("PMBOK 6ª edição") nunca são separadores;
+  ("PMBOK 6ª edição") nunca são separadores; uma LISTA de códigos, registros, artigos ou campos ("EFD
+  REGISTROS 0000, 0150, C100, C170"; "registros B, C, D, H") é UMA parte só, nunca uma parte por código;
 - repetição que está no edital fica (duas partes iguais), com um alerta;
 - "todo o conteúdo das disciplinas X e Y" é referência, não parte: vai em "referencias".
 A parte é texto copiado do assunto (sem a cabeça, que vai no contexto). Não invente palavras.
@@ -230,7 +243,9 @@ def cabecalho(disciplina):
 def reconferir(disciplina):
     """Refaz a conferência por regra sobre os assuntos já gravados (regra nova, mesma resposta da IA)."""
     for a in disciplina["assuntos"]:
-        a["erros"] = conferir_assunto(a, disciplina["texto"], cabecalho(disciplina))
+        a["avisos"] = []
+        a["erros"] = conferir_assunto(a, disciplina["texto"], cabecalho(disciplina), disciplina.get("referencias") or [],
+                                      a["avisos"])
     disciplina["trechos_sem_assunto"] = trechos_sem_assunto(disciplina["texto"], [a["texto"] for a in disciplina["assuntos"]],
                                                             cabecalho=cabecalho(disciplina))
     return disciplina
@@ -253,7 +268,11 @@ def quebrar_disciplina(sge, disciplina):
         resposta = completar_json(sge, SISTEMA, texto)
         assuntos = [a for a in (resposta.get("assuntos") or []) if isinstance(a, dict) and a.get("texto")]
         resposta["assuntos"] = assuntos
-        erros = {i: conferir_assunto(a, disciplina["texto"], cabecalho(disciplina)) for i, a in enumerate(assuntos)}
+        refs = resposta.get("referencias") or []
+        for a in assuntos:
+            a["avisos"] = []
+        erros = {i: conferir_assunto(a, disciplina["texto"], cabecalho(disciplina), refs, a["avisos"])
+                 for i, a in enumerate(assuntos)}
         sobras = trechos_sem_assunto(disciplina["texto"], [a["texto"] for a in assuntos], cabecalho=cabecalho(disciplina))
         if not any(erros.values()) and not sobras:
             break
@@ -285,7 +304,7 @@ def relatorio(edital, cargo, disciplinas):
                 saida.append(f"    - {p['texto']}{extra}")
             for e in a["erros"]:
                 saida.append(f"    - **conferência:** {e}")
-            for al in a.get("alertas") or []:
+            for al in (a.get("alertas") or []) + (a.get("avisos") or []):
                 saida.append(f"    - alerta: {al}")
         for s in d["trechos_sem_assunto"]:
             saida.append(f"- **trecho sem assunto:** {s}")
