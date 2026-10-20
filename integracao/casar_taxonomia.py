@@ -36,6 +36,11 @@ VAZIAS = set("de da do das dos e em a o as os para com por no na nos nas ao aos 
              "basicos basicas introducao principais geral".split())
 CANDIDATOS = 8
 LOTE = 25
+LOTE_ARVORE = 20
+# Ensaio de 2026-10-20: a busca por palavras deixa o nó certo de fora quando o nome muda ('Coordenação e
+# subordinação' x 'orações coordenadas'); as árvores das disciplinas são pequenas (mediana 32 nós), então a IA
+# vê a árvore inteira das disciplinas ligadas. Só as maiores (legislação municipal e estadual) ficam na busca.
+MAX_NOS_ARVORE = 300
 
 
 def palavras(texto):
@@ -73,6 +78,11 @@ class Arvore:
         for i, n in self.nos.items():
             for w in n["contexto"]:
                 self.indice.setdefault(w, set()).add(i)
+
+    def subarvore(self, raizes):
+        """Os ids dos nós abaixo das disciplinas 'raizes' (sem as próprias disciplinas), na ordem da árvore."""
+        raizes = set(raizes)
+        return [i for i in self.nos if self.nos[i]["nivel"] > 1 and self.ancestrais(i)[-1] in raizes]
 
     def ancestrais(self, i):
         saida = []
@@ -116,8 +126,11 @@ def mapear_disciplinas(sge, nomes, arvore):
     raizes = sorted((n["nome"], i) for i, n in arvore.nos.items() if n["nivel"] == 1)
     pedido = ("Disciplinas do QConcursos (id: nome):\n" + "\n".join(f"{i}: {nome}" for nome, i in raizes)
               + "\n\nDisciplinas a ligar:\n" + "\n".join(f"- {n}" for n in nomes)
-              + "\n\nPara cada uma, os ids das disciplinas do QConcursos que cobrem o mesmo conteúdo (uma larga liga a "
-                "várias; nenhuma se não houver).\nResponda: {\"disciplinas\": {\"nome exatamente como veio\": [ids]}}")
+              + "\n\nPara cada uma, os ids das disciplinas do QConcursos que cobrem o mesmo conteúdo. Disciplina que é uma "
+                "área inteira (ex.: Ciências da Computação, Ciência de Dados, Inteligência Artificial, Tecnologia da "
+                "Informação) liga a TODAS as disciplinas do QConcursos que a área abrange (ex.: Banco de Dados, "
+                "Programação, Engenharia de Software, Redes, Segurança da Informação, Estatística...). Lista vazia só "
+                "se nada do QConcursos tratar do conteúdo.\nResponda: {\"disciplinas\": {\"nome exatamente como veio\": [ids]}}")
     resposta = completar_json(sge, SISTEMA_DISCIPLINAS, pedido)
     validos = {i for _, i in raizes}
     return {n: [i for i in (resposta.get("disciplinas") or {}).get(n, []) if i in validos] for n in nomes}
@@ -133,6 +146,17 @@ o item inteiro. Se nenhum candidato corresponde, devolva lista vazia. Não inven
 Responda: {"ligacoes": [{"item": número do item, "nos": [ids], "confianca": "alta" | "media" | "baixa"}]}"""
 
 
+def pedido_com_arvore(itens, arvore, ids):
+    """O lote de itens de uma mesma disciplina com a árvore inteira dela (só nomes)."""
+    linhas = ["Árvore de assuntos do QConcursos (id: caminho):"]
+    linhas += [f"{i}: {' > '.join(arvore.nos[i]['caminho'])}" for i in ids]
+    linhas.append("\nItens:")
+    for k, it in enumerate(itens, 1):
+        extra = f" (termos: {', '.join(it['termos'][:6])})" if it.get("termos") else ""
+        linhas.append(f"{k}. [{it['disciplina'] or '?'}] {it['nome']}{extra}")
+    return "\n".join(linhas) + "\n\n" + INSTRUCOES.replace("entre os candidatos dele", "na árvore acima")
+
+
 def pedido_do_lote(itens, arvore):
     linhas = []
     for k, it in enumerate(itens, 1):
@@ -144,17 +168,30 @@ def pedido_do_lote(itens, arvore):
 
 
 def ligar_com_ia(sge, itens, arvore, log=print):
-    """Grava em cada item 'ia': [ids] e 'confianca'. Ids fora dos candidatos são descartados."""
-    for ini in range(0, len(itens), LOTE):
-        lote = itens[ini:ini + LOTE]
-        resposta = completar_json(sge, SISTEMA, pedido_do_lote(lote, arvore))
-        por_item = {r.get("item"): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
-        for k, it in enumerate(lote, 1):
-            r = por_item.get(k) or {}
-            validos = {i for _, i in it["candidatos"]}
-            it["ia"] = [i for i in (r.get("nos") or []) if i in validos][:3]
-            it["confianca"] = r.get("confianca")
-        log(f"... {min(ini + LOTE, len(itens))} de {len(itens)} itens")
+    """Grava em cada item 'ia': [ids] e 'confianca'. Itens com disciplinas ligadas de árvore pequena vão em
+    lotes por disciplina, com a árvore inteira; os outros, com os candidatos da busca por palavras. Id que a
+    IA não recebeu é descartado."""
+    grupos = {}
+    for it in itens:
+        ids = arvore.subarvore(it.get("raizes") or [])
+        chave = tuple(sorted(it.get("raizes") or [])) if ids and len(ids) <= MAX_NOS_ARVORE else None
+        grupos.setdefault(chave, []).append(it)
+    feitos = 0
+    for chave, membros in grupos.items():
+        ids = arvore.subarvore(chave) if chave else None
+        passo = LOTE_ARVORE if chave else LOTE
+        for ini in range(0, len(membros), passo):
+            lote = membros[ini:ini + passo]
+            pedido = pedido_com_arvore(lote, arvore, ids) if chave else pedido_do_lote(lote, arvore)
+            resposta = completar_json(sge, SISTEMA, pedido)
+            por_item = {r.get("item"): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
+            for k, it in enumerate(lote, 1):
+                r = por_item.get(k) or {}
+                validos = set(ids) if chave else {i for _, i in it["candidatos"]}
+                it["ia"] = [i for i in (r.get("nos") or []) if i in validos][:3]
+                it["confianca"] = r.get("confianca")
+            feitos += len(lote)
+            log(f"... {feitos} de {len(itens)} itens")
 
 
 def regra_decide(it, minimo=0.75, margem=0.15):
@@ -176,7 +213,7 @@ def itens_do_edital(planejamento, arvore, disciplinas=None):
     for a in planejamento["assuntos"]:
         raizes = set((disciplinas or {}).get(a["disciplina"]) or [])
         itens.append({"tipo": "edital", "nome": a["assunto"], "disciplina": a["disciplina"], "termos": [],
-                      "chave": a["chaveExterna"],
+                      "chave": a["chaveExterna"], "raizes": sorted(raizes),
                       "candidatos": arvore.candidatos(a["assunto"], (), a["disciplina"], raizes=raizes)})
     return itens
 
@@ -189,8 +226,9 @@ def itens_das_fichas(db, caminhos, arvore, disciplinas=None):
             continue
         for t in json.loads(linha[0])["temas"]:
             extras = list(t.get("termos") or []) + [s["nome"] for s in t.get("subtemas", [])][:4]
+            raizes = sorted((disciplinas or {}).get(t.get("disciplina")) or [])
             itens.append({"tipo": "ficha", "nome": t["tema"], "disciplina": t.get("disciplina"), "termos": t.get("termos") or [],
-                          "caminho": caminho, "paginas": t.get("paginas"),
+                          "caminho": caminho, "paginas": t.get("paginas"), "raizes": raizes,
                           "candidatos": arvore.candidatos(t["tema"], extras, t.get("disciplina") or "",
                                                           raizes=set((disciplinas or {}).get(t.get("disciplina")) or []))})
     return itens

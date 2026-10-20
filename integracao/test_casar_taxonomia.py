@@ -67,6 +67,19 @@ class CasarTaxonomiaTest(unittest.TestCase):
         self.assertEqual([], itens[1]["ia"])
         self.assertIn("31: Redes de Computadores > NAT (Network Address Translation)", ia.pedidos[0])
 
+    def test_ia_ve_a_arvore_inteira_da_disciplina_ligada(self):
+        itens = [{"nome": "Coordenação e subordinação", "disciplina": "Língua Portuguesa", "termos": [], "raizes": [1],
+                  "candidatos": []},
+                 {"nome": "NAT", "disciplina": "?", "termos": [], "raizes": [], "candidatos": [(0.9, 31)]}]
+        ia = IaFalsa([{"ligacoes": [{"item": 1, "nos": [11, 31], "confianca": "media"}]},
+                      {"ligacoes": [{"item": 1, "nos": [31]}]}])
+        ct.ligar_com_ia(ia, itens, self.arvore, log=lambda m: None)
+        self.assertEqual([11], itens[0]["ia"], "nó de outra disciplina (31) é descartado")
+        self.assertIn("111: Português > Sintaxe > Vozes Verbais", ia.pedidos[0])
+        self.assertNotIn("Espanhol", ia.pedidos[0])
+        self.assertEqual([31], itens[1]["ia"], "sem disciplina ligada, vai pelos candidatos")
+        self.assertEqual([11, 111, 12], self.arvore.subarvore([1]))
+
     def test_disciplinas_ligadas_numa_chamada(self):
         ia = IaFalsa([{"disciplinas": {"Língua Portuguesa": [1], "Ciências da Computação": [3, 77]}}])
         m = ct.mapear_disciplinas(ia, ["Língua Portuguesa", "Ciências da Computação", "Regionais de SC"], self.arvore)
