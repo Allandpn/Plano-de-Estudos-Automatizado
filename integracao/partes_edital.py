@@ -35,7 +35,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 VAZIAS = set("de da do das dos e em a o as os para com por no na nos nas ao aos um uma sua seu suas seus ou que "
              "se sobre entre como pela pelo pelas pelos".split())
-INICIO_PROGRAMA = re.compile(r"conte[uú]dos?\s+program[aá]tico|objetos?\s+de\s+avalia[cç][aã]o", re.IGNORECASE)
+INICIO_PROGRAMA = re.compile(r"conte[uú]dos?\s+program[aá]tico|objetos?\s+de\s+avalia[cç][aã]o|programas?\s+das?\s+provas?",
+                             re.IGNORECASE)
+TITULO_DE_ANEXO = re.compile(r"^ANEXO\s+([IVXL]+|\d+)\b")
+
+
+class ProgramaNaoEncontrado(Exception):
+    """O PDF não traz o conteúdo programático (ex.: MPPR 2024 remete ao Anexo II, publicado em outro arquivo).
+    Seguir com o edital inteiro seria afirmar uma completude que não existe."""
 
 
 # ---------------------------------------------------------------- 1. extração (regra)
@@ -68,12 +75,19 @@ def limpar(paginas, minimo=3):
 
 
 def recorte_do_programa(linhas):
-    """Do título do conteúdo programático (a última linha curta que o anuncia, não a frase que o cita) ao
-    fim do texto. Devolve as linhas recortadas."""
+    """Do título do conteúdo programático (a última linha curta que o anuncia, não a frase que o cita) até o
+    título do anexo seguinte (atribuições, cronograma), ou o fim. Sem título, ProgramaNaoEncontrado."""
     candidatos = [i for i, (_, l) in enumerate(linhas) if INICIO_PROGRAMA.search(l) and len(l) <= 80
                   and (l.isupper() or l.strip().upper().startswith(("ANEXO", "15")) or len(l.split()) <= 6)]
-    inicio = candidatos[-1] if candidatos else 0
-    return linhas[inicio:]
+    if not candidatos:
+        remissao = next((l for _, l in linhas if INICIO_PROGRAMA.search(l)), None)
+        raise ProgramaNaoEncontrado("conteúdo programático não encontrado neste PDF"
+                                    + (f"; o edital diz: {remissao!r}" if remissao else ""))
+    titulos = [i for i in candidatos if linhas[i][1].isupper() or linhas[i][1].strip().upper().startswith("ANEXO")]
+    inicio = (titulos or candidatos)[-1]
+    fim = next((i for i in range(inicio + 1, len(linhas)) if TITULO_DE_ANEXO.match(linhas[i][1])
+                and not INICIO_PROGRAMA.search(linhas[i][1])), len(linhas))
+    return linhas[inicio:fim]
 
 
 def extrair(pdf):
@@ -337,7 +351,11 @@ def main():
         print(relatorio(nome, args.cargo, feitas).splitlines()[2])
         return
     if args.cmd == "extrair":
-        dados = extrair(args.pdf)
+        try:
+            dados = extrair(args.pdf)
+        except ProgramaNaoEncontrado as erro:
+            print(f"{args.pdf}: {erro}")
+            sys.exit(2)
         Path(args.saida).write_text(json.dumps(dados, ensure_ascii=False, indent=1), encoding="utf-8")
         print(f"{args.saida}: {len(dados['linhas'])} linhas do conteúdo programático")
         return

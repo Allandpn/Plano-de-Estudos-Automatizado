@@ -24,6 +24,17 @@ class PartesEditalTest(unittest.TestCase):
                   (40, "ANEXO I – CONTEÚDO PROGRAMÁTICO"), (40, "LÍNGUA PORTUGUESA: 1. Interpretação.")]
         self.assertEqual(linhas[1:], pe.recorte_do_programa(linhas))
 
+    def test_programa_das_provas_ate_o_anexo_seguinte_e_programa_ausente(self):
+        linhas = [(1, "1.9 O conteúdo programático das provas é o constante do Anexo 2 deste Edital."),
+                  (40, "ANEXO 2 PROGRAMAS DAS PROVAS"), (40, "Língua Portuguesa: Ortografia."),
+                  (40, "listadas nos programas das provas."),
+                  (52, "ANEXO 3 ATRIBUIÇÕES"), (52, "Analista de Sistemas: desenvolver sistemas.")]
+        self.assertEqual(linhas[1:4], pe.recorte_do_programa(linhas))
+        with self.assertRaises(pe.ProgramaNaoEncontrado) as caso:
+            pe.recorte_do_programa([(1, "1.9 Os conteúdos programáticos das provas encontram-se no Anexo II deste Edital."),
+                                    (2, "2.1 Das inscrições.")])
+        self.assertIn("Anexo II", str(caso.exception))
+
     def test_prefixo_herdado_e_palavra_inventada(self):
         assunto = {"texto": INFRA, "partes": [
             {"texto": "fundamentos", "contexto": "Sistemas operacionais"},
