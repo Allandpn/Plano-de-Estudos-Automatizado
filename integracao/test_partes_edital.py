@@ -16,8 +16,26 @@ class PartesEditalTest(unittest.TestCase):
     def test_limpa_o_que_se_repete_em_varias_paginas(self):
         conteudo = ["Engenharia de Software: Requisitos", "Gestão de Projetos: PMBOK", "Bancos de Dados: SQL", "Redes: VLAN"]
         paginas = [f"ASSEMBLEIA LEGISLATIVA DO ESTADO DE SANTA CATARINA | CONCURSO PÚBLICO 2024 {n}\n"
-                   f"https://sei.tjsc.jus.br/sei/controlador.php?acao=x\n{conteudo[n - 1]}\n{n}" for n in range(1, 5)]
+                   f"https://sei.tjsc.jus.br/sei/controlador.php?acao=x {n}/45\n{conteudo[n - 1]}\n{n}" for n in range(1, 5)]
         self.assertEqual([(n, conteudo[n - 1]) for n in range(1, 5)], pe.limpar(paginas))
+        meio = "\n".join(f"conteúdo {k}" for k in range(20))
+        uma = [f"cabeçalho {n}\n{meio}\nhttps://www.gov.br/ana/pt-br/legislacao/resolucoes\n{meio}" for n in range(1, 2)]
+        self.assertIn((1, "https://www.gov.br/ana/pt-br/legislacao/resolucoes"), pe.limpar(uma), "URL no conteúdo fica")
+
+    def test_repeticao_no_meio_da_pagina_e_conteudo(self):
+        """TCE-SC 2026: título de disciplina que volta noutro módulo e fim de linha quebrada não são ruído."""
+        timbre = "PREFEITURA MUNICIPAL DA ESTÂNCIA TURÍSTICA DE TREMEMBÉ\n(Lei Estadual nº 8.506)\nRua 7 de Setembro, 701\nwww.tremembe.sp.gov.br\n"
+        meio = "\n".join(f"linha de conteúdo {k} da página" for k in range(1, 12))
+        paginas = [f"TRIBUNAL DE CONTAS DO ESTADO DE SANTA CATARINA | CONCURSO PÚBLICO 2026 {n}\n{timbre}"
+                   f"{'LÍNGUA PORTUGUESA' if n <= 3 else 'INFORMÁTICA'}\n{meio}\n1. Lei Orgânica do Tribunal de Contas do "
+                   f"Estado de Santa\nCatarina.\n{meio}\núltima {n}" for n in range(1, 9)]
+        ruido = []
+        linhas = [t for _, t in pe.limpar(paginas, ruido=ruido)]
+        self.assertEqual(3, linhas.count("LÍNGUA PORTUGUESA"), "título em 3 de 8 páginas, perto do topo, é conteúdo")
+        self.assertEqual(8, linhas.count("Catarina."))
+        self.assertNotIn("Rua 7 de Setembro, 701", linhas, "timbre de 5 linhas em todas as páginas é ruído")
+        self.assertIn((1, "www.tremembe.sp.gov.br"), ruido)
+        self.assertNotIn("TRIBUNAL DE CONTAS DO ESTADO DE SANTA CATARINA | CONCURSO PÚBLICO 2026 1", linhas)
 
     def test_recorte_comeca_no_titulo_e_nao_na_frase_que_o_cita(self):
         linhas = [(1, "9.8 O conteúdo programático encontra-se disponível no Anexo I deste Edital."),

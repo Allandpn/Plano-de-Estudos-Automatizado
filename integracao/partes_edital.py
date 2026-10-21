@@ -56,19 +56,31 @@ def _assinatura(linha):
     return re.sub(r"[\d\W_]+", "", unicodedata.normalize("NFKD", linha).encode("ascii", "ignore").decode().lower())
 
 
-def limpar(paginas, minimo=3):
-    """As linhas de cada página sem o ruído: linha que se repete (sem números) em `minimo` páginas ou mais
-    (cabeçalho, rodapé, timbre), URL, data e hora do SEI e número de página sozinho. Devolve [(página, linha)]."""
+def limpar(paginas, borda=8, fracao=0.5, ruido=None):
+    """As linhas de cada página sem o ruído: cabeçalho e rodapé (linha que, sem números, aparece perto da borda
+    — até `borda` linhas do topo ou do pé — em pelo menos `fracao` das páginas, e no mínimo em 3; a URL e a
+    data do SEI caem aqui) e número de página sozinho. URL no meio do conteúdo fica (TCE-SC cita resolução
+    por link). Repetição em poucas páginas ou no meio delas é conteúdo: título de
+    disciplina que volta noutro módulo, pedaço de linha quebrada ('Catarina.') (TCE-SC 2026). Toda linha
+    descartada vai para `ruido` [(página, linha)], para a revisão. Devolve [(página, linha)]."""
+    def borda_de(p):
+        cheias = [l for l in p.splitlines() if _assinatura(l)]
+        return set(cheias[:borda] + cheias[-borda:])
+    bordas = [borda_de(p) for p in paginas]
     contagem = Counter()
-    for p in paginas:
-        contagem.update({_assinatura(l) for l in p.splitlines() if _assinatura(l)})
-    repetidas = {a for a, n in contagem.items() if n >= minimo and len(a) >= 6}
+    for b in bordas:
+        contagem.update({_assinatura(l) for l in b})
+    corte = max(3, fracao * len([p for p in paginas if p.strip()]))
+    repetidas = {a for a, n in contagem.items() if n >= corte and len(a) >= 6}
     saida = []
-    for numero, p in enumerate(paginas, 1):
+    for numero, (p, b) in enumerate(zip(paginas, bordas), 1):
         for l in p.splitlines():
             texto = " ".join(l.split())
-            if not texto or _assinatura(texto) in repetidas or re.match(r"^https?://", texto) \
-                    or re.match(r"^\d{1,4}$", texto) or re.match(r"^\d{2}/\d{2}/\d{4},? \d{2}:\d{2}", texto):
+            if not texto:
+                continue
+            if (l in b and _assinatura(texto) in repetidas) or re.match(r"^\d{1,4}$", texto):
+                if ruido is not None:
+                    ruido.append((numero, texto))
                 continue
             saida.append((numero, texto))
     return saida
@@ -91,8 +103,11 @@ def recorte_do_programa(linhas):
 
 
 def extrair(pdf):
-    linhas = recorte_do_programa(limpar(paginas_do_pdf(pdf)))
-    return {"pdf": Path(pdf).name, "linhas": [{"n": i + 1, "pagina": p, "texto": t} for i, (p, t) in enumerate(linhas)]}
+    ruido = []
+    linhas = recorte_do_programa(limpar(paginas_do_pdf(pdf), ruido=ruido))
+    paginas = {p for p, _ in linhas}
+    return {"pdf": Path(pdf).name, "linhas": [{"n": i + 1, "pagina": p, "texto": t} for i, (p, t) in enumerate(linhas)],
+            "ruido": [{"pagina": p, "texto": t} for p, t in ruido if p in paginas]}
 
 
 # ---------------------------------------------------------------- conferência (regra)
