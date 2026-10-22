@@ -193,6 +193,18 @@ def pedido_do_lote(itens, arvore):
     return "\n".join(linhas) + "\n\n" + INSTRUCOES
 
 
+def _completar(sge, sistema, pedido, tentativas=2):
+    """completar_json com uma nova tentativa quando a IA não devolve JSON legível; na falha final devolve {} (os itens do
+    lote ficam sem nó e a segunda passada tenta de novo), em vez de derrubar a rodada inteira."""
+    for k in range(tentativas):
+        try:
+            return completar_json(sge, sistema, pedido)
+        except ValueError:
+            if k == tentativas - 1:
+                return {}
+    return {}
+
+
 def _inteiro(x):
     """A IA às vezes devolve número como texto ('12345', ' 3'): aceita os dois."""
     try:
@@ -217,7 +229,7 @@ def ligar_com_ia(sge, itens, arvore, log=print, respostas=None):
         for ini in range(0, len(membros), passo):
             lote = membros[ini:ini + passo]
             pedido = pedido_com_arvore(lote, arvore, ids) if chave else pedido_do_lote(lote, arvore)
-            resposta = completar_json(sge, SISTEMA, pedido)
+            resposta = _completar(sge, SISTEMA, pedido)
             if respostas is not None:
                 respostas.append(resposta)
             por_item = {_inteiro(r.get("item")): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
@@ -238,7 +250,7 @@ def ligar_com_ia(sge, itens, arvore, log=print, respostas=None):
     sem = [it for it in sem if it["candidatos"]]
     for ini in range(0, len(sem), LOTE):
         lote = sem[ini:ini + LOTE]
-        resposta = completar_json(sge, SISTEMA, pedido_do_lote(lote, arvore))
+        resposta = _completar(sge, SISTEMA, pedido_do_lote(lote, arvore))
         if respostas is not None:
             respostas.append(resposta)
         por_item = {_inteiro(r.get("item")): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
@@ -300,7 +312,7 @@ def refinar(sge, itens, arvore, log=print, respostas=None, candidatos=CANDIDATOS
             linhas += [f"   - {i}: {nome(i)}" + (" [fora das disciplinas do edital]"
                                                   if raizes and arvore.ancestrais(i)[-1] not in raizes else "")
                        for i in it["candidatos_refino"]]
-        resposta = completar_json(sge, SISTEMA_REFINO, "\n".join(linhas) + "\n\n" + INSTRUCOES_REFINO)
+        resposta = _completar(sge, SISTEMA_REFINO, "\n".join(linhas) + "\n\n" + INSTRUCOES_REFINO)
         if respostas is not None:
             respostas.append(resposta)
         por_item = {_inteiro(r.get("item")): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}

@@ -58,6 +58,24 @@ class CasarTaxonomiaTest(unittest.TestCase):
         self.assertIn("RAMO:", ia.pedidos[0])
         self.assertEqual([], itens[1]["ia"], "item com decisão aprovada não vai para o refino")
 
+    def test_resposta_ilegivel_tenta_de_novo_e_depois_deixa_para_a_segunda_passada(self):
+        class Ruim:
+            def __init__(self, respostas):
+                self.respostas, self.chamadas = list(respostas), 0
+
+            def completar(self, sistema, usuario):
+                self.chamadas += 1
+                r = self.respostas.pop(0)
+                return r if isinstance(r, str) else json.dumps(r)
+        itens = [{"nome": "NAT", "disciplina": "Redes", "termos": [], "raizes": [3]}]
+        ia = Ruim(["isto não é json", {"ligacoes": [{"item": 1, "nos": [31], "natureza": "exato"}]}])
+        ct.ligar_com_ia(ia, itens, self.arvore, log=lambda *_: None)
+        self.assertEqual(([31], 2), (itens[0]["ia"], ia.chamadas), "a segunda tentativa funcionou")
+        itens = [{"nome": "NAT", "disciplina": "Redes", "termos": [], "raizes": [3]}]
+        ia = Ruim(["lixo", "lixo", "lixo", "lixo", "lixo", "lixo"])
+        ct.ligar_com_ia(ia, itens, self.arvore, log=lambda *_: None)
+        self.assertEqual([], itens[0]["ia"], "falhou duas vezes: fica sem nó, sem derrubar a rodada")
+
     def test_sigla_colada_na_versao(self):
         # ALESC, 'Fundamentos ITILv4' ficou sem nó porque 'itilv4' não casava com o nó 'ITIL 4'
         self.assertEqual(["fundamento", "itil"], ct.palavras("Fundamentos ITILv4"))
