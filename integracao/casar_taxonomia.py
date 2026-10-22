@@ -162,7 +162,11 @@ o item inteiro. Se não houver nó específico para o assunto, escolha o nó mai
 as questões desse assunto estariam) e marque confiança "baixa". Lista vazia só se nada da árvore trata do
 assunto. Não invente id fora dos candidatos.
 
-Responda: {"ligacoes": [{"item": número do item, "nos": [ids], "confianca": "alta" | "media" | "baixa"}]}"""
+Diga também a NATUREZA do vínculo: "exato" (o nó é o mesmo assunto do item), "mais_amplo" (não há nó específico;
+o nó escolhido contém o assunto) ou "parcial" (os nós escolhidos cobrem só uma parte do item).
+
+Responda: {"ligacoes": [{"item": número do item, "nos": [ids], "natureza": "exato" | "mais_amplo" | "parcial",
+  "confianca": "alta" | "media" | "baixa"}]}"""
 
 
 def pedido_com_arvore(itens, arvore, ids):
@@ -219,6 +223,7 @@ def ligar_com_ia(sge, itens, arvore, log=print, respostas=None):
                 validos = set(ids) if chave else {i for _, i in it["candidatos"]}
                 it["ia"] = [i for i in map(_inteiro, r.get("nos") or []) if i in validos][:3]
                 it["confianca"] = r.get("confianca")
+                it["natureza"] = r.get("natureza")
             feitos += len(lote)
             log(f"... {feitos} de {len(itens)} itens")
     # Segunda passada: item sem nó (lei que mora em 'Legislação Federal', assunto fora das disciplinas ligadas)
@@ -239,6 +244,7 @@ def ligar_com_ia(sge, itens, arvore, log=print, respostas=None):
             validos = {i for _, i in it["candidatos"]}
             it["ia"] = [i for i in map(_inteiro, r.get("nos") or []) if i in validos][:3]
             it["confianca"] = r.get("confianca")
+            it["natureza"] = r.get("natureza")
             it["segunda_passada"] = True
         log(f"... segunda passada: {min(ini + LOTE, len(sem))} de {len(sem)} itens sem nó")
 
