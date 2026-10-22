@@ -261,6 +261,12 @@ candidatos, o nó mais específico que corresponde ao MESMO assunto do item (at�
 árvore separa). Troque o atual só quando um candidato for claramente mais adequado: mesmo assunto, ou ramo certo e
 mais específico. Se o atual for o melhor, devolva-o. Se nenhum serve, lista vazia. Não invente id fora da lista.
 
+RAMO: o mesmo nome existe em ramos diferentes ('Kanban' de estoque x 'Kanban' de desenvolvimento ágil; 'Ergonomia' de
+design x de software; 'tipos de dados' de programação x de ciência de dados). Os candidatos marcados com
+[fora das disciplinas do edital] são de uma disciplina que o edital não trata: use um deles só se o assunto, pelo
+contexto, for claramente daquele ramo. Isso não é motivo para deixar o item sem nó nem para abandonar um nó melhor:
+entre candidatos de mesmo mérito, prefira o da disciplina do edital.
+
 Responda: {"ligacoes": [{"item": número do item, "nos": [ids], "natureza": "exato" | "mais_amplo" | "parcial"}]}"""
 
 REFINAR_NATUREZAS = ("mais_amplo", "parcial", None, "")
@@ -269,10 +275,18 @@ REFINAR_NATUREZAS = ("mais_amplo", "parcial", None, "")
 def refinar(sge, itens, arvore, log=print, respostas=None, candidatos=CANDIDATOS_SEGUNDA):
     """Segunda checagem dos itens 'mais_amplo', 'parcial' ou sem nó: candidatos da árvore inteira, por palavras, e a
     IA fica com o nó atual ou troca. Guarda 'ia_antes' quando troca e marca 'refinado'. Id fora da lista é descartado."""
-    alvo = [it for it in itens if it.get("natureza") in REFINAR_NATUREZAS]
+    alvo = [it for it in itens if it.get("natureza") in REFINAR_NATUREZAS and not it.get("decisao")]
     for it in alvo:
+        # os da árvore inteira e, à parte, os das disciplinas ligadas ao edital (o nó certo pode ter palavras fracas)
         achados = arvore.candidatos(it["nome"], it.get("termos") or [], it.get("disciplina") or "", n=candidatos)
-        it["candidatos_refino"] = [i for _, i in achados if i not in (it.get("ia") or [])]
+        if it.get("raizes"):
+            achados += arvore.candidatos(it["nome"], it.get("termos") or [], it.get("disciplina") or "",
+                                         n=candidatos, raizes=set(it["raizes"]))
+        vistos = []
+        for _, i in achados:
+            if i not in vistos and i not in (it.get("ia") or []):
+                vistos.append(i)
+        it["candidatos_refino"] = vistos
     alvo = [it for it in alvo if it["candidatos_refino"]]
     nome = lambda i: " > ".join(arvore.nos[i]["caminho"])  # noqa: E731
     for ini in range(0, len(alvo), LOTE):
@@ -282,7 +296,10 @@ def refinar(sge, itens, arvore, log=print, respostas=None, candidatos=CANDIDATOS
             extra = f" (termos: {', '.join(it['termos'][:6])})" if it.get("termos") else ""
             linhas.append(f"{k}. [{it['disciplina'] or '?'}] {it['nome']}{extra}")
             linhas.append("   ATUAL: " + ("; ".join(f"{i}: {nome(i)}" for i in it.get("ia") or []) or "nenhum"))
-            linhas += [f"   - {i}: {nome(i)}" for i in it["candidatos_refino"]]
+            raizes = set(it.get("raizes") or [])
+            linhas += [f"   - {i}: {nome(i)}" + (" [fora das disciplinas do edital]"
+                                                  if raizes and arvore.ancestrais(i)[-1] not in raizes else "")
+                       for i in it["candidatos_refino"]]
         resposta = completar_json(sge, SISTEMA_REFINO, "\n".join(linhas) + "\n\n" + INSTRUCOES_REFINO)
         if respostas is not None:
             respostas.append(resposta)

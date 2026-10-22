@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from casar_taxonomia import Arvore, carregar_arvore, ligar_com_ia, mapear_disciplinas, refinar  # noqa: E402
+from casar_taxonomia import Arvore, carregar_arvore, ligar_com_ia, mapear_disciplinas, palavras, refinar  # noqa: E402
 from ia_comum import IaIndisponivel  # noqa: E402
 
 NATUREZAS = ("exato", "mais_amplo", "parcial")
@@ -46,6 +46,23 @@ def itens_das_partes(disciplinas, arvore, mapa_disciplinas, so=None):
     return itens, partes
 
 
+def _chave(nome, contexto):
+    return (" ".join(palavras(nome)), " ".join(palavras(contexto)))
+
+
+def aplicar_decisoes(itens, decisoes):
+    """Decisões já aprovadas por uma pessoa (lista de {parte, contexto, nos, natureza, origem}) valem antes da IA e
+    do refino, em qualquer edital: a chave é a parte e o contexto, sem a disciplina. Devolve quantas aplicou."""
+    por_chave = {_chave(d["parte"], d.get("contexto") or ""): d for d in decisoes}
+    feitas = 0
+    for it in itens:
+        d = por_chave.get(_chave(it["nome"], it["termos"][0] if it.get("termos") else ""))
+        if d:
+            it.update(ia=list(d["nos"]), natureza=d.get("natureza"), decisao=d.get("origem") or "aprovada")
+            feitas += 1
+    return feitas
+
+
 def relatorio(edital, itens, partes, arvore, mapa_disciplinas):
     caminho = lambda ids: "; ".join(" > ".join(arvore.nos[i]["caminho"]) for i in ids) or "**nenhum nó**"  # noqa: E731
     sem = sum(1 for it in itens if "ia" in it and not it["ia"])
@@ -63,7 +80,8 @@ def relatorio(edital, itens, partes, arvore, mapa_disciplinas):
         ctx = f" _(contexto: {it['termos'][0]})_" if it["termos"] and it["termos"][0] and len(it["termos"][0]) < 100 else ""
         saida.append(f"- [ ] **{it['nome']}**{ctx} → {caminho(it.get('ia', []))} · {it.get('natureza') or '?'}"
                      + (" · 2ª passada" if it.get("segunda_passada") else "")
-                     + (f" · refinado (antes: {caminho(it['ia_antes'])})" if it.get("refinado") else ""))
+                     + (f" · refinado (antes: {caminho(it['ia_antes'])})" if it.get("refinado") else "")
+                     + (f" · decisão aprovada ({it['decisao']})" if it.get("decisao") else ""))
     return "\n".join(saida)
 
 
@@ -72,6 +90,7 @@ def main():
     ap.add_argument("partes")
     ap.add_argument("--saida", required=True)
     ap.add_argument("--disciplinas", nargs="*", help="só as disciplinas cujo nome contém algum destes textos")
+    ap.add_argument("--decisoes", help="JSON com as decisões já aprovadas por uma pessoa (valem antes da IA)")
     ap.add_argument("--sem-refino", action="store_true", help="não faz a segunda checagem dos 'mais amplos' e sem nó")
     ap.add_argument("--so-refinar", action="store_true",
                     help="não liga de novo: lê <edital>-nos.json já gravado, refina e grava <edital>-nos-refinado.*")
@@ -101,8 +120,12 @@ def main():
         itens, partes = itens_das_partes(disciplinas, arvore, mapa)
         print(f"{len(partes)} partes, {len(itens)} ligações distintas", flush=True)
         nome_saida = f"{nome}-nos"
+        if args.decisoes:
+            lido = json.loads(Path(args.decisoes).read_text(encoding='utf-8'))
+            print(f"{aplicar_decisoes(itens, lido['decisoes'] if isinstance(lido, dict) else lido)} decisões aprovadas aplicadas",
+                  flush=True)
         try:
-            ligar_com_ia(sge, itens, arvore, respostas=respostas)
+            ligar_com_ia(sge, [it for it in itens if not it.get("decisao")], arvore, respostas=respostas)
         except IaIndisponivel as e:
             print(f"A IA parou: {e}")
     if not args.sem_refino:

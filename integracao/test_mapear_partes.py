@@ -31,6 +31,14 @@ class MapearPartesTest(unittest.TestCase):
         itens, _ = mp.itens_das_partes(DISCIPLINAS, ct.Arvore(ARVORE), {}, so=["português"])
         self.assertEqual([], itens)
 
+    def test_decisao_aprovada_vale_antes_da_ia_em_qualquer_edital(self):
+        itens, _ = mp.itens_das_partes(DISCIPLINAS, ct.Arvore(ARVORE), {"Redes": [3]})
+        decisoes = [{"parte": "ospf", "contexto": "Roteamento", "nos": [321], "natureza": "exato", "origem": "revisão 2026-10-22"},
+                    {"parte": "NAT", "contexto": "outro contexto", "nos": [31], "natureza": "exato"}]
+        self.assertEqual(1, mp.aplicar_decisoes(itens, decisoes), "a chave é parte + contexto; contexto diferente não casa")
+        self.assertEqual(([321], "exato", "revisão 2026-10-22"), (itens[1]["ia"], itens[1]["natureza"], itens[1]["decisao"]))
+        self.assertNotIn("decisao", itens[0])
+
     def test_relatorio_conta_naturezas(self):
         arvore = ct.Arvore(ARVORE)
         itens, partes = mp.itens_das_partes(DISCIPLINAS, arvore, {"Redes": [3]})

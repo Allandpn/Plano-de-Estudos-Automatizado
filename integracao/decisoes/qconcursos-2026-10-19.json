@@ -1,0 +1,65 @@
+{
+ "arvore": "qconcursos-2026-10-19",
+ "decisoes": [
+  {
+   "parte": "Kanban",
+   "contexto": "Conceitos de metodologias ágeis",
+   "nos": [
+    3062
+   ],
+   "natureza": "mais_amplo",
+   "origem": "revisão humana 2026-10-22 (conferência dos 110, três IAs)",
+   "exemplo": "ALESC 2024 · Analista de Sistemas · Gestão de Projetos"
+  },
+  {
+   "parte": "Ergonomia",
+   "contexto": "Ergonomia e Usabilidade",
+   "nos": [
+    10652
+   ],
+   "natureza": "exato",
+   "origem": "revisão humana 2026-10-22 (conferência dos 110, três IAs)",
+   "exemplo": "ALESC 2024 · Analista de Sistemas · Engenharia de Software"
+  },
+  {
+   "parte": "informativo",
+   "contexto": "Tipos textuais",
+   "nos": [
+    14656
+   ],
+   "natureza": "exato",
+   "origem": "revisão humana 2026-10-22 (conferência dos 110, três IAs)",
+   "exemplo": "ALESC 2024 · Analista de Sistemas · LÍNGUA PORTUGUESA"
+  },
+  {
+   "parte": "ferramentas de colaboração e comunicação",
+   "contexto": "Acesso remoto, rede wireless, ferramentas de colaboração e comunicação.",
+   "nos": [
+    27887
+   ],
+   "natureza": "exato",
+   "origem": "revisão humana 2026-10-22 (conferência dos 110, três IAs)",
+   "exemplo": "SEFAZ-SP · TIC · Tecnologia da Informação e Comunicação – TIC"
+  },
+  {
+   "parte": "DeVOps",
+   "contexto": "Conteinerização de aplicações e DeVOps.",
+   "nos": [
+    2482
+   ],
+   "natureza": "mais_amplo",
+   "origem": "revisão humana 2026-10-22 (conferência dos 110, três IAs)",
+   "exemplo": "ALESC 2024 · Analista de Sistemas · Infraestrutura de TIC"
+  },
+  {
+   "parte": "antivírus",
+   "contexto": "Soluções de Segurança",
+   "nos": [
+    17631
+   ],
+   "natureza": "exato",
+   "origem": "revisão humana 2026-10-22 (conferência dos 110, três IAs)",
+   "exemplo": "SEFAZ-SP · TIC · Tecnologia da Informação e Comunicação – TIC"
+  }
+ ]
+}

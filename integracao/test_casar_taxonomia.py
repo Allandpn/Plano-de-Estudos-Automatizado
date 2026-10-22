@@ -48,6 +48,16 @@ class CasarTaxonomiaTest(unittest.TestCase):
         self.assertEqual(1, len(ia.pedidos))
         self.assertIn("ATUAL: 32:", ia.pedidos[0])
 
+    def test_refino_marca_candidato_de_fora_das_disciplinas_e_pula_decisao(self):
+        itens = [{"nome": "Verbos", "disciplina": "Redes", "termos": [], "ia": [32], "natureza": "mais_amplo", "raizes": [3]},
+                 {"nome": "Verbos", "disciplina": "Redes", "termos": [], "ia": [], "natureza": None, "raizes": [3],
+                  "decisao": "aprovada"}]
+        ia = IaFalsa([{"ligacoes": [{"item": 1, "nos": [32], "natureza": "mais_amplo"}]}])
+        ct.refinar(ia, itens, self.arvore, log=lambda *_: None)
+        self.assertIn("21: Espanhol > Verbos [fora das disciplinas do edital]", ia.pedidos[0])
+        self.assertIn("RAMO:", ia.pedidos[0])
+        self.assertEqual([], itens[1]["ia"], "item com decisão aprovada não vai para o refino")
+
     def test_sigla_colada_na_versao(self):
         # ALESC, 'Fundamentos ITILv4' ficou sem nó porque 'itilv4' não casava com o nó 'ITIL 4'
         self.assertEqual(["fundamento", "itil"], ct.palavras("Fundamentos ITILv4"))
