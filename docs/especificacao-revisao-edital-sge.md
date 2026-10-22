@@ -1,6 +1,6 @@
 # Especificação: revisão do edital no SGE (assuntos, partes e ligação à árvore do QConcursos)
 
-**Versão** 0.1.0 · **Data** 2026-10-22 · **Natureza:** especificação aprovada pelo usuário nos pontos da §9. O que
+**Versão** 0.2.0 · **Data** 2026-10-22 (0.2.0: §11, contrato de entrega) · **Natureza:** especificação aprovada pelo usuário nos pontos da §9. O que
 toca o SGE nasce lá, pelo documento e pela regra deles (`01_DOMINIO.md`, ADR); este texto é o pedido e o desenho
 de origem. O protótipo do lado do planejamento está em `integracao/partes_edital.py`,
 `integracao/mapear_partes.py` e `integracao/casar_taxonomia.py`; os casos reais de teste, em
@@ -137,3 +137,68 @@ Leitura de PDF em imagem (OCR), ligação à árvore do TEC, e o uso das ligaç�
   quebrar nada do que existe no SGE.
 - O único uso do nó para o material é no lado do planejamento (`integracao/`): o casamento entre assuntos do edital e temas
   das apostilas pela árvore. Trocar o nó muda só as **sugestões** de material, como descrito no §6.1.
+
+## 11. Contrato de entrega planejamento ↔ SGE ("edital-revisao/1")
+
+Segue o desenho que o SGE já usa para a prova (Sprint 24): o worker do planejamento **consulta** o SGE, **pega os dados**,
+**entrega o resultado ou a falha**. Endereços e autenticação (`INTERNAL_TOKEN`, rede interna do compose) são do SGE; abaixo
+estão o que cada operação carrega.
+
+### 11.1 Operações
+
+| Operação | Sentido | Carrega |
+|---|---|---|
+| Editais pendentes | planejamento → SGE (consulta) | lista de editais subidos e ainda sem processamento (ou com "reprocessar" pedido) |
+| Dados do edital | planejamento → SGE (consulta) | PDF (volume compartilhado ou bytes), `slug`, `cargo`, e **as decisões aprovadas** (§11.3) |
+| Entregar a revisão | planejamento → SGE | o JSON "edital-revisao/1" (§11.2) |
+| Falha | planejamento → SGE | etapa (`extracao`, `organizacao`, `quebra`, `ligacao`), disciplina se houver, mensagem. O edital volta a "pendente" com o motivo |
+| Árvore do QConcursos | planejamento → SGE | o arquivo `taxonomia/qconcursos-AAAA-MM-DD.json` (nós com id, nome, pai, ordem) e o diff da anterior (novos, removidos, renomeados, movidos), para a busca e a navegação da tela |
+| Decisões | SGE → planejamento (na consulta de dados do edital) | as decisões do usuário, para valerem antes da IA (§11.3) |
+
+O arquivo da árvore e o diff seguem o mecanismo de importação já usado (pasta do concurso no Drive ou endpoint, a critério
+do SGE).
+
+### 11.2 O JSON da revisão
+
+Exemplo real, reduzido a uma disciplina, em `integracao/contrato/exemplo-edital-revisao-alesc.json`; gerador em
+`integracao/entrega_revisao.py` (testado). Campos:
+
+- `contrato` = `"edital-revisao/1"`; `concurso` {`slug`, `cargo`}; `pdf`; `execucao` {`data`, `arvore`, `modelo`};
+- `disciplinas[]`: `nome`, `restricao` (de cargo), `comum`, `paginas`, `linhas` [início, fim], `qconcursos` (ids das
+  disciplinas da árvore ligadas), `tentativas`, `trechos_sem_assunto`, `referencias`, e `assuntos[]`;
+- `assuntos[]`: `ordem`, `texto` (**exatamente como no edital**), `erros` (a conferência por regra recusou), `alertas`,
+  e `partes[]`;
+- `partes[]`: `chave` (§11.4), `ordem`, `texto`, `contexto` (a cabeça sob a qual aparece), `herdado` (prefixo
+  emprestado), `ligacao`;
+- `ligacao`: `nos` (ids da árvore, até 3), `natureza` (`exato`, `mais_amplo`, `parcial`; vazio com `nos` vazio = sem nó),
+  `origem` (`ia`, `refino` ou `decisao`), e, conforme o caso, `antes` (nós antes do refino), `segunda_passada`,
+  `decisao` (de onde veio);
+- `linhas_fora[]`: blocos de linhas do conteúdo programático que nenhuma disciplina cobre (`paginas`, `linha_inicio`,
+  `linha_fim`, `linhas`);
+- `resumo`: contagens que alimentam o cabeçalho da tela.
+
+O nó é guardado **só por id**; o caminho se lê da árvore entregue. O id vale para a versão da árvore em `execucao.arvore`.
+
+### 11.3 Decisões do usuário (SGE → planejamento)
+
+Cada decisão: `parte` e `contexto` (a chave de reaproveitamento, §4), `nos` [ids], `natureza`, `escopo` (`edital` ou
+`todos`), `edital` de origem, `arvore` (versão), `data`, `origem`. O planejamento as aplica **antes da IA e do refino**
+(já implementado: `mapear_partes.py --decisoes`, `integracao/decisoes/`) e devolve a ligação com `origem: "decisao"`.
+Decisões de escopo `edital` só entram no processamento daquele edital.
+
+### 11.4 Identidade e reprocessamento
+
+- A **`chave`** da parte é um hash do texto normalizado (sem acento nem caixa) de disciplina, assunto, prefixo herdado,
+  texto e contexto, mais o número da ocorrência quando o edital repete a mesma parte no mesmo assunto. Reprocessar o
+  mesmo edital mantém a chave das partes que não mudaram.
+- O SGE guarda a decisão do usuário **presa à chave**. Reprocessar nunca apaga nem sobrescreve decisão.
+- Parte com chave nova aparece como nova; chave que sumiu é marcada "não aparece mais no reprocessamento" e fica na fila
+  de revisão (o texto do assunto pode ter mudado). Nunca é removida em silêncio.
+- A entrega é **idempotente**: o mesmo JSON entregue duas vezes não duplica nada.
+- Mudança incompatível do formato vira `edital-revisao/2`; o SGE recusa versão que não conhece.
+
+### 11.5 O que o planejamento garante e o que não
+
+- Garante: `assuntos[].texto` é trecho literal do edital; cada parte usa só palavras do assunto; `erros` e
+  `trechos_sem_assunto` dizem o que a regra não aceitou. Nada disso depende do modelo de IA.
+- Não garante: que o nó escolhido seja o melhor. É por isso que a tela existe.

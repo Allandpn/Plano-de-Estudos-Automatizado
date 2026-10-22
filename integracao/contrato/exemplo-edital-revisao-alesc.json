@@ -1,0 +1,163 @@
+{
+ "contrato": "edital-revisao/1",
+ "concurso": {
+  "slug": "alesc-2024",
+  "cargo": "Analista Legislativo III – Analista de Sistemas"
+ },
+ "pdf": "alesc",
+ "execucao": {
+  "data": "2026-10-22",
+  "arvore": "qconcursos-2026-10-19",
+  "modelo": "(proxy do SGE)"
+ },
+ "disciplinas": [
+  {
+   "nome": "Gestão de Projetos",
+   "restricao": null,
+   "comum": false,
+   "paginas": [
+    31
+   ],
+   "linhas": [
+    127,
+    128
+   ],
+   "qconcursos": [
+    118
+   ],
+   "tentativas": 1,
+   "assuntos": [
+    {
+     "ordem": 1,
+     "texto": "Conceitos gerais",
+     "partes": [
+      {
+       "chave": "9425c8f0190fa624",
+       "ordem": 1,
+       "texto": "Conceitos gerais",
+       "contexto": null,
+       "herdado": null,
+       "ligacao": {
+        "nos": [
+         19794
+        ],
+        "natureza": "exato",
+        "origem": "ia"
+       }
+      }
+     ],
+     "erros": [],
+     "alertas": []
+    },
+    {
+     "ordem": 2,
+     "texto": "Noções do PMBOK (6ª edição)",
+     "partes": [
+      {
+       "chave": "a481cd3d3de67477",
+       "ordem": 1,
+       "texto": "Noções do PMBOK (6ª edição)",
+       "contexto": null,
+       "herdado": null,
+       "ligacao": {
+        "nos": [
+         19799
+        ],
+        "natureza": "exato",
+        "origem": "ia"
+       }
+      }
+     ],
+     "erros": [],
+     "alertas": []
+    },
+    {
+     "ordem": 3,
+     "texto": "COBIT (2019)",
+     "partes": [
+      {
+       "chave": "3234c49c2e0ee1e9",
+       "ordem": 1,
+       "texto": "COBIT (2019)",
+       "contexto": null,
+       "herdado": null,
+       "ligacao": {
+        "nos": [
+         28021
+        ],
+        "natureza": "exato",
+        "origem": "ia",
+        "segunda_passada": true
+       }
+      }
+     ],
+     "erros": [],
+     "alertas": []
+    },
+    {
+     "ordem": 4,
+     "texto": "Conceitos de metodologias ágeis (Scrum, Kanban, XP)",
+     "partes": [
+      {
+       "chave": "828ef1819884657e",
+       "ordem": 1,
+       "texto": "Scrum",
+       "contexto": "Conceitos de metodologias ágeis",
+       "herdado": null,
+       "ligacao": {
+        "nos": [
+         5943
+        ],
+        "natureza": "exato",
+        "origem": "refino",
+        "antes": [
+         19817
+        ]
+       }
+      },
+      {
+       "chave": "c6406dadebf0ac99",
+       "ordem": 2,
+       "texto": "Kanban",
+       "contexto": "Conceitos de metodologias ágeis",
+       "herdado": null,
+       "ligacao": {
+        "nos": [],
+        "natureza": null,
+        "origem": "refino",
+        "antes": [
+         19817
+        ]
+       }
+      },
+      {
+       "chave": "1c3b2b7ad0ac4999",
+       "ordem": 3,
+       "texto": "XP",
+       "contexto": "Conceitos de metodologias ágeis",
+       "herdado": null,
+       "ligacao": {
+        "nos": [
+         1656
+        ],
+        "natureza": "exato",
+        "origem": "refino",
+        "antes": [
+         19817
+        ]
+       }
+      }
+     ],
+     "erros": [],
+     "alertas": []
+    }
+   ],
+   "trechos_sem_assunto": [],
+   "referencias": []
+  }
+ ],
+ "linhas_fora": [],
+ "resumo": {
+  "nota": "exemplo reduzido a uma disciplina"
+ }
+}
