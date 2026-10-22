@@ -51,10 +51,13 @@ def palavras(texto):
     """Palavras sem acento, minúsculas, sem as vazias; plural simples tirado ('protocolos' -> 'protocolo')."""
     t = unicodedata.normalize("NFKD", texto or "").encode("ascii", "ignore").decode().lower()
     saida = []
-    for w in re.findall(r"[a-z0-9]+", t):
-        if w in VAZIAS or len(w) < 2:
-            continue
-        saida.append(w[:-1] if len(w) > 4 and w.endswith("s") else w)
+    for token in re.findall(r"[a-z0-9]+", t):
+        # sigla colada na versão ('ITILv4', 'ISO27001', 'IPv6') vale a sigla e o número, como em 'ITIL 4'
+        colada = re.fullmatch(r"([a-z]{3,}?)v?(\d+)", token)
+        for w in (colada.groups() if colada else (token,)):
+            if w in VAZIAS or len(w) < 2:
+                continue
+            saida.append(w[:-1] if len(w) > 4 and w.endswith("s") else w)
     return saida
 
 
@@ -247,6 +250,55 @@ def ligar_com_ia(sge, itens, arvore, log=print, respostas=None):
             it["natureza"] = r.get("natureza")
             it["segunda_passada"] = True
         log(f"... segunda passada: {min(ini + LOTE, len(sem))} de {len(sem)} itens sem nó")
+
+
+SISTEMA_REFINO = """Você confere ligações de assuntos de concurso público a nós da árvore de assuntos do QConcursos.
+Responda só com JSON, sem texto fora dele."""
+
+INSTRUCOES_REFINO = """Cada item já tem uma ligação (nó ATUAL, que pode estar vazio) feita só dentro das disciplinas ligadas
+ao edital. Abaixo dela há CANDIDATOS achados na árvore inteira pelas palavras do item. Escolha, entre o atual e os
+candidatos, o nó mais específico que corresponde ao MESMO assunto do item (até 3 se o item junta assuntos que a
+árvore separa). Troque o atual só quando um candidato for claramente mais adequado: mesmo assunto, ou ramo certo e
+mais específico. Se o atual for o melhor, devolva-o. Se nenhum serve, lista vazia. Não invente id fora da lista.
+
+Responda: {"ligacoes": [{"item": número do item, "nos": [ids], "natureza": "exato" | "mais_amplo" | "parcial"}]}"""
+
+REFINAR_NATUREZAS = ("mais_amplo", "parcial", None, "")
+
+
+def refinar(sge, itens, arvore, log=print, respostas=None, candidatos=CANDIDATOS_SEGUNDA):
+    """Segunda checagem dos itens 'mais_amplo', 'parcial' ou sem nó: candidatos da árvore inteira, por palavras, e a
+    IA fica com o nó atual ou troca. Guarda 'ia_antes' quando troca e marca 'refinado'. Id fora da lista é descartado."""
+    alvo = [it for it in itens if it.get("natureza") in REFINAR_NATUREZAS]
+    for it in alvo:
+        achados = arvore.candidatos(it["nome"], it.get("termos") or [], it.get("disciplina") or "", n=candidatos)
+        it["candidatos_refino"] = [i for _, i in achados if i not in (it.get("ia") or [])]
+    alvo = [it for it in alvo if it["candidatos_refino"]]
+    nome = lambda i: " > ".join(arvore.nos[i]["caminho"])  # noqa: E731
+    for ini in range(0, len(alvo), LOTE):
+        lote = alvo[ini:ini + LOTE]
+        linhas = []
+        for k, it in enumerate(lote, 1):
+            extra = f" (termos: {', '.join(it['termos'][:6])})" if it.get("termos") else ""
+            linhas.append(f"{k}. [{it['disciplina'] or '?'}] {it['nome']}{extra}")
+            linhas.append("   ATUAL: " + ("; ".join(f"{i}: {nome(i)}" for i in it.get("ia") or []) or "nenhum"))
+            linhas += [f"   - {i}: {nome(i)}" for i in it["candidatos_refino"]]
+        resposta = completar_json(sge, SISTEMA_REFINO, "\n".join(linhas) + "\n\n" + INSTRUCOES_REFINO)
+        if respostas is not None:
+            respostas.append(resposta)
+        por_item = {_inteiro(r.get("item")): r for r in (resposta.get("ligacoes") or []) if isinstance(r, dict)}
+        for k, it in enumerate(lote, 1):
+            r = por_item.get(k)
+            if not r:
+                continue
+            validos = set(it["candidatos_refino"]) | set(it.get("ia") or [])
+            novos = [i for i in map(_inteiro, r.get("nos") or []) if i in validos][:3]
+            if novos != (it.get("ia") or []):
+                it["ia_antes"] = it.get("ia") or []
+                it["ia"] = novos
+                it["natureza"] = r.get("natureza") if novos else None
+                it["refinado"] = True
+        log(f"... refino: {min(ini + LOTE, len(alvo))} de {len(alvo)} itens")
 
 
 def regra_decide(it, minimo=0.75, margem=0.15):

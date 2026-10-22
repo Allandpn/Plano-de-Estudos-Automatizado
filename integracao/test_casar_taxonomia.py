@@ -34,6 +34,28 @@ class CasarTaxonomiaTest(unittest.TestCase):
     def setUp(self):
         self.arvore = ct.Arvore(ARVORE)
 
+    def test_refino_troca_o_no_atual_por_candidato_melhor(self):
+        itens = [{"nome": "OSPF", "disciplina": "Redes", "termos": [], "ia": [32], "natureza": "mais_amplo"},
+                 {"nome": "NAT", "disciplina": "Redes", "termos": [], "ia": [31], "natureza": "exato"},
+                 {"nome": "Roteamento", "disciplina": "Redes", "termos": [], "ia": [32], "natureza": "mais_amplo"}]
+        ia = IaFalsa([{"ligacoes": [{"item": 1, "nos": [321, 999], "natureza": "exato"},
+                                    {"item": 2, "nos": [32], "natureza": "exato"}]}])
+        ct.refinar(ia, itens, self.arvore, log=lambda *_: None)
+        self.assertEqual(([321], "exato", [32], True), (itens[0]["ia"], itens[0]["natureza"], itens[0]["ia_antes"],
+                                                    itens[0]["refinado"]), "id fora da lista é descartado")
+        self.assertEqual(([31], "exato"), (itens[1]["ia"], itens[1]["natureza"]), "item exato nem entra no refino")
+        self.assertNotIn("refinado", itens[2], "a IA devolveu o atual: não muda")
+        self.assertEqual(1, len(ia.pedidos))
+        self.assertIn("ATUAL: 32:", ia.pedidos[0])
+
+    def test_sigla_colada_na_versao(self):
+        # ALESC, 'Fundamentos ITILv4' ficou sem nó porque 'itilv4' não casava com o nó 'ITIL 4'
+        self.assertEqual(["fundamento", "itil"], ct.palavras("Fundamentos ITILv4"))
+        self.assertEqual(ct.palavras("ITIL 4"), ct.palavras("ITILv4"))
+        self.assertEqual(["iso", "27001"], ct.palavras("ISO27001"))
+        self.assertEqual(["ipv"], ct.palavras("IPv6"))
+        self.assertEqual(["nbr", "27002", "2022"], ct.palavras("NBR 27002-2022"))
+
     def test_palavras_sem_acento_vazias_e_plural(self):
         self.assertEqual(["voze", "verbai"], ct.palavras("Vozes Verbais"))
         self.assertEqual(["protocolo", "roteamento"], ct.palavras("Noções de Protocolos de Roteamento"))

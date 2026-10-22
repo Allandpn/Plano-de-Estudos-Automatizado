@@ -4,7 +4,8 @@
 Entrada: um <edital>-partes.json (lista de disciplinas com assuntos e partes). Cada parte vira um item
 ("herdado + texto", com o contexto como termo), as disciplinas do edital são ligadas às do QConcursos (uma
 chamada) e as partes são ligadas por casar_taxonomia.ligar_com_ia, que devolve os nós e a NATUREZA do vínculo
-(exato, mais_amplo ou parcial). Partes iguais na mesma disciplina e contexto valem uma ligação só.
+(exato, mais_amplo ou parcial); depois, a segunda checagem (casar_taxonomia.refinar) olha a árvore inteira para os
+'mais amplos', parciais e sem nó. Partes iguais na mesma disciplina e contexto valem uma ligação só.
 
 Saída em --saida: <edital>-nos.json (um item por parte, na ordem do edital) e <edital>-nos.md (para conferir).
 
@@ -17,7 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from casar_taxonomia import Arvore, carregar_arvore, ligar_com_ia, mapear_disciplinas  # noqa: E402
+from casar_taxonomia import Arvore, carregar_arvore, ligar_com_ia, mapear_disciplinas, refinar  # noqa: E402
 from ia_comum import IaIndisponivel  # noqa: E402
 
 NATUREZAS = ("exato", "mais_amplo", "parcial")
@@ -61,7 +62,8 @@ def relatorio(edital, itens, partes, arvore, mapa_disciplinas):
             saida += ["", f"## {ultima} → {ligadas}", ""]
         ctx = f" _(contexto: {it['termos'][0]})_" if it["termos"] and it["termos"][0] and len(it["termos"][0]) < 100 else ""
         saida.append(f"- [ ] **{it['nome']}**{ctx} → {caminho(it.get('ia', []))} · {it.get('natureza') or '?'}"
-                     + (" · 2ª passada" if it.get("segunda_passada") else ""))
+                     + (" · 2ª passada" if it.get("segunda_passada") else "")
+                     + (f" · refinado (antes: {caminho(it['ia_antes'])})" if it.get("refinado") else ""))
     return "\n".join(saida)
 
 
@@ -70,6 +72,9 @@ def main():
     ap.add_argument("partes")
     ap.add_argument("--saida", required=True)
     ap.add_argument("--disciplinas", nargs="*", help="só as disciplinas cujo nome contém algum destes textos")
+    ap.add_argument("--sem-refino", action="store_true", help="não faz a segunda checagem dos 'mais amplos' e sem nó")
+    ap.add_argument("--so-refinar", action="store_true",
+                    help="não liga de novo: lê <edital>-nos.json já gravado, refina e grava <edital>-nos-refinado.*")
     args = ap.parse_args()
     from sge_api import SgeApi
     sge = SgeApi(os.environ.get("SGE_URL", "http://app:8080"), os.environ["INTERNAL_TOKEN"])
@@ -87,18 +92,30 @@ def main():
     if faltam:
         mapa.update(mapear_disciplinas(sge, faltam, arvore))
         mapa_arquivo.write_text(json.dumps(mapa, ensure_ascii=False, indent=1), encoding="utf-8")
-    itens, partes = itens_das_partes(disciplinas, arvore, mapa)
-    print(f"{len(partes)} partes, {len(itens)} ligações distintas", flush=True)
     respostas = []
-    try:
-        ligar_com_ia(sge, itens, arvore, respostas=respostas)
-    except IaIndisponivel as e:
-        print(f"A IA parou: {e}")
-    (saida / f"{nome}-respostas-ia.json").write_text(json.dumps(respostas, ensure_ascii=False, indent=1), encoding="utf-8")
-    (saida / f"{nome}-nos.json").write_text(json.dumps({"itens": itens, "partes": partes}, ensure_ascii=False, indent=1),
-                                            encoding="utf-8")
-    (saida / f"{nome}-nos.md").write_text(relatorio(nome, itens, partes, arvore, mapa), encoding="utf-8")
-    print(relatorio(nome, itens, partes, arvore, mapa).splitlines()[2])
+    if args.so_refinar:
+        gravado = json.loads((saida / f"{nome}-nos.json").read_text(encoding="utf-8"))
+        itens, partes = gravado["itens"], gravado["partes"]
+        nome_saida = f"{nome}-nos-refinado"
+    else:
+        itens, partes = itens_das_partes(disciplinas, arvore, mapa)
+        print(f"{len(partes)} partes, {len(itens)} ligações distintas", flush=True)
+        nome_saida = f"{nome}-nos"
+        try:
+            ligar_com_ia(sge, itens, arvore, respostas=respostas)
+        except IaIndisponivel as e:
+            print(f"A IA parou: {e}")
+    if not args.sem_refino:
+        try:
+            refinar(sge, itens, arvore, respostas=respostas)
+        except IaIndisponivel as e:
+            print(f"A IA parou no refino: {e}")
+    (saida / f"{nome_saida}-respostas-ia.json").write_text(json.dumps(respostas, ensure_ascii=False, indent=1), encoding="utf-8")
+    (saida / f"{nome_saida}.json").write_text(json.dumps({"itens": itens, "partes": partes}, ensure_ascii=False, indent=1),
+                                              encoding="utf-8")
+    texto = relatorio(nome, itens, partes, arvore, mapa)
+    (saida / f"{nome_saida}.md").write_text(texto, encoding="utf-8")
+    print(texto.splitlines()[2])
 
 
 if __name__ == "__main__":
