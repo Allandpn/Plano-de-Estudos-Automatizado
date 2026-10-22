@@ -5,10 +5,11 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONUTF8=1
 
-# OCR das provas em imagem (Sprint 24 do SGE; ADR-046): Tesseract com o idioma português.
+# OCR das provas em imagem (Sprint 24 do SGE; ADR-046): Tesseract com o idioma português. poppler-utils (pdftotext) lê o
+# texto do edital na extração das partes (partes_edital.py), com o mesmo resultado dos ensaios.
 # Medido no Pi: +150 MB de imagem, pico de ~85 MB de RAM, ~8 s por página.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-por \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-por poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -22,6 +23,12 @@ COPY integracao/ia_comum.py integracao/prova_pdf.py integracao/prova_questoes.py
 # Diagnóstico de prova, sem IA: onde se perdeu o conteúdo que a prova cobrou (rodado à mão).
 COPY integracao/diagnostico_prova.py integracao/estrutura_apostilas.py integracao/catalogo_aulas.py integracao/
 COPY integracao/diagnostico/ integracao/diagnostico/
+# Edital em assuntos e partes, ligação aos nós do QConcursos e entrega da revisão ao SGE (docs/especificacao-revisao-edital-sge.md).
+# As árvores (taxonomia/) e as decisões aprovadas (decisoes/) vão na imagem; casos-de-teste/ e contrato/ não.
+COPY integracao/partes_edital.py integracao/mapear_partes.py integracao/casar_taxonomia.py integracao/entrega_revisao.py \
+     integracao/exportar_taxonomia.py integracao/
+COPY integracao/taxonomia/ integracao/taxonomia/
+COPY integracao/decisoes/ integracao/decisoes/
 
 # Sem root: os volumes do material e das provas são os únicos lugares onde escreve.
 RUN useradd --uid 1000 --create-home worker

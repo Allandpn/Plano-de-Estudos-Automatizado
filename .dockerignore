@@ -18,3 +18,12 @@
 !integracao/diagnostico/*.json
 !integracao/estrutura_apostilas.py
 !integracao/catalogo_aulas.py
+!integracao/partes_edital.py
+!integracao/mapear_partes.py
+!integracao/casar_taxonomia.py
+!integracao/entrega_revisao.py
+!integracao/exportar_taxonomia.py
+!integracao/taxonomia/
+!integracao/taxonomia/*.json
+!integracao/decisoes/
+!integracao/decisoes/*.json
