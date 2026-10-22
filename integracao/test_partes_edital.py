@@ -66,6 +66,26 @@ class PartesEditalTest(unittest.TestCase):
         self.assertTrue(any("enterprise" in e for e in erros), "o erro de digitação do edital não pode ser corrigido")
         self.assertTrue(any("entrerprise" in e for e in erros), "e a palavra original fica sem parte")
 
+    def test_linhas_fora_de_qualquer_disciplina(self):
+        extraido = {"linhas": [{"n": i, "pagina": 1 + i // 3, "texto": f"t{i}"} for i in range(1, 9)]}
+        discs = [{"linha_inicio": 2, "linha_fim": 3}, {"linha_inicio": 6, "linha_fim": 6}]
+        fora = pe.linhas_fora(extraido, discs)
+        self.assertEqual([(1, 1), (4, 5), (7, 8)], [(b["linha_inicio"], b["linha_fim"]) for b in fora])
+        self.assertEqual(["t4", "t5"], fora[1]["linhas"])
+        texto = pe.relatorio("x.pdf", "Cargo", [], fora)
+        self.assertIn("3 blocos de linhas fora de qualquer disciplina", texto)
+        self.assertIn("L4–L5", texto)
+        self.assertEqual([], pe.linhas_fora(extraido, [{"linha_inicio": 1, "linha_fim": 8}]))
+
+    def test_adjetivo_solto_herda_o_prefixo(self):
+        # TJ-SC, Língua Portuguesa: "nominal" sozinha foi apontada como errada na conferência
+        texto = "Concordância verbal e nominal."
+        certo = {"texto": texto, "partes": [{"texto": "Concordância verbal"},
+                                            {"texto": "nominal", "herdado": "Concordância"}]}
+        self.assertEqual([], pe.conferir_assunto(certo, texto))
+        regras = pe.QUEBRAR.split("TEXTO DA DISCIPLINA")[0]
+        self.assertIn("Concordância verbal e nominal", regras)
+
     def test_assunto_reescrito_e_trecho_sem_assunto(self):
         disciplina = ("Frameworks: Conceitos; Padrão MVC (Model-View-Controller) aplicado à web; Web Services SOAP e "
                       "REST; e Expressões regulares (padrão POSIX). Versionamento de código: Conceitos; SVN; Git; e Github.")

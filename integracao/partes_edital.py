@@ -230,7 +230,9 @@ PARTE = cada assunto de estudo distinto dentro do assunto:
 - parêntese que descreve (nome de lei, sigla) fica na parte; parêntese que lista ("Power BI (Power Query, M,
   DAX)") vira partes com o que está fora dele no "contexto";
 - elemento que depende do anterior herda o prefixo: "Windows Server 2019 e 2022" → partes "Windows Server
-  2019" e "2022" com "herdado": "Windows Server"; nunca uma parte só "2022" sem o herdado;
+  2019" e "2022" com "herdado": "Windows Server"; nunca uma parte só "2022" sem o herdado. Vale também para
+  adjetivo solto: "Concordância verbal e nominal" → partes "Concordância verbal" e "nominal" com "herdado":
+  "Concordância" (a parte "nominal" sozinha não diz o que estudar);
 - número de lei, versão, decimal, abreviatura (art., nº), URL, código ("0000, 0150"), faixa de artigos e edição
   ("PMBOK 6ª edição") nunca são separadores; uma LISTA de códigos, registros, artigos ou campos ("EFD
   REGISTROS 0000, 0150, C100, C170"; "registros B, C, D, H") é UMA parte só, nunca uma parte por código;
@@ -263,6 +265,25 @@ def organizar(sge, extraido, cargo):
             saida.append(dict(d, texto=texto_das_linhas(extraido["linhas"], ini, fim),
                               paginas=sorted({l["pagina"] for l in extraido["linhas"] if ini <= l["n"] <= fim})))
     return saida
+
+
+def linhas_fora(extraido, disciplinas):
+    """Blocos de linhas do conteúdo programático que nenhuma disciplina cobre (o que a IA deixou de fora ao
+    organizar): para a revisão confirmar que são outro cargo, cabeçalho de grupo ou observação, e não conteúdo perdido."""
+    dentro = {n for d in disciplinas for n in range(d["linha_inicio"], d["linha_fim"] + 1)}
+    blocos, atual = [], None
+    for l in extraido["linhas"]:
+        if l["n"] in dentro:
+            atual = None
+            continue
+        if atual is None:
+            atual = {"linha_inicio": l["n"], "linha_fim": l["n"], "paginas": [l["pagina"]], "linhas": []}
+            blocos.append(atual)
+        atual["linha_fim"] = l["n"]
+        atual["linhas"].append(l["texto"])
+        if l["pagina"] not in atual["paginas"]:
+            atual["paginas"].append(l["pagina"])
+    return blocos
 
 
 def cabecalho(disciplina):
@@ -312,7 +333,7 @@ def quebrar_disciplina(sge, disciplina):
                 tentativas=tentativas)
 
 
-def relatorio(edital, cargo, disciplinas):
+def relatorio(edital, cargo, disciplinas, fora=None):
     assuntos = [a for d in disciplinas for a in d["assuntos"]]
     partes = [p for a in assuntos for p in a.get("partes") or []]
     recusados = [a for a in assuntos if a["erros"]]
@@ -320,7 +341,8 @@ def relatorio(edital, cargo, disciplinas):
     saida = [f"# {edital} — {cargo}", "",
              f"{len(disciplinas)} disciplinas · {len(assuntos)} assuntos · {len(partes)} partes · "
              f"{len(recusados)} assuntos recusados pela conferência · {len(sobras)} trechos do edital sem assunto · "
-             f"{sum(d['tentativas'] == 2 for d in disciplinas)} disciplinas refeitas", ""]
+             f"{sum(d['tentativas'] == 2 for d in disciplinas)} disciplinas refeitas"
+             + (f" · {len(fora)} blocos de linhas fora de qualquer disciplina" if fora else ""), ""]
     for d in disciplinas:
         saida += [f"## {d['nome']} (p. {', '.join(map(str, d['paginas']))})"
                   + (f" — restrição: {d['restricao']}" if d.get("restricao") else ""), ""]
@@ -339,6 +361,17 @@ def relatorio(edital, cargo, disciplinas):
             saida.append(f"- **trecho sem assunto:** {s}")
         for r in d["referencias"]:
             saida.append(f"- referência: {r}")
+        saida.append("")
+    if fora:
+        saida += ["## Linhas fora de qualquer disciplina (conferir se são de outro cargo ou observação)", ""]
+        for b in fora:
+            ls = b["linhas"]
+            saida.append(f"- p. {', '.join(map(str, b['paginas']))}, L{b['linha_inicio']}–L{b['linha_fim']} ({len(ls)} linhas):")
+            saida += [f"    - {t[:120]}" for t in ls[:3]]
+            if len(ls) > 4:
+                saida.append(f"    - … ({len(ls) - 4} linhas; o texto completo está em <edital>-fora.json)")
+            if len(ls) > 3:
+                saida.append(f"    - {ls[-1][:120]}")
         saida.append("")
     return "\n".join(saida)
 
@@ -362,8 +395,10 @@ def main():
         feitas = [reconferir(d) for d in json.loads(arquivo.read_text(encoding="utf-8"))]
         arquivo.write_text(json.dumps(feitas, ensure_ascii=False, indent=1), encoding="utf-8")
         nome = arquivo.name.replace("-partes.json", "")
-        arquivo.with_name(f"{nome}-partes.md").write_text(relatorio(nome, args.cargo, feitas), encoding="utf-8")
-        print(relatorio(nome, args.cargo, feitas).splitlines()[2])
+        arq_fora = arquivo.with_name(f"{nome}-fora.json")
+        fora = json.loads(arq_fora.read_text(encoding="utf-8")) if arq_fora.exists() else None
+        arquivo.with_name(f"{nome}-partes.md").write_text(relatorio(nome, args.cargo, feitas, fora), encoding="utf-8")
+        print(relatorio(nome, args.cargo, feitas, fora).splitlines()[2])
         return
     if args.cmd == "extrair":
         try:
@@ -386,7 +421,9 @@ def main():
     nome = Path(args.extraido).stem
     saida = Path(args.saida)
     (saida / f"{nome}-partes.json").write_text(json.dumps(feitas, ensure_ascii=False, indent=1), encoding="utf-8")
-    (saida / f"{nome}-partes.md").write_text(relatorio(extraido["pdf"], args.cargo, feitas), encoding="utf-8")
+    fora = linhas_fora(extraido, disciplinas)
+    (saida / f"{nome}-fora.json").write_text(json.dumps(fora, ensure_ascii=False, indent=1), encoding="utf-8")
+    (saida / f"{nome}-partes.md").write_text(relatorio(extraido["pdf"], args.cargo, feitas, fora), encoding="utf-8")
 
 
 if __name__ == "__main__":
