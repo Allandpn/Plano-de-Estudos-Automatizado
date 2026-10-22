@@ -138,3 +138,22 @@ devolve `slug, nome, cargo, banca, dataProva` e os assuntos na ordem do edital
 depois da confirmação: número de questões por disciplina e correspondência com assunto
 existente. Suíte do SGE 170/170 verde.
 
+
+## 11. Pedido ao SGE (2026-10-22): tela de revisão do edital e vínculo das partes com a árvore do QConcursos
+
+Contexto: o protótipo do planejamento quebra o conteúdo programático de um edital em **assuntos** (texto exato do
+edital) e **partes** (um assunto de estudo cada), confere por regra e liga cada parte a um nó da árvore do QConcursos
+(disciplina › assunto › subassunto), onde o usuário resolve questões. A IA erra e varia de um modelo para outro; por isso
+a qualidade vem de **o usuário resolver cada divergência numa tela e o sistema guardar a decisão**.
+
+Pedido: uma tela de revisão por edital, com decisões que valem antes da IA e podem ser editadas depois da conclusão.
+O desenho completo (fila de revisão, 11 tipos de divergência, ações, decisões aprovadas e seu escopo, regras de conclusão,
+troca de nó depois de concluído, dados) está em `docs/especificacao-revisao-edital-sge.md`. Em resumo:
+
+1. Conclusão bloqueia só quando o **conteúdo do edital** está incerto; parte sem nó avisa no painel e no plano
+   ("12 partes sem filtro de questões") e pode ser vinculada ou trocada a qualquer momento.
+2. Uso individual: sem autor nem revisores concorrentes.
+3. Verificado em 2026-10-22: o SGE não guarda hoje nó de taxonomia; o vínculo é um dado novo, e plano, escada e
+   histórico seguem o assunto (`chaveExterna`), não o nó. Trocar um nó não quebra o que existe.
+
+Nada disso é implementado por nós. A decisão de formato, de dados e de telas é do SGE.
