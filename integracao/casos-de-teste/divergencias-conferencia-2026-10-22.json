@@ -1,0 +1,238 @@
+{
+ "arvore": "qconcursos-2026-10-19",
+ "descricao": "Casos reais de divergência da conferência de 2026-10-22 (ALESC 2024 e SEFAZ-SP TIC). 'em_aberto' não tem decisão humana: servem para testar o fluxo de resolução do SGE. 'resolvidos' têm a decisão aprovada em integracao/decisoes/.",
+ "em_aberto": [
+  {
+   "id": "nos-alesc-057",
+   "edital": "ALESC 2024 · Analista de Sistemas",
+   "disciplina": "LÍNGUA PORTUGUESA",
+   "parte": "tipos",
+   "contexto": "Os dicionários",
+   "assunto_do_edital": "Os dicionários: tipos; a organização de verbetes.",
+   "sistema_sugeriu": [
+    "Português › Interpretação de Textos › Significação Contextual de Palavras e Expressões. Sinônimos e Antônimos."
+   ],
+   "tipo_de_divergencia": "sem nó proposto",
+   "nota": "tipos de dicionários: a árvore não tem nó de dicionário/lexicografia; o sistema usou Sinônimos e Antônimos",
+   "resolucao_humana": null,
+   "opinioes_das_ias": {
+    "Gemini": "árvore não tem",
+    "IA 2": "árvore não tem",
+    "IA 3": "certo"
+   }
+  },
+  {
+   "id": "nos-sefazsp-103",
+   "edital": "SEFAZ-SP · TIC",
+   "disciplina": "Tecnologia da Informação e Comunicação – TIC",
+   "parte": "tipos de dados",
+   "contexto": "Ciência de dados e inteligência artificial: Fundamentos",
+   "assunto_do_edital": "Ciência de dados e inteligência artificial: Fundamentos: tipos de dados, ciclo de vida, metodologia CRISP.",
+   "sistema_sugeriu": [
+    "Programação › Tipos de dados"
+   ],
+   "tipo_de_divergencia": "mesmo nome em ramos diferentes",
+   "nota": "'tipos de dados' em Ciência de Dados x Programação",
+   "resolucao_humana": null,
+   "opinioes_das_ias": {
+    "Gemini": "certo",
+    "IA 2": "errado",
+    "IA 3": "certo"
+   }
+  },
+  {
+   "id": "nos-sefazsp-116",
+   "edital": "SEFAZ-SP · TIC",
+   "disciplina": "Tecnologia da Informação e Comunicação – TIC",
+   "parte": "técnicas para normalização",
+   "contexto": "Engenharia de Dados",
+   "assunto_do_edital": "Engenharia de Dados: pipelines, ETL/ELT, técnicas para tratamento, limpeza, preparação, enriquecimento, normalização, tempo real, qualidade de dados.",
+   "sistema_sugeriu": [
+    "Banco de Dados › ETL (Extract Transform Load)"
+   ],
+   "tipo_de_divergencia": "mesmo nome em ramos diferentes",
+   "nota": "'normalização' em Engenharia de Dados: ETL x pré-processamento x formas normais",
+   "resolucao_humana": null,
+   "opinioes_das_ias": {
+    "Gemini": "certo",
+    "IA 2": "errado",
+    "IA 3": "certo"
+   }
+  },
+  {
+   "id": "nos-sefazsp-011",
+   "edital": "SEFAZ-SP · TIC",
+   "disciplina": "Tecnologia da Informação e Comunicação – TIC",
+   "parte": "riscos e conformidade em contratações",
+   "contexto": "Gestão de Contratações e de Fornecedores",
+   "assunto_do_edital": "Gestão de Contratações e de Fornecedores: Nova Lei de Licitações e Contratações (Lei nº 14.133/2021); riscos e conformidade em contratações; critérios de qualificação e avaliação de desempenho de fornecedores; Gestão de Riscos: ISO 31000:2018.",
+   "sistema_sugeriu": [
+    "Gerência de Projetos › Áreas de conhecimento › Gerenciamento dos riscos"
+   ],
+   "tipo_de_divergencia": "contexto muda o assunto",
+   "nota": "riscos em contratações de TI x gerenciamento de riscos do PMBOK",
+   "resolucao_humana": null,
+   "opinioes_das_ias": {
+    "Gemini": "certo",
+    "IA 2": "errado",
+    "IA 3": "certo"
+   }
+  },
+  {
+   "id": "nos-sefazsp-019",
+   "edital": "SEFAZ-SP · TIC",
+   "disciplina": "Tecnologia da Informação e Comunicação – TIC",
+   "parte": "visão",
+   "contexto": "Gestão ágil de produtos e projetos digitais: Gerenciamento de Produto Digital",
+   "assunto_do_edital": "Gestão ágil de produtos e projetos digitais: Gerenciamento de Produto Digital: visão, valor, OKRs, roadmaps; Gestão de Portfólios e Produtos; Metodologias Ágeis: SCRUM Guide 2020, KANBAN, LEAN, SAFe 6.0 (papéis).",
+   "sistema_sugeriu": [
+    "Gerência de Projetos › Conceitos básicos no Gerenciamento de Projetos"
+   ],
+   "tipo_de_divergencia": "contexto muda o assunto",
+   "nota": "'visão' de produto ágil x conceitos básicos de projetos",
+   "resolucao_humana": null,
+   "opinioes_das_ias": {
+    "Gemini": "certo",
+    "IA 2": "errado",
+    "IA 3": "certo"
+   }
+  },
+  {
+   "id": "nos-sefazsp-020",
+   "edital": "SEFAZ-SP · TIC",
+   "disciplina": "Tecnologia da Informação e Comunicação – TIC",
+   "parte": "valor",
+   "contexto": "Gestão ágil de produtos e projetos digitais: Gerenciamento de Produto Digital",
+   "assunto_do_edital": "Gestão ágil de produtos e projetos digitais: Gerenciamento de Produto Digital: visão, valor, OKRs, roadmaps; Gestão de Portfólios e Produtos; Metodologias Ágeis: SCRUM Guide 2020, KANBAN, LEAN, SAFe 6.0 (papéis).",
+   "sistema_sugeriu": [
+    "Gerência de Projetos › Conceitos básicos no Gerenciamento de Projetos"
+   ],
+   "tipo_de_divergencia": "contexto muda o assunto",
+   "nota": "'valor' em gestão ágil de produto x conceitos básicos de projetos",
+   "resolucao_humana": null,
+   "opinioes_das_ias": {
+    "Gemini": "certo",
+    "IA 2": "errado",
+    "IA 3": "certo"
+   }
+  }
+ ],
+ "resolvidos": [
+  {
+   "id": "nos-alesc-133",
+   "edital": "ALESC 2024 · Analista de Sistemas",
+   "disciplina": "Gestão de Projetos",
+   "parte": "Kanban",
+   "contexto": "Conceitos de metodologias ágeis",
+   "assunto_do_edital": "Conceitos de metodologias ágeis (Scrum, Kanban, XP)",
+   "sistema_sugeriu": [
+    "Administração de Recursos Materiais › Administração de Estoques › Just-In-Time e Kanban"
+   ],
+   "tipo_de_divergencia": "mesmo nome em ramos diferentes",
+   "nota": "Kanban de estoque x Kanban de desenvolvimento ágil",
+   "resolucao_humana": [
+    {
+     "id": 3062,
+     "caminho": "Engenharia de Software › Processos de Software - Desenvolvimento Ágil"
+    }
+   ],
+   "opinioes_das_ias": null
+  },
+  {
+   "id": "nos-alesc-126",
+   "edital": "ALESC 2024 · Analista de Sistemas",
+   "disciplina": "Engenharia de Software",
+   "parte": "Ergonomia",
+   "contexto": "Ergonomia e Usabilidade",
+   "assunto_do_edital": "Ergonomia e Usabilidade",
+   "sistema_sugeriu": [
+    "Design Gráfico › Linguagem, Suporte e Tecnologia › Ergonomia e Usabilidade"
+   ],
+   "tipo_de_divergencia": "mesmo nome em ramos diferentes",
+   "nota": "Ergonomia de design x de software",
+   "resolucao_humana": [
+    {
+     "id": 10652,
+     "caminho": "Arquitetura de Software › Usabilidade"
+    }
+   ],
+   "opinioes_das_ias": null
+  },
+  {
+   "id": "nos-alesc-011",
+   "edital": "ALESC 2024 · Analista de Sistemas",
+   "disciplina": "LÍNGUA PORTUGUESA",
+   "parte": "informativo",
+   "contexto": "Tipos textuais",
+   "assunto_do_edital": "Tipos textuais: informativo, publicitário, propagandístico, normativo, didático e divinatório; características específicas de cada tipo.",
+   "sistema_sugeriu": [
+    "Português › Interpretação de Textos › Gêneros Textuais"
+   ],
+   "tipo_de_divergencia": "conceito parecido",
+   "nota": "tipo textual x gênero textual",
+   "resolucao_humana": [
+    {
+     "id": 14656,
+     "caminho": "Português › Interpretação de Textos › Tipologia Textual"
+    }
+   ],
+   "opinioes_das_ias": null
+  },
+  {
+   "id": "nos-sefazsp-164",
+   "edital": "SEFAZ-SP · TIC",
+   "disciplina": "Tecnologia da Informação e Comunicação – TIC",
+   "parte": "ferramentas de colaboração e comunicação",
+   "contexto": "Acesso remoto, rede wireless, ferramentas de colaboração e comunicação.",
+   "assunto_do_edital": "Acesso remoto, rede wireless, ferramentas de colaboração e comunicação.",
+   "sistema_sugeriu": [],
+   "tipo_de_divergencia": "sem nó, existia",
+   "nota": "ferramentas de colaboração",
+   "resolucao_humana": [
+    {
+     "id": 27887,
+     "caminho": "Noções de Informática › Ferramentas de Reuniões e Comunicações On-line"
+    }
+   ],
+   "opinioes_das_ias": null
+  },
+  {
+   "id": "nos-alesc-207",
+   "edital": "ALESC 2024 · Analista de Sistemas",
+   "disciplina": "Infraestrutura de TIC",
+   "parte": "DeVOps",
+   "contexto": "Conteinerização de aplicações e DeVOps.",
+   "assunto_do_edital": "Conteinerização de aplicações e DeVOps.",
+   "sistema_sugeriu": [],
+   "tipo_de_divergencia": "sem nó, só genérico",
+   "nota": "DevOps não tem nó próprio",
+   "resolucao_humana": [
+    {
+     "id": 2482,
+     "caminho": "Engenharia de Software › Desenvolvimento de Software"
+    }
+   ],
+   "opinioes_das_ias": null
+  },
+  {
+   "id": "nos-sefazsp-084",
+   "edital": "SEFAZ-SP · TIC",
+   "disciplina": "Tecnologia da Informação e Comunicação – TIC",
+   "parte": "antivírus",
+   "contexto": "Soluções de Segurança",
+   "assunto_do_edital": "Soluções de Segurança: firewall/NGFW, IPS, SIEM, SOC, IAM, WAF, EDR, antivírus.",
+   "sistema_sugeriu": [
+    "Segurança da Informação › Malware"
+   ],
+   "tipo_de_divergencia": "nó mais específico existia",
+   "nota": "antivírus x Malware",
+   "resolucao_humana": [
+    {
+     "id": 17631,
+     "caminho": "Noções de Informática › Segurança da Informação › Ferramentas de Segurança (antivírus, firewall e outros)"
+    }
+   ],
+   "opinioes_das_ias": null
+  }
+ ]
+}
