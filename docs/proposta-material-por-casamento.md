@@ -87,7 +87,7 @@ fonte e por assunto. Em preparação de alto nível, restringir o assunto por te
 | Onde | O quê |
 |---|---|
 | `integracao/` (novo) | `montar_manifesto_do_casamento.py`: da lista de partes confirmadas ao manifesto por assunto, com a política (D2); e o PDF de questões por assunto (D3) |
-| `worker.py` | novo caminho "por casamento" antes da busca por palavras; a busca antiga vira a segunda chance (D4) |
+| `worker.py` | `preparar` passa a usar o casamento; a busca por palavras sobra só como segunda chance (D4) |
 | `entrega_revisao.py` / contrato | `chave` do assunto; material por parte (fontes, páginas, veredito) como saída opcional do planejamento |
 | SGE | o que já está pedido (tela de revisão, decisões) e **um conceito novo**: material de consulta "Questões deste assunto", fora da escada (D3) |
 | `Dockerfile` | módulos novos na imagem |
@@ -111,6 +111,6 @@ fonte e por assunto. Em preparação de alto nível, restringir o assunto por te
 
 ## 7. Dados da ficha usados
 
-Cada tema da ficha tem as páginas da teoria (sem questões, decisão 7). As seções da aula () trazem, por tema, as
-faixas de  e  (fixação) e de , ,  e 
-(questões deste assunto). Ficam de fora ,  e .
+Cada tema da ficha tem as páginas da teoria (sem questões, decisão 7). As seções da aula (`secoes`) trazem, por tema, as
+faixas de `resumo` e `mapa_mental` (fixação) e de `questoes_comentadas`, `lista_questoes`, `questionario` e `gabarito`
+(questões deste assunto). Ficam de fora `incidencia`, `apresentacao` e `bibliografia`.
