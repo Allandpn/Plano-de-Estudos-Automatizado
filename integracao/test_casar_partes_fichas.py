@@ -37,6 +37,26 @@ class CasarPartesFichasTest(unittest.TestCase):
         self.assertEqual([("c.pdf", "exato"), ("b.pdf", "dentro")], [(a["caminho"], a["relacao"]) for a in por[1]])
         self.assertEqual([], por[2])
 
+    def test_reserva_por_nome_so_para_parte_sem_casamento_por_no(self):
+        itens = [{"nome": "noções de probabilidade", "ia": [12], "natureza": "mais_amplo"},   # nó sem ficha
+                 {"nome": "OSPF", "ia": [321], "natureza": "exato"},                          # já casa por nó
+                 {"nome": "Algoritmos genéticos", "ia": [11], "natureza": "exato"}]
+        temas = TEMAS + [{"caminho": "f.pdf", "tema": "Teoria da Probabilidade", "paginas": [[1, 5]], "nos": [21]}]
+        por = cp.casar(self.arvore, itens, [], temas)
+        self.assertEqual(([], 1), (por[0], len([a for a in por[1] if a["relacao"] == "exato"])))
+        self.assertEqual(1, cp.casar_por_nome(itens, por, temas), "só a parte de probabilidade ganha material")
+        self.assertEqual([("f.pdf", "nome")], [(a["caminho"], a["relacao"]) for a in por[0]])
+        self.assertEqual("exato", por[1][0]["relacao"], "quem já tinha casamento por nó não muda")
+        self.assertEqual([], por[2])
+
+    def test_reserva_por_nome_ignora_palavra_curta_e_comum_sozinha(self):
+        itens = [{"nome": "valor", "ia": [], "natureza": None}, {"nome": "MVC", "ia": [], "natureza": None}]
+        temas = [{"caminho": "a.pdf", "tema": "P-Valor", "nos": [31]}, {"caminho": "b.pdf", "tema": "ASP.NET MVC", "nos": [31]}]
+        por = {}
+        self.assertEqual(1, cp.casar_por_nome(itens, por, temas))
+        self.assertNotIn(0, por)
+        self.assertEqual("b.pdf", por[1][0]["caminho"])
+
     def test_resumo_e_relatorio_listam_o_que_ficou_sem_material(self):
         itens = [{"nome": "OSPF", "ia": [321], "natureza": "exato", "disciplina": "Redes"},
                  {"nome": "NAT", "ia": [31], "natureza": "mais_amplo", "disciplina": "Redes"},
