@@ -183,10 +183,12 @@ escada do SGE. Ver `dias/montar_bloco.py` (docstring) pro formato do manifesto e
 - `descartes`: o que a triagem decidiu deixar de fora (as "decisões de descarte"), com motivo.
 - `paginas` é a **posição no PDF** (contador do leitor, a mesma de `buscar_indice.py`),
   nunca o número impresso na apostila.
-- **Fixação entra sempre:** questões comentadas, lista de exercícios e resumo de cada aula
-  vão como fonte `"tipo": "fixacao"`, logo depois da teoria correspondente. O script nunca
-  mistura fixação com teoria no mesmo bloco. Use `minutos_por_pagina` por fonte quando o
-  ritmo for diferente (lei seca, código, questões).
+- **Fixação entra, questões não** (decisão 7 de `docs/proposta-catalogo-aulas-e-modos.md`, 2026-10-19): o resumo e o
+  roteiro de revisão de cada aula vão como fonte `"tipo": "fixacao"`, logo depois da teoria correspondente. **Questões
+  comentadas, lista de exercícios e gabarito não entram nos segmentos**: a resolução de questões é feita no QConcursos/TEC,
+  ligada ao assunto pelo nó da árvore. O catálogo registra as faixas de questões à parte. O script nunca mistura fixação
+  com teoria no mesmo bloco. Use `minutos_por_pagina` por fonte quando o ritmo for diferente (lei seca, código). O legado
+  SEFAZ SC mantém as questões que já constavam das suas triagens.
 - Rodar primeiro com `--validar` (confere tudo e mostra o corte, sem gerar nada). Qualquer
   erro — arquivo inexistente, faixa invertida, página fora do PDF, página repetida, subitem
   sem cobertura — faz o script parar sem gerar nada.
@@ -245,13 +247,22 @@ pra revisão humana antes de importar** — não é pra importar direto sem olha
 
 ## Canal com o SGE (SGE-Concursos)
 
-Dois sistemas separados, cada IA só escreve no próprio repositório — nunca
-acesso de escrita cruzado.
+Dois sistemas, dois repositórios: este (planejamento, `/opt/Plano-de-Estudos-Automatizado`) e o SGE
+(`/opt/estudos`, `github.com/Allandpn/SGE-Concursos`).
+
+**Regra vigente (desde 2026-10-22, definida pelo usuário):** uma IA escreve nos dois repositórios, e a sessão
+escolhida decide onde cada coisa vai, pela convenção de cada lado. No SGE, `especificacao/` é a fonte de verdade e só
+muda pelo processo deles (documento, versão, changelog, sprint); pedidos vindos do planejamento entram em
+`docs/requisitos-planejamento-blocos-de-conteudo.md`, em seção nova, só acrescentando. Aqui, o canal de saída é
+`docs/requisitos-sge-integracao.md`. Commits do SGE vão em branch própria; envio ao GitHub do SGE e merge em `main` de lá
+só com o OK do usuário. Arquivos do SGE podem ter dono root: substituir o arquivo (a pasta é do usuário) em vez de usar
+`sudo` no conteúdo.
+
+**Histórico das exceções anteriores** (superadas pela regra acima, mantidas como registro):
 
 **Exceção registrada (2026-10-14), pedida pelo usuário:** uma sessão do SGE trabalhou
 neste repositório, numa branch própria (`integracao-sge`) e seguindo este `CLAUDE.md`,
-para alinhar a exportação ao formato do SGE e fechar o caminho até o Drive. A regra acima
-continua valendo para o dia a dia; uma nova exceção precisa de novo pedido explícito.
+para alinhar a exportação ao formato do SGE e fechar o caminho até o Drive. Valia só para aquele pedido.
 
 **Segunda exceção (2026-10-15), pedida pelo usuário:** esta sessão escreveu no SGE-Concursos,
 na branch `exportacao-planejamento` (endpoint `GET /api/concursos/{id}/planejamento`) e mesclou a
@@ -269,7 +280,7 @@ depois de avaliar a primeira preparação real no Pi. Vale só para aquele pedid
 **Antes de começar qualquer trabalho que toque a integração com o SGE**
 (fatiamento de blocos, segmentos, chaveExterna, ADR-037, ou qualquer
 novidade do lado deles), confira o repositório público
-`github.com/Allandpn/SGE-Concursos` (leitura pública, nunca escrita) nestes
+`github.com/Allandpn/SGE-Concursos` (no Pi: `/opt/estudos`; escreva só como a regra acima permite) nestes
 arquivos, nesta ordem, comparando com o que você já sabe/implementou:
 
 1. `docs/requisitos-planejamento-blocos-de-conteudo.md` — nosso canal
