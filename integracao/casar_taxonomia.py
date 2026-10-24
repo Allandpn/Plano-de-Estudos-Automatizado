@@ -140,12 +140,14 @@ SISTEMA_DISCIPLINAS = """Você liga disciplinas de editais e de apostilas de con
 Responda só com JSON, sem texto fora dele."""
 
 
-def mapear_disciplinas(sge, nomes, arvore):
+def mapear_disciplinas(sge, nomes, arvore, descricoes=None):
     """{disciplina do edital ou da ficha: [ids das disciplinas do QConcursos]}, numa chamada só: uma disciplina
-    larga ('Conhecimentos Específicos - Ciências da Computação') liga a várias."""
+    larga ('Conhecimentos Específicos - Ciências da Computação') liga a várias. `descricoes` {nome: texto} dá à IA o
+    que o nome não diz (o cargo e uma amostra dos assuntos): 'Conhecimentos específicos' sozinho não indica a área."""
     raizes = sorted((n["nome"], i) for i, n in arvore.nos.items() if n["nivel"] == 1)
     pedido = ("Disciplinas do QConcursos (id: nome):\n" + "\n".join(f"{i}: {nome}" for nome, i in raizes)
-              + "\n\nDisciplinas a ligar:\n" + "\n".join(f"- {n}" for n in nomes)
+              + "\n\nDisciplinas a ligar:\n" + "\n".join(f"- {n}" + (f"  [{descricoes[n]}]" if descricoes and descricoes.get(n) else "")
+                                                         for n in nomes)
               + "\n\nPara cada uma, os ids das disciplinas do QConcursos que cobrem o mesmo conteúdo. Disciplina que é uma "
                 "área inteira (ex.: Ciências da Computação, Ciência de Dados, Inteligência Artificial, Tecnologia da "
                 "Informação) liga a TODAS as disciplinas do QConcursos que a área abrange (ex.: Banco de Dados, "

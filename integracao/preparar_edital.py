@@ -119,6 +119,12 @@ def decisoes_padrao(arvore_nome):
     return lido["decisoes"] if isinstance(lido, dict) else lido
 
 
+def descricao_da_disciplina(cargo, disciplina, quantos=12):
+    """O que o nome da disciplina não diz: o cargo e os primeiros assuntos dela, para a IA achar a área no QConcursos."""
+    amostra = "; ".join(a["texto"].strip(" .")[:70] for a in disciplina["assuntos"][:quantos])
+    return f"cargo: {cargo}; assuntos: {amostra}"
+
+
 def etapa_ligar(ctx):
     import mapear_partes as mp
     from casar_taxonomia import Arvore, carregar_arvore, ligar_com_ia, mapear_disciplinas, refinar
@@ -126,9 +132,10 @@ def etapa_ligar(ctx):
     disc, nome_arvore = carregar_arvore()
     arvore = Arvore(disc)
     mapa = json.loads(ctx.arquivo("disciplinas.json").read_text(encoding="utf-8")) if ctx.arquivo("disciplinas.json").exists() else {}
-    faltam = [d["nome"] for d in disciplinas if d["nome"] not in mapa]
+    faltam = [d["nome"] for d in disciplinas if not mapa.get(d["nome"])]  # mapa vazio vale como não mapeado: pergunta de novo
     if faltam:
-        mapa.update(com_espera(ctx, lambda: mapear_disciplinas(ctx.sge, faltam, arvore)))
+        descricoes = {d["nome"]: descricao_da_disciplina(ctx.cargo, d) for d in disciplinas}
+        mapa.update(com_espera(ctx, lambda: mapear_disciplinas(ctx.sge, faltam, arvore, descricoes)))
         ctx.gravar("disciplinas.json", mapa)
     itens, partes = mp.itens_das_partes(disciplinas, arvore, mapa)
     decisoes = decisoes_padrao(nome_arvore.replace(".json", ""))
@@ -136,7 +143,8 @@ def etapa_ligar(ctx):
         lido = json.loads(Path(ctx.decisoes).read_text(encoding="utf-8"))
         decisoes += lido["decisoes"] if isinstance(lido, dict) else lido
     aplicadas = mp.aplicar_decisoes(itens, decisoes)
-    com_espera(ctx, lambda: ligar_com_ia(ctx.sge, [it for it in itens if "ia" not in it and not it.get("decisao")], arvore,
+    # sem nó (inclusive o que ficou assim por uma interrupção antes da segunda passada) entra de novo; o que já tem nó, não
+    com_espera(ctx, lambda: ligar_com_ia(ctx.sge, [it for it in itens if not it.get("ia") and not it.get("decisao")], arvore,
                                          log=lambda *_: None))
     com_espera(ctx, lambda: refinar(ctx.sge, itens, arvore, log=lambda *_: None))
     ctx.gravar("nos.json", {"itens": itens, "partes": partes, "arvore": nome_arvore})
