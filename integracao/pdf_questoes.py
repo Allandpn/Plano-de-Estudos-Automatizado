@@ -67,6 +67,10 @@ def montar_todos(pasta, saida=None):
     saida.mkdir(parents=True, exist_ok=True)
     assuntos = {a["chave"]: a for a in json.loads((pasta / "assuntos.json").read_text(encoding="utf-8"))}
     resultado = []
+    atuais = {a.stem for a in (pasta / "questoes").glob("*.json")}
+    for velho in saida.glob("*.pdf"):  # PDF de rodada anterior de um assunto que já não tem questões
+        if velho.stem not in atuais:
+            velho.unlink()
     for arq in sorted((pasta / "questoes").glob("*.json")):
         chave = arq.stem
         a = assuntos.get(chave, {})

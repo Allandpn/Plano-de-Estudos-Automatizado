@@ -13,6 +13,7 @@ aquela e todas as seguintes; `--ate ETAPA` para depois dela):
   casar       regra   partes ↔ temas das fichas, pelos nós                   → material.json
   confirmar   IA      quais candidatos ensinam a parte                       → confirmado.json
   manifestos  regra   um manifesto por assunto, validado pelo fatiador       → manifestos/, questoes/, assuntos.json, relatorio.md
+  segunda     IA      segunda chance: busca por palavras só nas partes sem material (D4) → segunda.json
   consulta    regra   o PDF "Questões deste assunto" de cada assunto (fora da escada) → consulta/
   entrega     regra   o JSON "edital-revisao/1" para o SGE                   → entrega.json
 
@@ -30,9 +31,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "dias"))
 
-ETAPAS = ["extrair", "quebrar", "ligar", "casar", "confirmar", "manifestos", "consulta", "entrega"]
+ETAPAS = ["extrair", "quebrar", "ligar", "casar", "confirmar", "manifestos", "segunda", "consulta", "entrega"]
 SAIDA_DA_ETAPA = {"extrair": "extraido.json", "quebrar": "partes.json", "ligar": "nos.json", "casar": "material.json",
-                  "confirmar": "confirmado.json", "manifestos": "relatorio.md", "consulta": "consulta/consulta.json", "entrega": "entrega.json"}
+                  "confirmar": "confirmado.json", "manifestos": "relatorio.md", "segunda": "segunda.json", "consulta": "consulta/consulta.json", "entrega": "entrega.json"}
 
 
 class ErroDeEtapa(Exception):
@@ -41,10 +42,11 @@ class ErroDeEtapa(Exception):
 
 class Contexto:
     def __init__(self, pdf, slug, cargo, pasta, db=None, fichas=None, acervo=None, modo="completo", decisoes=None,
-                 sge=None, esperar=False, log=print):
+                 sge=None, esperar=False, log=print, indice=None):
         self.pdf, self.slug, self.cargo, self.pasta = pdf, slug, cargo, Path(pasta)
         self.db, self.fichas, self.acervo, self.modo = db, fichas, acervo, modo
         self.decisoes, self.sge, self.esperar, self.log = decisoes, sge, esperar, log
+        self.indice = indice  # indice.db do acervo, para a segunda chance
 
     def arquivo(self, nome):
         return self.pasta / nome
@@ -187,16 +189,8 @@ def etapa_confirmar(ctx):
     return cm.resumo(feitos)
 
 
-def etapa_manifestos(ctx):
-    import manifesto_do_casamento as mc
-    db = sqlite3.connect(f"file:{ctx.db}?mode=ro", uri=True)
-    cache = {}
-
-    def ficha_de(caminho):
-        if caminho not in cache:
-            linha = db.execute("SELECT ficha FROM fichas WHERE caminho = ? AND situacao = 'ok'", (caminho,)).fetchone()
-            cache[caminho] = json.loads(linha[0]) if linha else None
-        return cache[caminho]
+def validador_de_arquivo():
+    """`validar(caminho_do_manifesto)` -> lista de erros do fatiador (vazia = passou)."""
     import montar_bloco as mb
     import tempfile
 
@@ -207,6 +201,20 @@ def etapa_manifestos(ctx):
             return []
         except mb.ManifestoInvalido as e:
             return e.erros
+    return validar
+
+
+def etapa_manifestos(ctx):
+    import manifesto_do_casamento as mc
+    db = sqlite3.connect(f"file:{ctx.db}?mode=ro", uri=True)
+    cache = {}
+
+    def ficha_de(caminho):
+        if caminho not in cache:
+            linha = db.execute("SELECT ficha FROM fichas WHERE caminho = ? AND situacao = 'ok'", (caminho,)).fetchone()
+            cache[caminho] = json.loads(linha[0]) if linha else None
+        return cache[caminho]
+    validar = validador_de_arquivo()
     linhas = mc.processar(ctx.slug, ctx.ler("partes.json"), ctx.ler("material.json"), ctx.ler("confirmado.json"), ficha_de,
                           ctx.acervo, ctx.modo, validar, ctx.pasta)
     ctx.gravar("assuntos.json", linhas)
@@ -237,6 +245,32 @@ def etapa_entrega(ctx):
     return json.dumps(entrega["resumo"], ensure_ascii=False)
 
 
+def etapa_segunda(ctx):
+    import json as _json
+    import segunda_chance as sc
+    import tempfile
+    from acervo import Acervo
+    if not ctx.indice:
+        ctx.gravar("segunda.json", [])
+        return "pulada: sem índice do acervo (--indice)"
+    arquivo = validador_de_arquivo()
+
+    def validar(manifesto):
+        with tempfile.TemporaryDirectory() as t:
+            caminho = Path(t) / "m.json"
+            caminho.write_text(_json.dumps(manifesto, ensure_ascii=False), encoding="utf-8")
+            return arquivo(caminho)
+    linhas = ctx.ler("assuntos.json")
+    tentados = com_espera(ctx, lambda: sc.processar(ctx.slug, ctx.ler("partes.json"), linhas, ctx.pasta, ctx.sge,
+                                                    Acervo(ctx.indice, ctx.acervo), validar, ctx.log))
+    ctx.gravar("assuntos.json", linhas)
+    import manifesto_do_casamento as mc
+    ctx.arquivo("relatorio.md").write_text(mc.relatorio(ctx.slug, ctx.modo, linhas), encoding="utf-8")
+    ctx.gravar("segunda.json", tentados)
+    achou = sum(1 for t in tentados if t["resultado"] == "achou")
+    return f"{len(tentados)} assuntos tentados, {achou} com material novo"
+
+
 def etapa_consulta(ctx):
     import pdf_questoes
     r = pdf_questoes.montar_todos(ctx.pasta) if ctx.arquivo("questoes").exists() else []
@@ -244,7 +278,7 @@ def etapa_consulta(ctx):
 
 
 FUNCOES = {"extrair": etapa_extrair, "quebrar": etapa_quebrar, "ligar": etapa_ligar, "casar": etapa_casar,
-           "confirmar": etapa_confirmar, "manifestos": etapa_manifestos, "consulta": etapa_consulta, "entrega": etapa_entrega}
+           "confirmar": etapa_confirmar, "manifestos": etapa_manifestos, "segunda": etapa_segunda, "consulta": etapa_consulta, "entrega": etapa_entrega}
 
 
 def executar(ctx, ate=None, refazer=None, funcoes=None, etapas=None):
@@ -282,6 +316,7 @@ def main():
     ap.add_argument("--acervo", required=True, help="raiz das apostilas")
     ap.add_argument("--modo", default="completo", choices=("completo", "compacto"))
     ap.add_argument("--decisoes", help="JSON de decisões aprovadas além das de integracao/decisoes/")
+    ap.add_argument("--indice", default=os.environ.get("INDICE_DB"), help="indice.db do acervo (segunda chance)")
     ap.add_argument("--ate", choices=ETAPAS)
     ap.add_argument("--refazer", choices=ETAPAS)
     ap.add_argument("--esperar", action="store_true")
@@ -289,7 +324,7 @@ def main():
     from sge_api import SgeApi
     sge = SgeApi(os.environ.get("SGE_URL", "http://app:8080"), os.environ["INTERNAL_TOKEN"])
     ctx = Contexto(args.pdf, args.slug, args.cargo, Path(args.saida) / args.slug, args.db, args.fichas, args.acervo, args.modo,
-                   args.decisoes, sge, args.esperar, log=lambda m: print(m, flush=True))
+                   args.decisoes, sge, args.esperar, log=lambda m: print(m, flush=True), indice=args.indice)
     try:
         executar(ctx, args.ate, args.refazer)
     except ErroDeEtapa as e:

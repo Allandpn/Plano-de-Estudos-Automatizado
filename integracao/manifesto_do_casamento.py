@@ -67,11 +67,15 @@ def processar(slug, disciplinas, material, confirmado, ficha_de, raiz, modo="com
             linha = {"chave": chave, "disciplina": d["nome"], "assunto": a["texto"], "partes": len(partes),
                      "fontes": len(escolha["fontes"]), "lacunas": len(escolha["lacunas"]), "minutos": escolha["estimativa_min"],
                      "tem_questoes": bool(escolha["questoes"]), "erros": [], "avisos": escolha["avisos"]}
+            if saida and not escolha["fontes"]:  # sobra de rodada anterior: assunto sem material não pode ficar com manifesto
+                for pasta in ("manifestos", "questoes"):
+                    (saida / pasta / f"{chave}.json").unlink(missing_ok=True)
             if escolha["fontes"]:
                 m = manifesto(slug, d["nome"], a, chave, escolha, raiz)
                 if saida:
                     (saida / "manifestos").mkdir(parents=True, exist_ok=True)
                     (saida / "manifestos" / f"{chave}.json").write_text(json.dumps(m, ensure_ascii=False, indent=1), encoding="utf-8")
+                    (saida / "questoes" / f"{chave}.json").unlink(missing_ok=True)
                     if escolha["questoes"]:
                         (saida / "questoes").mkdir(parents=True, exist_ok=True)
                         (saida / "questoes" / f"{chave}.json").write_text(json.dumps(

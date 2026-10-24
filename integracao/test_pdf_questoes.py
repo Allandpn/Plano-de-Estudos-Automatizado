@@ -51,6 +51,9 @@ class MontarTest(unittest.TestCase):
         self.assertEqual([("abc", "abc.pdf", 3)], [(x["chave"], x["arquivo"], x["paginas"]) for x in r])
         self.assertTrue((pasta / "consulta" / "abc.pdf").exists())
         self.assertTrue((pasta / "consulta" / "consulta.json").exists())
+        (pasta / "consulta" / "velho.pdf").write_bytes(b"x")
+        pq.montar_todos(pasta)
+        self.assertFalse((pasta / "consulta" / "velho.pdf").exists(), "PDF de assunto que já não tem questões sai")
 
 
 if __name__ == "__main__":

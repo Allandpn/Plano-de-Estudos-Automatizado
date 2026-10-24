@@ -40,6 +40,17 @@ class ManifestoDoCasamentoTest(unittest.TestCase):
             self.assertEqual("16-24", q[0]["paginas"])
             self.assertEqual(linhas[0]["chave"], m["assunto_uuid"])
 
+    def test_manifesto_velho_de_assunto_que_ficou_sem_material_e_removido(self):
+        with tempfile.TemporaryDirectory() as t:
+            saida = Path(t)
+            linhas = mc.processar("ed", DISC, MAT, CONF, FICHAS.get, "/acervo", "completo", lambda c: [], saida)
+            velho = saida / "manifestos" / f"{linhas[1]['chave']}.json"
+            velho.write_text("{}", encoding="utf-8")
+            (saida / "questoes" / f"{linhas[1]['chave']}.json").write_text("[]", encoding="utf-8")
+            mc.processar("ed", DISC, MAT, CONF, FICHAS.get, "/acervo", "completo", lambda c: [], saida)
+            self.assertFalse(velho.exists())
+            self.assertFalse((saida / "questoes" / f"{linhas[1]['chave']}.json").exists())
+
     def test_recusa_do_fatiador_vira_situacao_recusado(self):
         with tempfile.TemporaryDirectory() as t:
             linhas = mc.processar("ed", DISC, MAT, CONF, FICHAS.get, "/acervo", "completo", lambda c: ["página 99 fora do PDF"],

@@ -101,8 +101,9 @@ fonte e por assunto. Em preparação de alto nível, restringir o assunto por te
 5. **Contrato**: chave do assunto e material por parte; atualizar a especificação.
 6. Ligar ao laço do worker quando o SGE tiver as operações do contrato; então subir os editais pela cadeia nova.
 
-Situação em 2026-10-24: **1, 2, 3 e 5 feitos** (o ensaio do passo 3 foi o MPPR inteiro, §8); **4 e 6 aguardam o SGE** adotar o
-contrato (nesse passo o worker chama `preparar_edital.py` e aplica a segunda chance D4).
+Situação em 2026-10-24: **1, 2, 3 e 5 feitos** (o ensaio do passo 3 foi o MPPR inteiro, §8) e a **segunda chance D4 feita** como
+etapa `segunda` do pipeline (`segunda_chance.py`); do passo 4 falta só o worker chamar o pipeline, e o passo 6 aguarda o SGE
+adotar o contrato.
 
 ## 6. Riscos
 
@@ -144,3 +145,16 @@ Kubernetes, contêineres, CI/CD, IaC nem Direito Empresarial.
    precisa do conceito novo (canal, §18 de `requisitos-planejamento-blocos-de-conteudo.md`).
 
 **Confirmação por IA:** 84% de veredito igual e 92% de acordo em "serve ou não", às cegas, com outra IA (60 partes).
+
+**Segunda chance (D4) medida no MPPR.** Nos 37 assuntos que o casamento deixou parciais ou sem material, a busca por palavras +
+IA, só nas partes sem cobertura, achou material novo em 24 (e em 9 dos 18 que sobraram na segunda volta). Resultado final:
+**completos 101 → 127, parciais 16 → 7, sem material 21 → 4**, 0 recusados pelo fatiador. A IA só leva teoria (sem questões e
+sem aula inteira), nenhuma página que o casamento já usa entra de novo, e cada fonte nova sai marcada `"origem":
+"segunda_chance"` e no fim da lista, para a tela de revisão mostrar que veio da busca e não do catálogo (decisão D5/D6: o
+usuário confere e troca). O que sobrou sem material é lacuna real (por exemplo projeto de banco de dados teórico e modelagem
+semântica no MPPR).
+
+**Leitura das fichas com página fora do PDF.** Reler as 28 fichas pela IA (2026-10-24) reproduziu o defeito nos mesmos 28 PDFs
+(30 temas): são aulas sem sumário em que a IA devolve numeração que o PDF não tem. Não compensa mais cota; ficam como aviso, e
+são quase todas de contabilidade, direito civil e tributário (cinco de TI). Se um edital precisar delas, corrige-se pela tela
+(trocar a fonte) ou por regra de página, não por nova leitura.

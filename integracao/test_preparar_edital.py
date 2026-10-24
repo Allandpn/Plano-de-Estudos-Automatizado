@@ -42,12 +42,12 @@ class PrepararEditalTest(unittest.TestCase):
         self.roda(ate="ligar")
         self.assertEqual(["extrair", "quebrar", "ligar"], self.chamadas)
         self.roda()
-        self.assertEqual(["casar", "confirmar", "manifestos", "consulta", "entrega"], self.chamadas, "retoma de onde parou")
+        self.assertEqual(["casar", "confirmar", "manifestos", "segunda", "consulta", "entrega"], self.chamadas, "retoma de onde parou")
 
     def test_refazer_refaz_a_etapa_e_todas_as_seguintes(self):
         self.roda()
         self.roda(refazer="casar")
-        self.assertEqual(["casar", "confirmar", "manifestos", "consulta", "entrega"], self.chamadas)
+        self.assertEqual(["casar", "confirmar", "manifestos", "segunda", "consulta", "entrega"], self.chamadas)
 
     def test_etapa_desconhecida(self):
         with self.assertRaises(ValueError):
