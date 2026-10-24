@@ -1,6 +1,6 @@
 # Especificação: revisão do edital no SGE (assuntos, partes e ligação à árvore do QConcursos)
 
-**Versão** 0.2.0 · **Data** 2026-10-22 (0.2.0: §11, contrato de entrega) · **Natureza:** especificação aprovada pelo usuário nos pontos da §9. O que
+**Versão** 0.3.0 · **Data** 2026-10-24 (0.3.0: chave e material do assunto na entrega, §11.2 e §11.6; 0.2.0: §11, contrato de entrega) · **Natureza:** especificação aprovada pelo usuário nos pontos da §9. O que
 toca o SGE nasce lá, pelo documento e pela regra deles (`01_DOMINIO.md`, ADR); este texto é o pedido e o desenho
 de origem. O protótipo do lado do planejamento está em `integracao/partes_edital.py`,
 `integracao/mapear_partes.py` e `integracao/casar_taxonomia.py`; os casos reais de teste, em
@@ -166,8 +166,8 @@ Exemplo real, reduzido a uma disciplina, em `integracao/contrato/exemplo-edital-
 - `contrato` = `"edital-revisao/1"`; `concurso` {`slug`, `cargo`}; `pdf`; `execucao` {`data`, `arvore`, `modelo`};
 - `disciplinas[]`: `nome`, `restricao` (de cargo), `comum`, `paginas`, `linhas` [início, fim], `qconcursos` (ids das
   disciplinas da árvore ligadas), `tentativas`, `trechos_sem_assunto`, `referencias`, e `assuntos[]`;
-- `assuntos[]`: `ordem`, `texto` (**exatamente como no edital**), `erros` (a conferência por regra recusou), `alertas`,
-  e `partes[]`;
+- `assuntos[]`: `chave` (§11.4), `ordem`, `texto` (**exatamente como no edital**), `erros` (a conferência por regra recusou),
+  `alertas`, `material` (§11.6) e `partes[]`;
 - `partes[]`: `chave` (§11.4), `ordem`, `texto`, `contexto` (a cabeça sob a qual aparece), `herdado` (prefixo
   emprestado), `ligacao`;
 - `ligacao`: `nos` (ids da árvore, até 3), `natureza` (`exato`, `mais_amplo`, `parcial`; vazio com `nos` vazio = sem nó),
@@ -188,6 +188,8 @@ Decisões de escopo `edital` só entram no processamento daquele edital.
 
 ### 11.4 Identidade e reprocessamento
 
+- A **`chave` do assunto** é um hash do texto normalizado de disciplina e assunto, mais a ocorrência quando se repete; é por ela
+  que o material (manifesto, segmentos, consulta) se prende ao assunto.
 - A **`chave`** da parte é um hash do texto normalizado (sem acento nem caixa) de disciplina, assunto, prefixo herdado,
   texto e contexto, mais o número da ocorrência quando o edital repete a mesma parte no mesmo assunto. Reprocessar o
   mesmo edital mantém a chave das partes que não mudaram.
@@ -202,3 +204,21 @@ Decisões de escopo `edital` só entram no processamento daquele edital.
 - Garante: `assuntos[].texto` é trecho literal do edital; cada parte usa só palavras do assunto; `erros` e
   `trechos_sem_assunto` dizem o que a regra não aceitou. Nada disso depende do modelo de IA.
 - Não garante: que o nó escolhido seja o melhor. É por isso que a tela existe.
+
+### 11.6 Material do assunto na entrega
+
+Quando o planejamento já preparou o material (proposta de material por casamento, `docs/proposta-material-por-casamento.md`),
+cada assunto traz `material`:
+
+- `situacao`: `completo` (todas as partes cobertas), `parcial` (há lacunas), `sem material` ou `recusado` (o fatiador
+  recusou o manifesto; vai para a fila de revisão com os erros);
+- `fontes` (quantidade), `minutos` (tempo estimado de leitura, sem teto), `lacunas` (partes sem tema que sirva, com motivo);
+- `tem_questoes` e `consulta` {`arquivo`, `paginas`}: o PDF "Questões deste assunto", **material de consulta fora da escada**.
+
+A tela de revisão mostra, por assunto, a situação, o tempo estimado e as lacunas, e deixa o usuário trocar a fonte de uma parte
+(decisão presa à `chave`, como as de nó). Os segmentos de ~60 min saem do manifesto pelo fatiador; segmento já criado nunca é
+apagado, e o material novo de um assunto que já tem segmentos entra como sugestão.
+
+**Mapeamento de disciplinas.** A ligação das disciplinas do edital às do QConcursos recebe o **cargo** e uma amostra dos
+assuntos. Disciplina genérica ("Conhecimentos específicos") só se liga por isso; parte que fica sem nó na primeira passada
+ganha uma segunda ao retomar.

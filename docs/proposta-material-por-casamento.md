@@ -1,6 +1,6 @@
 # Proposta: o material do plano vem do casamento parte ↔ ficha, não de busca por palavras
 
-**Versão** 0.3.0 · **Data** 2026-10-23 · **Natureza:** proposta discutida e decidida com o usuário nos pontos D1 a D7 (§3). O
+**Versão** 0.4.0 · **Data** 2026-10-24 (0.4.0: §8, o que a implementação e a prática mostraram) · **Data original** 2026-10-23 · **Natureza:** proposta discutida e decidida com o usuário nos pontos D1 a D7 (§3). O
 que toca o SGE nasce lá, pelo documento e pela regra deles; esta proposta é o pedido e o desenho de origem.
 
 **Escopo (decisão do usuário, 2026-10-23): o sistema está sendo construído do zero.** Não há compatibilidade com concursos
@@ -86,7 +86,7 @@ fonte e por assunto. Em preparação de alto nível, restringir o assunto por te
 
 | Onde | O quê |
 |---|---|
-| `integracao/` (novo) | `montar_manifesto_do_casamento.py`: da lista de partes confirmadas ao manifesto por assunto, com a política (D2); e o PDF de questões por assunto (D3) |
+| `integracao/` (feito) | `selecao_material.py` e `manifesto_do_casamento.py` (política D2, manifesto por assunto), `pdf_questoes.py` (PDF de questões por assunto, D3) e `preparar_edital.py` (pipeline único) |
 | `worker.py` | `preparar` passa a usar o casamento; a busca por palavras sobra só como segunda chance (D4) |
 | `entrega_revisao.py` / contrato | `chave` do assunto; material por parte (fontes, páginas, veredito) como saída opcional do planejamento |
 | SGE | o que já está pedido (tela de revisão, decisões) e **um conceito novo**: material de consulta "Questões deste assunto", fora da escada (D3) |
@@ -101,6 +101,9 @@ fonte e por assunto. Em preparação de alto nível, restringir o assunto por te
 5. **Contrato**: chave do assunto e material por parte; atualizar a especificação.
 6. Ligar ao laço do worker quando o SGE tiver as operações do contrato; então subir os editais pela cadeia nova.
 
+Situação em 2026-10-24: **1, 2, 3 e 5 feitos** (o ensaio do passo 3 foi o MPPR inteiro, §8); **4 e 6 aguardam o SGE** adotar o
+contrato (nesse passo o worker chama `preparar_edital.py` e aplica a segunda chance D4).
+
 ## 6. Riscos
 
 - A confirmação por IA varia entre modelos: por isso a escolha final é regra, e a decisão do usuário prevalece.
@@ -114,3 +117,30 @@ fonte e por assunto. Em preparação de alto nível, restringir o assunto por te
 Cada tema da ficha tem as páginas da teoria (sem questões, decisão 7). As seções da aula (`secoes`) trazem, por tema, as
 faixas de `resumo` e `mapa_mental` (fixação) e de `questoes_comentadas`, `lista_questoes`, `questionario` e `gabarito`
 (questões deste assunto). Ficam de fora `incidencia`, `apresentacao` e `bibliografia`.
+
+## 8. O que a implementação e a prática mostraram (2026-10-24)
+
+**Pipeline único.** `integracao/preparar_edital.py` encadeia `extrair → quebrar → ligar → casar → confirmar → manifestos →
+consulta → entrega`, cada etapa gravando um arquivo; rodar de novo pula o que já existe, `--refazer ETAPA` refaz aquela e as
+seguintes, `--ate` para antes, `--esperar` dorme até o limite de uso da IA liberar. É o que o worker vai chamar.
+
+**Resultado de ponta a ponta, MPPR cargo 402:** 138 assuntos, 300 partes (5 sem nó); material completo em 101 assuntos,
+parcial em 16, nenhum em 21; 0 manifestos recusados pelo fatiador; mediana de 4,9 h por assunto (modo completo); 77 assuntos
+com PDF de "Questões deste assunto" (5.522 páginas). Os assuntos sem material são lacunas reais: o QConcursos não tem Docker,
+Kubernetes, contêineres, CI/CD, IaC nem Direito Empresarial.
+
+**Achados que mudaram o desenho:**
+
+1. **Disciplina genérica.** "Conhecimentos específicos" (MPPR) não casava com nenhuma disciplina do QConcursos. O mapeamento
+   de disciplinas passou a receber uma descrição com o **cargo** e uma amostra dos assuntos; sem isso, 39 partes ficavam sem
+   nó. Parte sem nó volta a uma segunda passada ao retomar.
+2. **Página além do PDF.** 31 temas (28 fichas) do catálogo apontam páginas que o PDF não tem (leitura errada do catálogo).
+   Não se adivinha o recorte: o tema não é usado e vira **aviso** no relatório. Refazer a leitura dessas fichas é pendência.
+3. **Seção sem posição.** Seção da ficha sem início ou fim não gera página (fixação e questões a ignoram).
+4. **A quebra varia entre rodadas.** O mesmo edital deu 199 e 138 assuntos em duas rodadas, com o mesmo total de partes: a IA
+   agrupa de outro jeito. É um motivo a mais para a revisão e as decisões presas à `chave` (especificação, §1).
+5. **Parte de uma palavra só.** Reserva por nome exige 8 letras ou sigla em maiúsculas; "valor" casava com "P-Valor".
+6. **Questões à parte.** O PDF "Questões deste assunto" é gerado pelo planejamento e entregue em `material.consulta`; o SGE
+   precisa do conceito novo (canal, §18 de `requisitos-planejamento-blocos-de-conteudo.md`).
+
+**Confirmação por IA:** 84% de veredito igual e 92% de acordo em "serve ou não", às cegas, com outra IA (60 partes).
