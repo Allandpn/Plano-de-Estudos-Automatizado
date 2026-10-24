@@ -134,6 +134,18 @@ def relatorio(edital, itens, por_item, arvore, tot):
     return "\n".join(linhas)
 
 
+def montar_material(arvore, dados, temas):
+    """Casa as partes de `dados` ({itens, partes}) com os temas das fichas (por nó e, na falta, por nome).
+    Devolve ({itens com 'material', partes, cobertura}, quantas partes só casaram por nome)."""
+    temas = [t for t in temas if t.get("nos")]
+    por_item = casar(arvore, dados["itens"], dados["partes"], temas)
+    por_nome = casar_por_nome(dados["itens"], por_item, temas)
+    cobertura = resumo(dados["itens"], por_item)
+    itens = [dict(nome=it["nome"], disciplina=it["disciplina"], nos=it.get("ia") or [], natureza=it.get("natureza"),
+                  material=por_item.get(k, [])) for k, it in enumerate(dados["itens"])]
+    return {"itens": itens, "partes": dados["partes"], "cobertura": cobertura}, por_nome
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("nos", help="<edital>-nos.json (ou -nos-refinado.json)")
@@ -143,18 +155,13 @@ def main():
     arvore = Arvore(carregar_arvore()[0])
     dados = json.loads(Path(args.nos).read_text(encoding="utf-8"))
     temas = [json.loads(l) for l in Path(args.fichas).read_text(encoding="utf-8").splitlines() if l.strip()]
-    temas = [t for t in temas if t.get("nos")]
-    por_item = casar(arvore, dados["itens"], dados["partes"], temas)
-    por_nome = casar_por_nome(dados["itens"], por_item, temas)
+    material, por_nome = montar_material(arvore, dados, temas)
     nome = Path(args.nos).name.split("-nos")[0]
     saida = Path(args.saida)
     saida.mkdir(parents=True, exist_ok=True)
-    tot = resumo(dados["itens"], por_item)
-    (saida / f"{nome}-material.json").write_text(json.dumps(
-        {"itens": [dict(nome=it["nome"], disciplina=it["disciplina"], nos=it.get("ia") or [], natureza=it.get("natureza"),
-                        material=por_item.get(k, [])) for k, it in enumerate(dados["itens"])], "partes": dados["partes"],
-         "cobertura": tot}, ensure_ascii=False, indent=1), encoding="utf-8")
-    texto = relatorio(nome, dados["itens"], por_item, arvore, tot)
+    (saida / f"{nome}-material.json").write_text(json.dumps(material, ensure_ascii=False, indent=1), encoding="utf-8")
+    por_item = {k: it["material"] for k, it in enumerate(material["itens"])}
+    texto = relatorio(nome, dados["itens"], por_item, arvore, material["cobertura"])
     (saida / f"{nome}-material.md").write_text(texto, encoding="utf-8")
     print(texto.splitlines()[2], f"· {por_nome} só por nome")
 

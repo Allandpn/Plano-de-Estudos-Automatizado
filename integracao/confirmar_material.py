@@ -93,6 +93,23 @@ def amostrar(itens, n, semente):
     return sorted(com[:n])
 
 
+def confirmar(sge, db, trabalho, log=print):
+    """Confirma por IA, em lotes, as partes de `trabalho` ([(rotulo, item)]). Grava `confirmado` e o veredito em cada candidato.
+    Devolve False se a IA parou no meio (as partes seguintes ficam sem `confirmado`)."""
+    for ini in range(0, len(trabalho), LOTE):
+        lote = trabalho[ini:ini + LOTE]
+        try:
+            resposta = completar_json(sge, SISTEMA, pedido_do_lote(db, lote))
+        except ValueError:
+            resposta = {}
+        except IaIndisponivel as e:
+            log(f"A IA parou: {e}")
+            return False
+        aplicar(lote, resposta)
+        log(f"... {min(ini + LOTE, len(trabalho))} de {len(trabalho)}")
+    return True
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("material", help="<edital>-material.json")
@@ -114,29 +131,27 @@ def main():
         for it, base in zip(itens, json.loads(nos.read_text(encoding="utf-8"))["itens"]):
             it["contexto"] = (base.get("termos") or [""])[0]
     if args.assuntos:
-        disciplinas = json.loads(Path(args.assuntos).read_text(encoding="utf-8"))
-        textos = {d["nome"]: d["assuntos"] for d in disciplinas}
-        for p in reversed(dados.get("partes", [])):  # a primeira ocorrência de cada item vale
-            if p["disciplina"] in textos:
-                itens[p["item"]]["assunto"] = textos[p["disciplina"]][p["assunto"]]["texto"]
+        anexar_trechos(itens, dados.get("partes", []), json.loads(Path(args.assuntos).read_text(encoding="utf-8")))
     escolha = amostrar(itens, args.amostra, args.semente) if args.amostra else [i for i, it in enumerate(itens) if it["material"]]
     trabalho = [(nome, itens[i]) for i in escolha]
     print(f"{len(trabalho)} partes para confirmar", flush=True)
-    for ini in range(0, len(trabalho), LOTE):
-        lote = trabalho[ini:ini + LOTE]
-        try:
-            resposta = completar_json(sge, SISTEMA, pedido_do_lote(db, lote))
-        except ValueError:
-            resposta = {}
-        except IaIndisponivel as e:
-            print(f"A IA parou: {e}")
-            break
-        aplicar(lote, resposta)
-        print(f"... {min(ini + LOTE, len(trabalho))} de {len(trabalho)}", flush=True)
+    confirmar(sge, db, trabalho, log=lambda m: print(m, flush=True))
     saida = Path(args.saida)
     saida.mkdir(parents=True, exist_ok=True)
     feitos = [dict(itens[i], indice=i) for i in escolha if "confirmado" in itens[i]]
     (saida / f"{nome}-confirmado.json").write_text(json.dumps(feitos, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(resumo(feitos))
+
+
+def anexar_trechos(itens, partes, disciplinas):
+    """Acrescenta a cada item o texto do assunto do edital onde a parte aparece (a primeira ocorrência vale)."""
+    textos = {d["nome"]: d["assuntos"] for d in disciplinas}
+    for p in reversed(partes):
+        if p["disciplina"] in textos:
+            itens[p["item"]]["assunto"] = textos[p["disciplina"]][p["assunto"]]["texto"]
+
+
+def resumo(feitos):
     contagem = {"ensina": 0, "parcial": 0, "nao": 0}
     sem_ensina = 0
     for it in feitos:
@@ -144,8 +159,8 @@ def main():
         for x in v:
             contagem[x] += 1
         sem_ensina += 0 if any(x in ("ensina", "parcial") for x in v) else 1
-    print(f"{len(feitos)} partes: candidatos ensina {contagem['ensina']} · parcial {contagem['parcial']} · nao {contagem['nao']} · "
-          f"partes sem nenhum que sirva {sem_ensina}")
+    return (f"{len(feitos)} partes: candidatos ensina {contagem['ensina']} · parcial {contagem['parcial']} · nao {contagem['nao']} · "
+            f"partes sem nenhum que sirva {sem_ensina}")
 
 
 if __name__ == "__main__":
