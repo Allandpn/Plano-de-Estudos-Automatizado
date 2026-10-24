@@ -13,6 +13,7 @@ aquela e todas as seguintes; `--ate ETAPA` para depois dela):
   casar       regra   partes ↔ temas das fichas, pelos nós                   → material.json
   confirmar   IA      quais candidatos ensinam a parte                       → confirmado.json
   manifestos  regra   um manifesto por assunto, validado pelo fatiador       → manifestos/, questoes/, assuntos.json, relatorio.md
+  consulta    regra   o PDF "Questões deste assunto" de cada assunto (fora da escada) → consulta/
   entrega     regra   o JSON "edital-revisao/1" para o SGE                   → entrega.json
 
 As etapas com IA usam o proxy do SGE (SGE_URL e INTERNAL_TOKEN). `--esperar` dorme até o horário que a assinatura indicar
@@ -29,9 +30,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "dias"))
 
-ETAPAS = ["extrair", "quebrar", "ligar", "casar", "confirmar", "manifestos", "entrega"]
+ETAPAS = ["extrair", "quebrar", "ligar", "casar", "confirmar", "manifestos", "consulta", "entrega"]
 SAIDA_DA_ETAPA = {"extrair": "extraido.json", "quebrar": "partes.json", "ligar": "nos.json", "casar": "material.json",
-                  "confirmar": "confirmado.json", "manifestos": "relatorio.md", "entrega": "entrega.json"}
+                  "confirmar": "confirmado.json", "manifestos": "relatorio.md", "consulta": "consulta/consulta.json", "entrega": "entrega.json"}
 
 
 class ErroDeEtapa(Exception):
@@ -52,7 +53,7 @@ class Contexto:
         return json.loads(self.arquivo(nome).read_text(encoding="utf-8"))
 
     def gravar(self, nome, dados):
-        self.pasta.mkdir(parents=True, exist_ok=True)
+        self.arquivo(nome).parent.mkdir(parents=True, exist_ok=True)
         self.arquivo(nome).write_text(json.dumps(dados, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
@@ -221,6 +222,7 @@ def etapa_entrega(ctx):
     fora = ctx.ler("fora.json") if ctx.arquivo("fora.json").exists() else []
     entrega = er.montar_entrega(ctx.slug, ctx.cargo, Path(ctx.pdf).name, ctx.ler("partes.json"), nos, mapa, fora,
                                 {"modo_de_material": ctx.modo}, nos.get("arvore", "qconcursos").replace(".json", ""))
+    consulta = {c["chave"]: c for c in ctx.ler("consulta/consulta.json")} if ctx.arquivo("consulta/consulta.json").exists() else {}
     por_chave = {l["chave"]: l for l in ctx.ler("assuntos.json")} if ctx.arquivo("assuntos.json").exists() else {}
     for d in entrega["disciplinas"]:
         for a in d["assuntos"]:
@@ -228,12 +230,21 @@ def etapa_entrega(ctx):
             if l:
                 a["material"] = {"situacao": l["situacao"], "fontes": l["fontes"], "minutos": l["minutos"],
                                  "lacunas": l["lacunas"], "tem_questoes": l["tem_questoes"]}
+                c = consulta.get(a["chave"])
+                if c and c["arquivo"]:
+                    a["material"]["consulta"] = {"arquivo": f"consulta/{c['arquivo']}", "paginas": c["paginas"]}
     ctx.gravar("entrega.json", entrega)
     return json.dumps(entrega["resumo"], ensure_ascii=False)
 
 
+def etapa_consulta(ctx):
+    import pdf_questoes
+    r = pdf_questoes.montar_todos(ctx.pasta) if ctx.arquivo("questoes").exists() else []
+    return f"{sum(1 for x in r if x['arquivo'])} PDFs, {sum(x['paginas'] for x in r)} páginas, {sum(len(x['avisos']) for x in r)} avisos"
+
+
 FUNCOES = {"extrair": etapa_extrair, "quebrar": etapa_quebrar, "ligar": etapa_ligar, "casar": etapa_casar,
-           "confirmar": etapa_confirmar, "manifestos": etapa_manifestos, "entrega": etapa_entrega}
+           "confirmar": etapa_confirmar, "manifestos": etapa_manifestos, "consulta": etapa_consulta, "entrega": etapa_entrega}
 
 
 def executar(ctx, ate=None, refazer=None, funcoes=None, etapas=None):
