@@ -33,6 +33,13 @@ def chave_da_parte(disciplina, assunto, parte, vistas):
     return hashlib.sha1(f"{base}|{vistas[base]}".encode("utf-8")).hexdigest()[:16]
 
 
+def chave_do_assunto(disciplina, texto, vistos):
+    """Hash estável do assunto: disciplina e texto normalizados, mais o número da ocorrência se o edital o repete."""
+    base = "|".join(normalizar(x or "") for x in (disciplina, texto))
+    vistos[base] = vistos.get(base, 0) + 1
+    return hashlib.sha1(f"assunto|{base}|{vistos[base]}".encode("utf-8")).hexdigest()[:16]
+
+
 def _ligacao(item, arvore_id):
     """A ligação de um item de `mapear_partes`: nós, natureza e de onde veio."""
     if item is None:
@@ -55,7 +62,7 @@ def montar_entrega(slug, cargo, pdf, disciplinas, nos=None, mapa_disciplinas=Non
     itens = (nos or {}).get("itens", [])
     saida_disciplinas = []
     for d in disciplinas:
-        assuntos, vistas = [], {}
+        assuntos, vistas, vistos = [], {}, {}
         for ia, a in enumerate(d["assuntos"]):
             partes = []
             for ip, p in enumerate(a.get("partes") or []):
@@ -63,7 +70,8 @@ def montar_entrega(slug, cargo, pdf, disciplinas, nos=None, mapa_disciplinas=Non
                 partes.append({"chave": chave_da_parte(d["nome"], a["texto"], p, vistas), "ordem": ip + 1,
                                "texto": p["texto"], "contexto": p.get("contexto"), "herdado": p.get("herdado"),
                                "ligacao": _ligacao(itens[i], arvore) if i is not None else None})
-            assuntos.append({"ordem": ia + 1, "texto": a["texto"], "partes": partes,
+            assuntos.append({"chave": chave_do_assunto(d["nome"], a["texto"], vistos), "ordem": ia + 1, "texto": a["texto"],
+                             "partes": partes,
                              "erros": a.get("erros") or [], "alertas": (a.get("alertas") or []) + (a.get("avisos") or [])})
         saida_disciplinas.append({"nome": d["nome"], "restricao": d.get("restricao"), "comum": d.get("comum"),
                                   "paginas": d.get("paginas"), "linhas": [d.get("linha_inicio"), d.get("linha_fim")],

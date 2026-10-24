@@ -52,6 +52,16 @@ class EntregaTest(unittest.TestCase):
         outra = er.chave_da_parte("Gestão de Projetos", "x", {"texto": "Scrum"}, {})
         self.assertNotEqual(outra, chaves[0])
 
+    def test_assunto_tem_chave_propria_estavel_e_diferente_da_da_parte(self):
+        a1 = self.entrega()["disciplinas"][0]["assuntos"]
+        a2 = self.entrega()["disciplinas"][0]["assuntos"]
+        self.assertEqual([a["chave"] for a in a1], [a["chave"] for a in a2])
+        self.assertEqual(2, len({a["chave"] for a in a1}))
+        self.assertTrue(all(a["chave"] not in {p["chave"] for p in a["partes"]} for a in a1))
+        v = {}
+        c1, c2 = er.chave_do_assunto("D", "Texto", v), er.chave_do_assunto("D", "Texto", v)
+        self.assertNotEqual(c1, c2, "o mesmo assunto repetido no edital ganha chave própria")
+
     def test_chave_ignora_acento_e_caixa(self):
         a = er.chave_da_parte("Gestão", "Assunto X", {"texto": "Concordância"}, {})
         b = er.chave_da_parte("GESTAO", "assunto x", {"texto": "concordancia"}, {})
