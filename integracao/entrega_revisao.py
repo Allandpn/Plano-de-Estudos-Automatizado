@@ -78,7 +78,10 @@ def montar_entrega(slug, cargo, pdf, disciplinas, nos=None, mapa_disciplinas=Non
                                   "qconcursos": (mapa_disciplinas or {}).get(d["nome"], []),
                                   "tentativas": d.get("tentativas"), "assuntos": assuntos,
                                   "trechos_sem_assunto": d.get("trechos_sem_assunto") or [],
-                                  "referencias": d.get("referencias") or []})
+                                  "referencias": d.get("referencias") or [],
+                                  # O texto da disciplina, para o SGE refazer a conferência por regra quando a pessoa
+                                  # edita uma parte (a regra de `partes_edital.conferir_assunto` precisa dele).
+                                  "texto": d.get("texto")})
     todas = [p for d in saida_disciplinas for a in d["assuntos"] for p in a["partes"]]
     return {"contrato": CONTRATO, "concurso": {"slug": slug, "cargo": cargo}, "pdf": pdf,
             "execucao": dict({"data": date.today().isoformat(), "arvore": arvore}, **(execucao or {})),

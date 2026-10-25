@@ -1,0 +1,421 @@
+{
+ "normalizar": [
+  {
+   "entrada": "Normalização de banco de dados",
+   "saida": "normalizacao de banco de dados"
+  },
+  {
+   "entrada": "  Álgebra  Relacional ",
+   "saida": "algebra relacional"
+  },
+  {
+   "entrada": "Lei nº 8.112/1990 — art. 5º",
+   "saida": "lei no 8 112 1990 art 5o"
+  },
+  {
+   "entrada": "Coesão e coerên-\ncia textual",
+   "saida": "coesao e coerencia textual"
+  },
+  {
+   "entrada": "SQL: DDL, DML, DCL",
+   "saida": "sql ddl dml dcl"
+  },
+  {
+   "entrada": "Windows Server 2019 e 2022",
+   "saida": "windows server 2019 e 2022"
+  },
+  {
+   "entrada": "Ação, Opção e Eleição (Cônsul)",
+   "saida": "acao opcao e eleicao consul"
+  },
+  {
+   "entrada": "ÇÃO ÀÉÎÕÜ ção",
+   "saida": "cao aeiou cao"
+  },
+  {
+   "entrada": "PMBOK 6ª edição",
+   "saida": "pmbok 6a edicao"
+  },
+  {
+   "entrada": "",
+   "saida": ""
+  },
+  {
+   "entrada": "Redes: TCP/IP; UDP",
+   "saida": "redes tcp ip udp"
+  },
+  {
+   "entrada": "Kanban – Scrum – XP",
+   "saida": "kanban scrum xp"
+  }
+ ],
+ "palavras": [
+  {
+   "entrada": "Concordância verbal e nominal",
+   "saida": [
+    "concordancia",
+    "nominal",
+    "verbal"
+   ]
+  },
+  {
+   "entrada": "Os princípios da Administração Pública",
+   "saida": [
+    "administracao",
+    "principio",
+    "publica"
+   ]
+  },
+  {
+   "entrada": "Redes de computadores e protocolos",
+   "saida": [
+    "computadore",
+    "protocolo",
+    "rede"
+   ]
+  },
+  {
+   "entrada": "Funções de janela (window functions) em SQL",
+   "saida": [
+    "funcoe",
+    "function",
+    "janela",
+    "sql",
+    "window"
+   ]
+  },
+  {
+   "entrada": "A, o, as e os",
+   "saida": []
+  },
+  {
+   "entrada": "4.1 Coesão referencial",
+   "saida": [
+    "1",
+    "4",
+    "coesao",
+    "referencial"
+   ]
+  },
+  {
+   "entrada": "Estruturas de dados",
+   "saida": [
+    "dado",
+    "estrutura"
+   ]
+  }
+ ],
+ "chaves_de_parte": [
+  {
+   "disciplina": "Banco de Dados",
+   "assunto": "SQL: DDL, DML, DCL",
+   "partes": [
+    {
+     "texto": "DDL",
+     "contexto": "SQL",
+     "herdado": null
+    },
+    {
+     "texto": "DML",
+     "contexto": "SQL",
+     "herdado": null
+    },
+    {
+     "texto": "DDL",
+     "contexto": "SQL",
+     "herdado": null
+    }
+   ],
+   "chaves": [
+    "9b3c3c6aee2c88f2",
+    "e1883f8edc444836",
+    "3c153915a3d692b8"
+   ]
+  },
+  {
+   "disciplina": "Língua Portuguesa",
+   "assunto": "Concordância verbal e nominal",
+   "partes": [
+    {
+     "texto": "Concordância verbal",
+     "contexto": null,
+     "herdado": null
+    },
+    {
+     "texto": "nominal",
+     "contexto": null,
+     "herdado": "Concordância"
+    }
+   ],
+   "chaves": [
+    "9110145fd31e5db4",
+    "b3743508c68da29f"
+   ]
+  }
+ ],
+ "chaves_de_assunto": [
+  {
+   "disciplina": "Banco de Dados",
+   "textos": [
+    "Modelagem",
+    "SQL",
+    "Modelagem",
+    "Modelagem"
+   ],
+   "chaves": [
+    "2855ac6aad54eaa9",
+    "97e65c81688da7b4",
+    "51d7b6c36329fe2f",
+    "cdd8f6a49070e965"
+   ]
+  },
+  {
+   "disciplina": "Redes",
+   "textos": [
+    "TCP/IP",
+    "tcp/ip"
+   ],
+   "chaves": [
+    "3b72316c24e9dc59",
+    "425c99dfb41c11e4"
+   ]
+  }
+ ],
+ "conferencias": [
+  {
+   "nome": "assunto bem quebrado",
+   "cabecalho": "Banco de Dados Analista",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "2 SQL: DDL, DML e DCL",
+    "partes": [
+     {
+      "texto": "DDL",
+      "contexto": "SQL",
+      "herdado": null
+     },
+     {
+      "texto": "DML",
+      "contexto": "SQL",
+      "herdado": null
+     },
+     {
+      "texto": "DCL",
+      "contexto": "SQL",
+      "herdado": null
+     }
+    ]
+   },
+   "erros": [],
+   "alertas": []
+  },
+  {
+   "nome": "assunto reescrito",
+   "cabecalho": "Banco de Dados Analista",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "2 SQL: linguagens DDL, DML e DCL",
+    "partes": [
+     {
+      "texto": "DDL",
+      "contexto": "SQL",
+      "herdado": null
+     },
+     {
+      "texto": "DML",
+      "contexto": "SQL",
+      "herdado": null
+     },
+     {
+      "texto": "DCL",
+      "contexto": "SQL",
+      "herdado": null
+     }
+    ]
+   },
+   "erros": [
+    "o assunto não é trecho do edital (foi reescrito ou juntou pedaços)",
+    "palavras do assunto sem parte: linguagen"
+   ],
+   "alertas": []
+  },
+  {
+   "nome": "assunto sem partes",
+   "cabecalho": "Banco de Dados",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "3 Normalização",
+    "partes": []
+   },
+   "erros": [
+    "assunto sem partes"
+   ],
+   "alertas": []
+  },
+  {
+   "nome": "parte com palavra alheia",
+   "cabecalho": "Banco de Dados",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "3 Normalização",
+    "partes": [
+     {
+      "texto": "Normalização de tabelas",
+      "contexto": null,
+      "herdado": null
+     }
+    ]
+   },
+   "erros": [
+    "parte 'Normalização de tabelas' usa palavras que não estão no assunto: tabela"
+   ],
+   "alertas": []
+  },
+  {
+   "nome": "herdado fora do assunto",
+   "cabecalho": "Banco de Dados",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "3 Normalização",
+    "partes": [
+     {
+      "texto": "Normalização",
+      "contexto": null,
+      "herdado": "Projeto"
+     }
+    ]
+   },
+   "erros": [
+    "prefixo herdado 'Projeto' não está no assunto"
+   ],
+   "alertas": []
+  },
+  {
+   "nome": "contexto vindo de assunto anterior vira alerta",
+   "cabecalho": "Banco de Dados",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "DML e DCL",
+    "partes": [
+     {
+      "texto": "DML",
+      "contexto": "Modelagem",
+      "herdado": null
+     },
+     {
+      "texto": "DCL",
+      "contexto": "Modelagem",
+      "herdado": null
+     }
+    ]
+   },
+   "erros": [],
+   "alertas": [
+    "contexto 'Modelagem' vem de fora do assunto (de um assunto anterior)"
+   ]
+  },
+  {
+   "nome": "contexto que não está em lugar nenhum",
+   "cabecalho": "Banco de Dados",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "3 Normalização",
+    "partes": [
+     {
+      "texto": "Normalização",
+      "contexto": "Kubernetes",
+      "herdado": null
+     }
+    ]
+   },
+   "erros": [
+    "contexto 'Kubernetes' não está no assunto nem no texto da disciplina"
+   ],
+   "alertas": []
+  },
+  {
+   "nome": "palavras do assunto sem parte",
+   "cabecalho": "Banco de Dados",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "2 SQL: DDL, DML e DCL",
+    "partes": [
+     {
+      "texto": "DDL",
+      "contexto": "SQL",
+      "herdado": null
+     }
+    ]
+   },
+   "erros": [
+    "palavras do assunto sem parte: dcl, dml"
+   ],
+   "alertas": []
+  },
+  {
+   "nome": "assunto é só uma referência",
+   "cabecalho": "Banco de Dados",
+   "referencias": [
+    "Todo o conteúdo das disciplinas de Redes"
+   ],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "Todo o conteúdo das disciplinas de Redes",
+    "partes": []
+   },
+   "erros": [],
+   "alertas": []
+  },
+  {
+   "nome": "números de item não exigem parte",
+   "cabecalho": "Banco de Dados",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "4 Coesão: 4.1 referencial 4.2 sequencial",
+    "partes": [
+     {
+      "texto": "referencial",
+      "contexto": "Coesão",
+      "herdado": null
+     },
+     {
+      "texto": "sequencial",
+      "contexto": "Coesão",
+      "herdado": null
+     }
+    ]
+   },
+   "erros": [],
+   "alertas": []
+  },
+  {
+   "nome": "texto da parte com aspas",
+   "cabecalho": "Banco de Dados",
+   "referencias": [],
+   "texto_disciplina": "Banco de Dados Apenas para o cargo Analista. 1 Modelagem: conceitual, lógica e física. 2 SQL: DDL, DML e DCL. 3 Normalização. 4 Coesão: 4.1 referencial 4.2 sequencial. Todo o conteúdo das disciplinas de Redes.",
+   "assunto": {
+    "texto": "3 Normalização",
+    "partes": [
+     {
+      "texto": "Normalização d'água",
+      "contexto": null,
+      "herdado": null
+     }
+    ]
+   },
+   "erros": [
+    "parte \"Normalização d'água\" usa palavras que não estão no assunto: agua, d"
+   ],
+   "alertas": []
+  }
+ ]
+}
