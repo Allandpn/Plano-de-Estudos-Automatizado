@@ -31,6 +31,8 @@ Configuração (variáveis de ambiente):
     TRABALHO_DIR     manifestos gerados       (padrão: MATERIAL_DIR/.manifestos)
     INTERVALO_SEG    300
     MAX_POR_CICLO    10
+    EDITAIS_DIR      volume `editais` do SGE (Sprint 25, só leitura): o PDF do edital em conferência; sem ele, o
+                     worker não lê editais (integracao/edital_worker.py)
     PROVAS_DIR       volume `provas` do SGE (Sprint 24): entrada/ (o SGE grava) e paginas/ (o worker grava);
                      sem ele, o worker só prepara o material e não lê provas
     OCR_IDIOMA       por                      (Tesseract, para prova em imagem)
@@ -278,9 +280,14 @@ def main():
         from prova_worker import WorkerProvas
         provas = WorkerProvas(sge, env["PROVAS_DIR"], material,
                               Tesseract(env.get("OCR_IDIOMA", "por"), int(env.get("OCR_PSM", "3"))))
+    # Sprint 25 do SGE: leitura do edital (partes e nós). Só liga se EDITAIS_DIR existir (o volume `editais`).
+    editais = None
+    if env.get("EDITAIS_DIR"):
+        from edital_worker import WorkerEditais
+        editais = WorkerEditais(sge, env["EDITAIS_DIR"], env.get("TRABALHO_DIR", str(Path(material) / ".manifestos")))
     intervalo = int(env.get("INTERVALO_SEG", "300"))
     while True:
-        for ciclo in filter(None, (worker.ciclo, provas.ciclo if provas else None)):
+        for ciclo in filter(None, (editais.ciclo if editais else None, worker.ciclo, provas.ciclo if provas else None)):
             try:
                 ciclo()
             except ErroSge as e:

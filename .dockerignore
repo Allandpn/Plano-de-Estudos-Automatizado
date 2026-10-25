@@ -22,6 +22,8 @@
 !integracao/mapear_partes.py
 !integracao/casar_taxonomia.py
 !integracao/entrega_revisao.py
+!integracao/preparar_edital.py
+!integracao/edital_worker.py
 !integracao/exportar_taxonomia.py
 !integracao/taxonomia/
 !integracao/taxonomia/*.json

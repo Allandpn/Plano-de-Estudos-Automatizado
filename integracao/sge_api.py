@@ -18,6 +18,11 @@ Rotas:
     GET  /internal/provas/{id}/julgamento        as questões a julgar, com os segmentos (token)
     POST /internal/provas/{id}/vereditos         entrega vereditos (token)
     POST /internal/provas/{id}/falha             a leitura ou o julgamento falhou (token)
+    GET  /internal/editais/pendentes             editais com o cargo escolhido, esperando a leitura (token)
+    GET  /internal/editais/{id}/dados            PDF, cargo, árvore vigente e as decisões da pessoa (token)
+    POST /internal/editais/{id}/revisao          entrega a leitura "edital-revisao/1" (token)
+    POST /internal/editais/{id}/falha            a leitura falhou, com a etapa (token)
+    POST /internal/arvores                       carrega uma versão da árvore do QConcursos (token)
 """
 
 import json
@@ -92,6 +97,26 @@ class SgeApi:
 
     def prova_falha(self, prova_id, etapa, erro):
         return self._json("POST", f"/internal/provas/{prova_id}/falha", {"etapa": etapa, "erro": erro})
+
+    # ------------------------------------------------------------ edital (Sprint 25 do SGE, ADR-047)
+
+    def editais_pendentes(self):
+        return self._pedir("GET", "/internal/editais/pendentes", interno=True)[1]
+
+    def edital_dados(self, analise_id):
+        return self._pedir("GET", f"/internal/editais/{analise_id}/dados", interno=True)[1]
+
+    def edital_entregar(self, analise_id, texto_json):
+        """`texto_json`: o JSON da entrega, como texto — o SGE tira o hash do corpo para a entrega ser idempotente."""
+        return self._pedir("POST", f"/internal/editais/{analise_id}/revisao", texto_json.encode("utf-8"),
+                           "application/json", interno=True)[1]
+
+    def edital_falha(self, analise_id, etapa, mensagem, disciplina=None):
+        return self._json("POST", f"/internal/editais/{analise_id}/falha",
+                          {"etapa": etapa, "disciplina": disciplina, "mensagem": mensagem})
+
+    def arvore_carregar(self, bytes_do_arquivo):
+        return self._pedir("POST", "/internal/arvores", bytes_do_arquivo, "application/json", interno=True)[1]
 
     def _json(self, metodo, caminho, corpo):
         dados = json.dumps(corpo, ensure_ascii=False).encode("utf-8")
