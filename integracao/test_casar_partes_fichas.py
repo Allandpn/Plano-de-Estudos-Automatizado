@@ -13,7 +13,7 @@ from test_casar_taxonomia import ARVORE  # noqa: E402
 TEMAS = [{"caminho": "a.pdf", "tema": "NAT", "paginas": [[1, 2]], "nos": [31]},
          {"caminho": "b.pdf", "tema": "OSPF", "paginas": [[3, 9]], "nos": [321]},
          {"caminho": "c.pdf", "tema": "Roteamento", "paginas": [[1, 40]], "nos": [32]},
-         {"caminho": "d.pdf", "tema": "Redes (disciplina inteira)", "paginas": [[1, 90]], "nos": [3]},
+         {"caminho": "d.pdf", "tema": "Redes (disciplina inteira)", "paginas": [[1, 90]], "nos": [-3]},
          {"caminho": "e.pdf", "tema": "Verbos", "paginas": [[5, 6]], "nos": [21]}]
 
 
@@ -27,7 +27,7 @@ class CasarPartesFichasTest(unittest.TestCase):
         self.assertEqual("dentro", r([32], [321]), "tema abaixo do nó da parte")
         self.assertEqual("contem", r([321], [32]), "tema acima do nó da parte")
         self.assertIsNone(r([31], [321]), "ramos irmãos não casam")
-        self.assertIsNone(r([3], [3]), "disciplina sozinha nunca casa")
+        self.assertIsNone(r([-3], [-3]), "disciplina sozinha nunca casa")
 
     def test_casar_ordena_pela_forca_e_ignora_outra_disciplina(self):
         itens = [{"nome": "OSPF", "ia": [321], "natureza": "exato"}, {"nome": "Roteamento", "ia": [32], "natureza": "mais_amplo"},

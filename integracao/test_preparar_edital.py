@@ -73,7 +73,7 @@ class DescricaoTest(unittest.TestCase):
         import json as _json
         import casar_taxonomia as ct
         from test_casar_taxonomia import ARVORE, IaFalsa
-        ia = IaFalsa([{"disciplinas": {"Conhecimentos específicos": [3]}}])
+        ia = IaFalsa([{"disciplinas": {"Conhecimentos específicos": [-3]}}])
         r = ct.mapear_disciplinas(ia, ["Conhecimentos específicos"], ct.Arvore(ARVORE), {"Conhecimentos específicos": "cargo: TI; assuntos: redes"})
-        self.assertEqual({"Conhecimentos específicos": [3]}, r)
+        self.assertEqual({"Conhecimentos específicos": [-3]}, r)
         self.assertIn("- Conhecimentos específicos  [cargo: TI; assuntos: redes]", ia.pedidos[0])

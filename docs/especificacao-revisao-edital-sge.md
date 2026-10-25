@@ -1,6 +1,6 @@
 # Especificação: revisão do edital no SGE (assuntos, partes e ligação à árvore do QConcursos)
 
-**Versão** 0.3.0 · **Data** 2026-10-24 (0.3.0: chave e material do assunto na entrega, §11.2 e §11.6; 0.2.0: §11, contrato de entrega) · **Natureza:** especificação aprovada pelo usuário nos pontos da §9. O que
+**Versão** 0.3.1 · **Data** 2026-10-24 (0.3.1: id de disciplina negativo, §11.2; 0.3.0: chave e material do assunto na entrega, §11.2 e §11.6; 0.2.0: §11, contrato de entrega) · **Natureza:** especificação aprovada pelo usuário nos pontos da §9. O que
 toca o SGE nasce lá, pelo documento e pela regra deles (`01_DOMINIO.md`, ADR); este texto é o pedido e o desenho
 de origem. O protótipo do lado do planejamento está em `integracao/partes_edital.py`,
 `integracao/mapear_partes.py` e `integracao/casar_taxonomia.py`; os casos reais de teste, em
@@ -178,6 +178,13 @@ Exemplo real, reduzido a uma disciplina, em `integracao/contrato/exemplo-edital-
 - `resumo`: contagens que alimentam o cabeçalho da tela.
 
 O nó é guardado **só por id**; o caminho se lê da árvore entregue. O id vale para a versão da árvore em `execucao.arvore`.
+
+**Id de disciplina é negativo.** No QConcursos o id da disciplina e o do assunto vêm de espaços diferentes e colidem (50 ids na
+árvore de 2026-10-19, ex.: 273 é a disciplina Antropologia e também "Arquitetura de Banco de Dados"). Um nó de disciplina da
+árvore é, por isso, identificado por `-id` (`qconcursos` e `nos` carregam `-213` para a disciplina 213); nó de assunto fica com o
+id do QConcursos. O arquivo da árvore continua com os ids originais; quem a carrega (o SGE, `Arvore` no planejamento) aplica o
+sinal. Antes da correção, o planejamento guardava um nó só por id e 24 assuntos eram sobrescritos por uma disciplina, ficando
+invisíveis à ligação.
 
 ### 11.3 Decisões do usuário (SGE → planejamento)
 

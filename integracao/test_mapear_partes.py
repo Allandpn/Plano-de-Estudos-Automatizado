@@ -20,19 +20,19 @@ DISCIPLINAS = [{"nome": "Redes", "assuntos": [
 class MapearPartesTest(unittest.TestCase):
     def test_item_por_parte_distinta_com_herdado_e_contexto(self):
         arvore = ct.Arvore(ARVORE)
-        itens, partes = mp.itens_das_partes(DISCIPLINAS, arvore, {"Redes": [3]})
+        itens, partes = mp.itens_das_partes(DISCIPLINAS, arvore, {"Redes": [-3]})
         self.assertEqual(["NAT", "OSPF", "Concordância verbal", "Concordância nominal"], [i["nome"] for i in itens])
         self.assertEqual(5, len(partes), "toda parte do edital aponta para um item")
         self.assertEqual(partes[0]["item"], partes[4]["item"], "'NAT' e 'nat' na mesma disciplina valem uma ligação")
         self.assertEqual(["Roteamento"], itens[1]["termos"])
-        self.assertEqual([3], itens[0]["raizes"])
+        self.assertEqual([-3], itens[0]["raizes"])
 
     def test_so_as_disciplinas_pedidas(self):
         itens, _ = mp.itens_das_partes(DISCIPLINAS, ct.Arvore(ARVORE), {}, so=["português"])
         self.assertEqual([], itens)
 
     def test_decisao_aprovada_vale_antes_da_ia_em_qualquer_edital(self):
-        itens, _ = mp.itens_das_partes(DISCIPLINAS, ct.Arvore(ARVORE), {"Redes": [3]})
+        itens, _ = mp.itens_das_partes(DISCIPLINAS, ct.Arvore(ARVORE), {"Redes": [-3]})
         decisoes = [{"parte": "ospf", "contexto": "Roteamento", "nos": [321], "natureza": "exato", "origem": "revisão 2026-10-22"},
                     {"parte": "NAT", "contexto": "outro contexto", "nos": [31], "natureza": "exato"}]
         self.assertEqual(1, mp.aplicar_decisoes(itens, decisoes), "a chave é parte + contexto; contexto diferente não casa")
@@ -41,10 +41,10 @@ class MapearPartesTest(unittest.TestCase):
 
     def test_relatorio_conta_naturezas(self):
         arvore = ct.Arvore(ARVORE)
-        itens, partes = mp.itens_das_partes(DISCIPLINAS, arvore, {"Redes": [3]})
+        itens, partes = mp.itens_das_partes(DISCIPLINAS, arvore, {"Redes": [-3]})
         itens[0].update(ia=[31], natureza="exato")
         itens[1].update(ia=[], natureza=None)
-        texto = mp.relatorio("x", itens, partes, arvore, {"Redes": [3]})
+        texto = mp.relatorio("x", itens, partes, arvore, {"Redes": [-3]})
         self.assertIn("sem nó: 1", texto)
         self.assertIn("exato: 1", texto)
         self.assertIn("Redes de Computadores > NAT (Network Address Translation) · exato", texto)

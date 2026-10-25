@@ -73,10 +73,13 @@ class Arvore:
         self.nos = {}
         def andar(n, pai, caminho):
             c = caminho + [n["nome"]]
-            self.nos[n["id"]] = {"id": n["id"], "nome": n["nome"], "pai": pai, "caminho": c, "nivel": len(c),
-                                 "palavras": set(palavras(n["nome"])), "contexto": set(palavras(" ".join(c)))}
+            # No QConcursos o id da disciplina e o id do assunto vêm de espaços diferentes e colidem (50 casos na árvore de
+            # 2026-10-19): a disciplina guarda o id NEGATIVO, que é também como o SGE e a entrega a identificam.
+            i = -n["id"] if pai is None else n["id"]
+            self.nos[i] = {"id": i, "nome": n["nome"], "pai": pai, "caminho": c, "nivel": len(c),
+                           "palavras": set(palavras(n["nome"])), "contexto": set(palavras(" ".join(c)))}
             for f in n["filhos"]:
-                andar(f, n["id"], c)
+                andar(f, i, c)
         for d in disciplinas:
             andar(d, None, [])
         freq = Counter(w for n in self.nos.values() for w in n["contexto"])

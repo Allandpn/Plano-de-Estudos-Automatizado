@@ -34,7 +34,7 @@ class LigarFichasTest(unittest.TestCase):
     def test_ligar_bloco_e_linha_gravada(self):
         arvore = ct.Arvore(ARVORE)
         ia = IaFalsa([{"ligacoes": [{"item": 1, "nos": [31], "natureza": "exato"}, {"item": 2, "nos": [321], "natureza": "exato"}]}])
-        itens = lf.ligar_bloco(ia, banco(), ["a/aula0.pdf", "b/aula1.pdf"], arvore, {"Redes de Computadores": [3]})
+        itens = lf.ligar_bloco(ia, banco(), ["a/aula0.pdf", "b/aula1.pdf"], arvore, {"Redes de Computadores": [-3]})
         linhas = [lf.linha_do_tema(i) for i in itens]
         self.assertEqual([("a/aula0.pdf", "NAT", [31]), ("b/aula1.pdf", "OSPF", [321])],
                          [(l["caminho"], l["tema"], l["nos"]) for l in linhas])
