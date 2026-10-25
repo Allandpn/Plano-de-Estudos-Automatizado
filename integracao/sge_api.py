@@ -22,6 +22,8 @@ Rotas:
     GET  /internal/editais/{id}/dados            PDF, cargo, árvore vigente e as decisões da pessoa (token)
     POST /internal/editais/{id}/revisao          entrega a leitura "edital-revisao/1" (token)
     POST /internal/editais/{id}/falha            a leitura falhou, com a etapa (token)
+    GET  /internal/editais/material/pendentes    assuntos de uma conferência concluída que esperam material (token)
+    POST /internal/editais/{id}/material         entrega o material por casamento de cada assunto (token)
     POST /internal/arvores                       carrega uma versão da árvore do QConcursos (token)
 """
 
@@ -114,6 +116,12 @@ class SgeApi:
     def edital_falha(self, analise_id, etapa, mensagem, disciplina=None):
         return self._json("POST", f"/internal/editais/{analise_id}/falha",
                           {"etapa": etapa, "disciplina": disciplina, "mensagem": mensagem})
+
+    def edital_material_pendentes(self):
+        return self._pedir("GET", "/internal/editais/material/pendentes", interno=True)[1]
+
+    def edital_material_entregar(self, analise_id, assuntos):
+        return self._json("POST", f"/internal/editais/{analise_id}/material", {"assuntos": assuntos})
 
     def arvore_carregar(self, bytes_do_arquivo):
         return self._pedir("POST", "/internal/arvores", bytes_do_arquivo, "application/json", interno=True)[1]

@@ -70,7 +70,7 @@ def montar_entrega(slug, cargo, pdf, disciplinas, nos=None, mapa_disciplinas=Non
                 partes.append({"chave": chave_da_parte(d["nome"], a["texto"], p, vistas), "ordem": ip + 1,
                                "texto": p["texto"], "contexto": p.get("contexto"), "herdado": p.get("herdado"),
                                "ligacao": _ligacao(itens[i], arvore) if i is not None else None})
-            assuntos.append({"chave": chave_do_assunto(d["nome"], a["texto"], vistos), "ordem": ia + 1, "texto": a["texto"],
+            assuntos.append({"chave": a.get("chave") or chave_do_assunto(d["nome"], a["texto"], vistos), "ordem": ia + 1, "texto": a["texto"],
                              "partes": partes,
                              "erros": a.get("erros") or [], "alertas": (a.get("alertas") or []) + (a.get("avisos") or [])})
         saida_disciplinas.append({"nome": d["nome"], "restricao": d.get("restricao"), "comum": d.get("comum"),

@@ -24,6 +24,12 @@
 !integracao/entrega_revisao.py
 !integracao/preparar_edital.py
 !integracao/edital_worker.py
+!integracao/casar_partes_fichas.py
+!integracao/confirmar_material.py
+!integracao/selecao_material.py
+!integracao/manifesto_do_casamento.py
+!integracao/segunda_chance.py
+!integracao/pdf_questoes.py
 !integracao/exportar_taxonomia.py
 !integracao/taxonomia/
 !integracao/taxonomia/*.json

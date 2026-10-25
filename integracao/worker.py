@@ -80,7 +80,10 @@ class Worker:
             return 0
         entrega = self.sge.planejamento(ativo["id"])
         pendentes = [a for a in entrega["assuntos"]
-                     if a.get("chaveExterna") and not a.get("segmentos") and not a.get("lacuna")]
+                     if a.get("chaveExterna") and not a.get("segmentos") and not a.get("lacuna")
+                     # O assunto que nasceu de uma conferência tem o material pelo casamento por partes (edital_worker.py),
+                     # não pela busca por palavras daqui.
+                     and not a.get("viaConferencia")]
         if not pendentes:
             return 0
         log.info("%s: %d assunto(s) a preparar.", entrega["nome"], len(pendentes))
@@ -282,12 +285,21 @@ def main():
                               Tesseract(env.get("OCR_IDIOMA", "por"), int(env.get("OCR_PSM", "3"))))
     # Sprint 25 do SGE: leitura do edital (partes e nós). Só liga se EDITAIS_DIR existir (o volume `editais`).
     editais = None
+    material_do_edital = None
     if env.get("EDITAIS_DIR"):
         from edital_worker import WorkerEditais
-        editais = WorkerEditais(sge, env["EDITAIS_DIR"], env.get("TRABALHO_DIR", str(Path(material) / ".manifestos")))
+        from edital_worker import MaterialDoEdital
+        trabalho = env.get("TRABALHO_DIR", str(Path(material) / ".manifestos"))
+        editais = WorkerEditais(sge, env["EDITAIS_DIR"], trabalho)
+        # O material por casamento usa o catálogo de aulas e a ligação das fichas aos nós, que moram em MATERIAL_DIR.
+        material_do_edital = MaterialDoEdital(
+            sge, trabalho, material, env.get("CATALOGO_DB", str(Path(material) / "catalogo.db")),
+            env.get("FICHAS_NOS", str(Path(material) / "ligacao" / "fichas-nos.jsonl")), env["ACERVO_DIR"], env["INDICE_DB"],
+            env.get("MODO_DO_MATERIAL", "completo"))
     intervalo = int(env.get("INTERVALO_SEG", "300"))
     while True:
-        for ciclo in filter(None, (editais.ciclo if editais else None, worker.ciclo, provas.ciclo if provas else None)):
+        for ciclo in filter(None, (editais.ciclo if editais else None, material_do_edital.ciclo if material_do_edital else None,
+                                   worker.ciclo, provas.ciclo if provas else None)):
             try:
                 ciclo()
             except ErroSge as e:

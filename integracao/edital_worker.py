@@ -128,3 +128,148 @@ class WorkerEditais:
         log.warning("Edital %s falhou em %s: %s", analise_id, etapa, mensagem)
         self.sge.edital_falha(analise_id, etapa, mensagem)
         return False
+
+
+# ====================================================================================================================
+# O material por casamento (Sprint 26 do SGE; docs/SPRINT-26-REPROCESSAR-E-MATERIAL.md §6 e §7)
+
+import csv  # noqa: E402
+import io  # noqa: E402
+import shutil  # noqa: E402
+
+CAMPOS_SEGMENTOS = ["chaveExternaSegmento", "chaveExternaAssunto", "ordem", "arquivo", "paginaInicial", "paginaFinal", "tempoEstimadoMin"]
+ETAPAS_DO_MATERIAL = ["casar", "confirmar", "manifestos", "segunda", "consulta"]
+SITUACAO_DO_SGE = {"completo": "COMPLETO", "parcial": "PARCIAL", "sem material": "SEM_MATERIAL", "recusado": "RECUSADO"}
+MOTIVO_SEM_TEMA = "nenhum tema do acervo ensina esta parte"
+
+
+def csv_dos_segmentos(chave_externa, segmentos):
+    """O segmentos.csv de sempre, com a chave externa do assunto no SGE (o UUID dado na conclusão, D-64)."""
+    saida = io.StringIO()
+    escritor = csv.DictWriter(saida, fieldnames=CAMPOS_SEGMENTOS, lineterminator="\n")
+    escritor.writeheader()
+    for sg in segmentos:
+        escritor.writerow({"chaveExternaSegmento": sg["chave_externa_segmento"], "chaveExternaAssunto": chave_externa,
+                           "ordem": sg["ordem"], "arquivo": "/material/" + sg["arquivo"],
+                           "paginaInicial": "" if sg["pagina_inicial"] is None else sg["pagina_inicial"],
+                           "paginaFinal": "" if sg["pagina_final"] is None else sg["pagina_final"],
+                           "tempoEstimadoMin": sg["tempo_estimado_min"]})
+    return saida.getvalue()
+
+
+def entradas_do_material(pendente, nos_validos=None):
+    """`partes.json` e `nos.json` do pipeline a partir do que a PESSOA conferiu no SGE (não do que a IA propôs). Uma ligação por
+    parte distinta (disciplina, nome, contexto), como `mapear_partes.itens_das_partes`; a chave do assunto vem pronta."""
+    disciplinas, itens, partes, por_chave = [], [], [], {}
+    por_disciplina = {}
+    for a in pendente["assuntos"]:
+        if a["disciplina"] not in por_disciplina:
+            por_disciplina[a["disciplina"]] = {"nome": a["disciplina"], "assuntos": []}
+            disciplinas.append(por_disciplina[a["disciplina"]])
+        d = por_disciplina[a["disciplina"]]
+        d["assuntos"].append({"chave": a["chave"], "texto": a["texto"], "erros": [], "alertas": [],
+                              "partes": [{"texto": p["texto"], "contexto": p.get("contexto"), "herdado": p.get("herdado")} for p in a["partes"]]})
+        for ip, p in enumerate(a["partes"]):
+            nome = " ".join(x for x in (p.get("herdado"), p["texto"]) if x).strip()
+            contexto = p.get("contexto") or ""
+            chave = (a["disciplina"], nome.lower(), contexto.lower())
+            if chave not in por_chave:
+                nos = [n for n in p.get("nos") or [] if nos_validos is None or n in nos_validos]
+                por_chave[chave] = len(itens)
+                itens.append({"tipo": "parte", "nome": nome, "disciplina": a["disciplina"], "termos": [contexto] if contexto else [a["texto"][:100]],
+                              "raizes": [], "candidatos": [], "ia": nos, "natureza": (p.get("natureza") or "").lower() or None,
+                              "decisao": "conferida pela pessoa"})
+            partes.append({"disciplina": a["disciplina"], "assunto": len(d["assuntos"]) - 1, "parte": ip, "item": por_chave[chave]})
+    return disciplinas, {"itens": itens, "partes": partes}
+
+
+class MaterialDoEdital:
+    """O ciclo do material por casamento: casa as partes conferidas com as aulas, corta os segmentos, importa e entrega a situação."""
+
+    def __init__(self, sge, trabalho_dir, material_dir, catalogo, fichas, acervo, indice, modo="completo", funcoes=None, log_etapa=None,
+                 fatiador=None):
+        self.sge = sge
+        self.trabalho = Path(trabalho_dir) / "editais"
+        self.material = Path(material_dir)
+        self.catalogo, self.fichas, self.acervo, self.indice, self.modo = catalogo, fichas, acervo, indice, modo
+        self.funcoes = funcoes
+        self.fatiador = fatiador  # só os testes trocam o fatiador de PDF
+        self.log_etapa = log_etapa or (lambda m: log.info(m))
+
+    def disponivel(self):
+        return all(x and Path(x).exists() for x in (self.catalogo, self.fichas))
+
+    def ciclo(self):
+        """Um edital por volta. Devolve quantos assuntos tiveram o material entregue."""
+        if not self.disponivel():
+            return 0
+        pendentes = self.sge.edital_material_pendentes()
+        if not pendentes:
+            return 0
+        try:
+            return self.processar(pendentes[0])
+        except IaIndisponivel as e:
+            log.warning("IA indisponível, o material segue no próximo ciclo: %s", e)
+            return 0
+
+    def processar(self, pendente):
+        from casar_taxonomia import Arvore, carregar_arvore
+        analise_id = pendente["analiseId"]
+        pasta = self.trabalho / str(analise_id) / "material"
+        pasta.mkdir(parents=True, exist_ok=True)
+        # A pasta é do lote que o SGE pediu: se o lote mudou (assunto a mais ou a menos), o trabalho antigo não vale.
+        lote = sorted(a["chave"] for a in pendente["assuntos"])
+        marca = pasta / "lote.json"
+        if marca.exists() and json.loads(marca.read_text(encoding="utf-8")) != lote:
+            for f in pasta.iterdir():
+                shutil.rmtree(f) if f.is_dir() else f.unlink()
+        marca.write_text(json.dumps(lote), encoding="utf-8")
+        ctx = pe.Contexto(None, pendente.get("slug") or f"analise-{analise_id}", pendente.get("cargo") or "", pasta, self.catalogo, self.fichas,
+                          self.acervo, self.modo, None, self.sge, True, log=self.log_etapa, indice=self.indice)
+        if not ctx.arquivo("nos.json").exists():
+            arvore = Arvore(carregar_arvore()[0])
+            disciplinas, nos = entradas_do_material(pendente, set(arvore.nos))
+            nos["arvore"] = carregar_arvore()[1]
+            ctx.gravar("partes.json", disciplinas)
+            ctx.gravar("nos.json", nos)
+        pe.executar(ctx, ate="consulta", funcoes=self.funcoes, etapas=ETAPAS_DO_MATERIAL)
+        return self._entregar(analise_id, pendente, ctx)
+
+    def _entregar(self, analise_id, pendente, ctx):
+        fatiar = self.fatiador
+        if fatiar is None:
+            import montar_bloco as mb
+            fatiar = lambda manifesto, destino: mb.montar_bloco(manifesto, destino, refatiar=True)[1]  # noqa: E731
+        linhas = {l["chave"]: l for l in ctx.ler("assuntos.json")}
+        consulta = {c["chave"]: c for c in ctx.ler("consulta/consulta.json")} if ctx.arquivo("consulta/consulta.json").exists() else {}
+        saida = []
+        for a in pendente["assuntos"]:
+            linha = linhas.get(a["chave"])
+            if linha is None:
+                continue
+            situacao = SITUACAO_DO_SGE[linha["situacao"]]
+            manifesto = ctx.arquivo(f"manifestos/{a['chave']}.json")
+            lacunas = []
+            if situacao == "RECUSADO":
+                lacunas = [{"parte": "(fatiador)", "motivo": e[:300]} for e in (linha.get("erros") or [])[:3]]
+            elif situacao == "SEM_MATERIAL":
+                lacunas = [{"parte": p["texto"], "motivo": MOTIVO_SEM_TEMA} for p in a["partes"]]
+            elif manifesto.exists():
+                lacunas = [{"parte": l["subitem"], "motivo": l["motivo"]} for l in json.loads(manifesto.read_text(encoding="utf-8")).get("lacunas", [])]
+            if situacao in ("COMPLETO", "PARCIAL") and not a.get("temSegmentos") and a.get("chaveExterna"):
+                # O SGE nunca apaga segmento: assunto que já tem não recebe os novos (a pessoa usa "Refazer o material", D-66).
+                segmentos = fatiar(manifesto, self.material)
+                self.sge.importar_segmentos(csv_dos_segmentos(a["chaveExterna"], segmentos))
+            elif situacao == "SEM_MATERIAL" and a.get("chaveExterna") and not a.get("temSegmentos"):
+                self.sge.registrar_lacuna(a["chaveExterna"], "nenhum tema do acervo ensina as partes deste assunto (casamento por partes)")
+            entrada = {"chave": a["chave"], "situacao": situacao, "minutos": linha["minutos"], "fontes": linha["fontes"], "lacunas": lacunas}
+            c = consulta.get(a["chave"])
+            if c and c.get("arquivo"):
+                destino = self.material / "consulta"
+                destino.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ctx.arquivo(f"consulta/{c['arquivo']}"), destino / f"{a['chave']}.pdf")
+                entrada["consulta"] = {"arquivo": f"consulta/{a['chave']}.pdf", "paginas": c["paginas"]}
+            saida.append(entrada)
+        self.sge.edital_material_entregar(analise_id, saida)
+        log.info("Material do edital %s entregue: %d assunto(s).", analise_id, len(saida))
+        return len(saida)

@@ -61,7 +61,8 @@ def processar(slug, disciplinas, material, confirmado, ficha_de, raiz, modo="com
             continue
         vistos = {}
         for ia, a in enumerate(d["assuntos"]):
-            chave = chave_do_assunto(d["nome"], a["texto"], vistos)
+            # A chave pode vir pronta (o SGE a guarda desde a conferência; sem ela, repetir assuntos mudaria a contagem).
+            chave = chave_do_assunto(d["nome"], a["texto"], vistos) if not a.get("chave") else a["chave"]
             partes = partes_do_assunto(d["nome"], ia, a, por_posicao, confirmados)
             escolha = selecionar(partes, ficha_de, modo)
             linha = {"chave": chave, "disciplina": d["nome"], "assunto": a["texto"], "partes": len(partes),
