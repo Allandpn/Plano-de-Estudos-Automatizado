@@ -149,9 +149,12 @@ class CasarTaxonomiaTest(unittest.TestCase):
         self.assertEqual(201, len(ids))
 
     def test_disciplinas_ligadas_numa_chamada(self):
-        ia = IaFalsa([{"disciplinas": {"Língua Portuguesa": [-1], "Ciências da Computação": [-3, 77]}}])
+        # a IA responde com o id do QConcursos (positivo) ou, por engano, com o sinal; o resultado é sempre o id interno (negativo)
+        ia = IaFalsa([{"disciplinas": {"Língua Portuguesa": [1], "Ciências da Computação": [-3, 3, 77, "x"]}}])
         m = ct.mapear_disciplinas(ia, ["Língua Portuguesa", "Ciências da Computação", "Regionais de SC"], self.arvore)
         self.assertEqual({"Língua Portuguesa": [-1], "Ciências da Computação": [-3], "Regionais de SC": []}, m)
+        self.assertIn("1: Português", ia.pedidos[0], "a IA vê o id do QConcursos, sem o sinal")
+        self.assertNotIn("-1: Português", ia.pedidos[0])
 
     def test_edital_usa_a_disciplina_ligada(self):
         itens = ct.itens_do_edital({"assuntos": [{"assunto": "Vozes do verbo", "disciplina": "Língua Portuguesa",

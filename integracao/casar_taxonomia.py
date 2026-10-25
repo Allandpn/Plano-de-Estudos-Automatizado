@@ -148,7 +148,8 @@ def mapear_disciplinas(sge, nomes, arvore, descricoes=None):
     larga ('Conhecimentos Específicos - Ciências da Computação') liga a várias. `descricoes` {nome: texto} dá à IA o
     que o nome não diz (o cargo e uma amostra dos assuntos): 'Conhecimentos específicos' sozinho não indica a área."""
     raizes = sorted((n["nome"], i) for i, n in arvore.nos.items() if n["nivel"] == 1)
-    pedido = ("Disciplinas do QConcursos (id: nome):\n" + "\n".join(f"{i}: {nome}" for nome, i in raizes)
+    # A IA vê (e responde com) o id do QConcursos; internamente a disciplina é o id negativo (ver Arvore).
+    pedido = ("Disciplinas do QConcursos (id: nome):\n" + "\n".join(f"{abs(i)}: {nome}" for nome, i in raizes)
               + "\n\nDisciplinas a ligar:\n" + "\n".join(f"- {n}" + (f"  [{descricoes[n]}]" if descricoes and descricoes.get(n) else "")
                                                          for n in nomes)
               + "\n\nPara cada uma, os ids das disciplinas do QConcursos que cobrem o mesmo conteúdo. Disciplina que é uma "
@@ -157,8 +158,19 @@ def mapear_disciplinas(sge, nomes, arvore, descricoes=None):
                 "Programação, Engenharia de Software, Redes, Segurança da Informação, Estatística...). Lista vazia só "
                 "se nada do QConcursos tratar do conteúdo.\nResponda: {\"disciplinas\": {\"nome exatamente como veio\": [ids]}}")
     resposta = completar_json(sge, SISTEMA_DISCIPLINAS, pedido)
-    validos = {i for _, i in raizes}
-    return {n: [i for i in (resposta.get("disciplinas") or {}).get(n, []) if i in validos] for n in nomes}
+    validos = {abs(i) for _, i in raizes}
+    saida = {}
+    for n in nomes:
+        ids = []
+        for i in (resposta.get("disciplinas") or {}).get(n, []):
+            try:
+                alvo = -abs(int(i))
+            except (TypeError, ValueError):
+                continue
+            if abs(alvo) in validos and alvo not in ids:
+                ids.append(alvo)
+        saida[n] = ids
+    return saida
 
 
 SISTEMA = """Você liga assuntos de concurso público aos nós da árvore de assuntos do QConcursos.
