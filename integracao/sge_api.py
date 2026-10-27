@@ -123,6 +123,17 @@ class SgeApi:
     def edital_material_entregar(self, analise_id, assuntos):
         return self._json("POST", f"/internal/editais/{analise_id}/material", {"assuntos": assuntos})
 
+    # ------------------------------------------------------------ PDF anexado a uma lacuna (Sprint 28 do SGE, D-97)
+
+    def anexos_pendentes(self):
+        return self._pedir("GET", "/internal/editais/anexos/pendentes", interno=True)[1]
+
+    def anexo_pronto(self, anexo_id, segmentos, minutos):
+        return self._json("POST", f"/internal/editais/anexos/{anexo_id}/pronto", {"segmentos": segmentos, "minutos": minutos})
+
+    def anexo_falha(self, anexo_id, erro):
+        return self._json("POST", f"/internal/editais/anexos/{anexo_id}/falha", {"erro": erro})
+
     def arvore_carregar(self, bytes_do_arquivo):
         return self._pedir("POST", "/internal/arvores", bytes_do_arquivo, "application/json", interno=True)[1]
 

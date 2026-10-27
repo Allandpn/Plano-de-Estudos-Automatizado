@@ -24,6 +24,7 @@
 !integracao/entrega_revisao.py
 !integracao/preparar_edital.py
 !integracao/edital_worker.py
+!integracao/anexo_worker.py
 !integracao/casar_partes_fichas.py
 !integracao/confirmar_material.py
 !integracao/selecao_material.py

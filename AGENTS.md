@@ -345,8 +345,9 @@ mora lá); dados em `/mnt/ssd/material` (`catalogo.db`, `ligacao/fichas-nos.json
 
 **O pipeline do edital** (`integracao/preparar_edital.py`): `extrair → quebrar → ligar → casar → confirmar → manifestos → segunda →
 consulta → entrega`, cada etapa grava um arquivo e rodar de novo pula o que está feito (`--refazer ETAPA`, `--ate ETAPA`).
-O worker (`integracao/worker.py`) tem três ciclos: `edital_worker.WorkerEditais` (lê o edital: extrair, quebrar, ligar, entrega),
-`edital_worker.MaterialDoEdital` (material por casamento, depois da conclusão da conferência no SGE) e o das provas.
+O worker (`integracao/worker.py`) tem quatro ciclos: `edital_worker.WorkerEditais` (lê o edital: extrair, quebrar, ligar, entrega),
+`edital_worker.MaterialDoEdital` (material por casamento, depois da conclusão da conferência no SGE), `anexo_worker.AnexosDeLacuna`
+(PDF que a pessoa anexa a uma lacuna no SGE: corta em segmentos, importa e devolve o resultado; D-97) e o das provas.
 
 **Regras que já custaram caro:**
 - **Id de disciplina da árvore do QConcursos é negativo** (`Arvore` em `casar_taxonomia.py`): os ids de disciplina e de assunto colidem

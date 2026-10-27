@@ -286,11 +286,14 @@ def main():
     # Sprint 25 do SGE: leitura do edital (partes e nós). Só liga se EDITAIS_DIR existir (o volume `editais`).
     editais = None
     material_do_edital = None
+    anexos = None
     if env.get("EDITAIS_DIR"):
+        from anexo_worker import AnexosDeLacuna
         from edital_worker import WorkerEditais
         from edital_worker import MaterialDoEdital
         trabalho = env.get("TRABALHO_DIR", str(Path(material) / ".manifestos"))
         editais = WorkerEditais(sge, env["EDITAIS_DIR"], trabalho)
+        anexos = AnexosDeLacuna(sge, env["EDITAIS_DIR"], material)
         # O material por casamento usa o catálogo de aulas e a ligação das fichas aos nós, que moram em MATERIAL_DIR.
         material_do_edital = MaterialDoEdital(
             sge, trabalho, material, env.get("CATALOGO_DB", str(Path(material) / "catalogo.db")),
@@ -299,7 +302,7 @@ def main():
     intervalo = int(env.get("INTERVALO_SEG", "300"))
     while True:
         for ciclo in filter(None, (editais.ciclo if editais else None, material_do_edital.ciclo if material_do_edital else None,
-                                   worker.ciclo, provas.ciclo if provas else None)):
+                                   anexos.ciclo if anexos else None, worker.ciclo, provas.ciclo if provas else None)):
             try:
                 ciclo()
             except ErroSge as e:

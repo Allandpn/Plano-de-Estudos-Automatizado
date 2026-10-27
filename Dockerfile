@@ -26,7 +26,7 @@ COPY integracao/diagnostico/ integracao/diagnostico/
 # Edital em assuntos e partes, ligação aos nós do QConcursos e entrega da revisão ao SGE (docs/especificacao-revisao-edital-sge.md).
 # As árvores (taxonomia/) e as decisões aprovadas (decisoes/) vão na imagem; casos-de-teste/ e contrato/ não.
 COPY integracao/partes_edital.py integracao/mapear_partes.py integracao/casar_taxonomia.py integracao/entrega_revisao.py \
-     integracao/exportar_taxonomia.py integracao/preparar_edital.py integracao/edital_worker.py integracao/
+     integracao/exportar_taxonomia.py integracao/preparar_edital.py integracao/edital_worker.py integracao/anexo_worker.py integracao/
 # Material por casamento (Sprint 26 do SGE): partes ↔ aulas, confirmação, seleção, manifestos, segunda chance e PDF de consulta.
 COPY integracao/casar_partes_fichas.py integracao/confirmar_material.py integracao/selecao_material.py \
      integracao/manifesto_do_casamento.py integracao/segunda_chance.py integracao/pdf_questoes.py integracao/
