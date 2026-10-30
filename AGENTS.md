@@ -362,10 +362,15 @@ O worker (`integracao/worker.py`) tem quatro ciclos: `edital_worker.WorkerEditai
 - **Regra antes da IA**: o que uma regra resolve, a regra resolve; a IA fica para o que não tem regra. Decisão aprovada pela pessoa vale
   antes da IA (D-86/D-87 do SGE).
 
-**Implantar no Pi** (só com o OK do usuário): backup do banco (`docker compose exec -T postgres pg_dump -U estudos -d estudos | gzip >
-/mnt/ssd/backups/...`), `git pull --ff-only` nos dois clones, `docker compose up -d --build app planejamento`, conferir saúde e migração.
-Envio ao GitHub do SGE e merge na `main` de lá também só com OK. **Nunca leia o `.env`** (tem o token interno e as chaves); confira rota
-protegida pelo código de resposta sem token, e o resto pelos logs do worker.
+**Implantar (desde 2026-10-30, sem acesso do usuário ao Pi):** só pelo Guardian (`github.com/Allandpn/guardian`, `docs/DEPLOY.md`).
+Quem desenvolve não coloca nada no ar: o pedido de deploy é uma **etiqueta `release/N`** num commit já em `main`, e **só criar a etiqueta com o
+OK do usuário**. O deployer (root, no Pi) mostra a oferta no site, o guardião-mestre assina com passkey dentro do horário dele, e ele faz o
+checkout e volta sozinho se a saúde falhar. Neste repositório o projeto `plano-de-estudos` só faz o checkout da etiqueta; o código só roda
+quando o `estudos` (SGE) for reconstruído, porque o compose de lá constrói a imagem `planejamento` a partir daqui. Mudar o registro do
+deployer (`/etc/guardian-deploy/projects.json`) exige root no Pi: fale com o usuário. Teste antes (ver "Testes"); o deployer não os executa.
+Envio ao GitHub do SGE e merge na `main` de lá também só com OK. **Nunca leia o `.env`** nem cole token em sessão; confira rota protegida pelo
+código de resposta sem token, e o resto pelos logs do worker. O histórico do deploy manual (backup, `git pull`, `docker compose`) vale só
+para quem ainda tiver acesso root ao Pi.
 
 **Custo de IA** (a assinatura do usuário é finita): um edital como o MPPR gasta centenas de chamadas no material. Antes de rodar uma etapa
 nova em edital inteiro, ensaie em um assunto; prefira medir (`--ensaiar`, `--ate`) a rodar tudo; registre no documento da sprint o que
