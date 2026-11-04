@@ -28,6 +28,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from exportar_taxonomia import versoes  # noqa: E402
 from ia_comum import IaIndisponivel, completar_json  # noqa: E402
 
 PASTA_TAXONOMIA = Path(__file__).resolve().parent / "taxonomia"
@@ -62,7 +63,7 @@ def palavras(texto):
 
 
 def carregar_arvore(pasta=PASTA_TAXONOMIA, fonte="qconcursos"):
-    arquivo = sorted(pasta.glob(f"{fonte}-*.json"))[-1]
+    arquivo = versoes(pasta, fonte)[-1]
     return json.loads(arquivo.read_text(encoding="utf-8"))["disciplinas"], arquivo.name
 
 
