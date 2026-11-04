@@ -28,6 +28,7 @@ from pathlib import Path
 
 import preparar_edital as pe
 from casar_taxonomia import PASTA_TAXONOMIA
+from exportar_taxonomia import versoes
 from ia_comum import IaIndisponivel
 from sge_api import ErroSge
 
@@ -108,7 +109,7 @@ class WorkerEditais:
 
     def _garantir_arvore(self, pasta):
         """Carrega no SGE a árvore que a ligação vai usar. Idempotente pelo rótulo; o arquivo só sobe uma vez."""
-        arquivo = sorted(self.taxonomia.glob("qconcursos-*.json"))[-1]
+        arquivo = versoes(self.taxonomia, "qconcursos")[-1]
         enviadas = self.trabalho / "arvores-enviadas.json"
         ja = json.loads(enviadas.read_text(encoding="utf-8")) if enviadas.exists() else []
         if arquivo.stem not in ja:

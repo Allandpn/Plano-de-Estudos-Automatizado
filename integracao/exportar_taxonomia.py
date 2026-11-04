@@ -26,6 +26,7 @@ Uso:
 
 import argparse
 import json
+import re
 import sys
 import time
 import urllib.request
@@ -108,12 +109,21 @@ def diferencas(antiga, nova):
                               for i in a.keys() & n.keys() if a[i][1] != n[i][1])}
 
 
+def versoes(pasta, fonte):
+    """As exportações da árvore, da mais antiga à mais nova: só <fonte>-AAAA-MM-DD.json.
+
+    Outros arquivos da pasta com o mesmo começo (o catálogo de filtros, qconcursos-filtros-…) não são árvore e ficam de fora.
+    """
+    padrao = re.compile(rf"{re.escape(fonte)}-\d{{4}}-\d{{2}}-\d{{2}}\.json")
+    return sorted(p for p in pasta.glob(f"{fonte}-*.json") if padrao.fullmatch(p.name))
+
+
 def gravar(fonte, arvore, pasta=PASTA, hoje=None):
     """Grava <fonte>-AAAA-MM-DD.json e devolve (caminho, diferenças em relação à exportação anterior ou None)."""
     pasta.mkdir(parents=True, exist_ok=True)
     hoje = hoje or date.today().isoformat()
     destino = pasta / f"{fonte}-{hoje}.json"
-    anteriores = sorted(p for p in pasta.glob(f"{fonte}-*.json") if p != destino)
+    anteriores = [p for p in versoes(pasta, fonte) if p != destino]
     dif = diferencas(json.loads(anteriores[-1].read_text(encoding="utf-8"))["disciplinas"], arvore) if anteriores else None
     destino.write_text(json.dumps({"fonte": fonte, "data": hoje, "quantidade_nos": len(nos(arvore)),
                                    "disciplinas": arvore}, ensure_ascii=False, indent=1), encoding="utf-8")

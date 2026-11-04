@@ -27,6 +27,20 @@ TEC = {"dominios": [
 
 
 class TaxonomiaTest(unittest.TestCase):
+    def test_versoes_so_pega_a_arvore_datada_e_nao_o_catalogo_de_filtros(self):
+        # Regressão: qconcursos-filtros-2026-11-03.json vencia qconcursos-2026-10-19.json na ordem alfabética.
+        with tempfile.TemporaryDirectory() as d:
+            pasta = Path(d)
+            arvore = {"fonte": "qconcursos", "data": "2026-10-19", "quantidade_nos": 0, "disciplinas": []}
+            (pasta / "qconcursos-2026-10-19.json").write_text(json.dumps(arvore), encoding="utf-8")
+            (pasta / "qconcursos-filtros-2026-11-03.json").write_text(json.dumps({"metadata": {}}), encoding="utf-8")
+            (pasta / "tec-2026-10-19.json").write_text(json.dumps(arvore), encoding="utf-8")
+            self.assertEqual([p.name for p in et.versoes(pasta, "qconcursos")], ["qconcursos-2026-10-19.json"])
+            import casar_taxonomia as ct
+            self.assertEqual(ct.carregar_arvore(pasta)[1], "qconcursos-2026-10-19.json")
+            _, dif = et.gravar("qconcursos", [], pasta=pasta, hoje="2026-11-04")
+            self.assertIsNotNone(dif)
+
     def test_qconcursos_normalizado_na_ordem_do_site(self):
         arvore = et.normalizar_qconcursos(DISCIPLINAS, ASSUNTOS)
         self.assertEqual(["Conceitos Básicos na Administração de Recursos Materiais", "Classificação de Materiais"],
