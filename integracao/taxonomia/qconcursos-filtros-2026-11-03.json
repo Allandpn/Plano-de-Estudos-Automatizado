@@ -1,0 +1,965 @@
+{
+  "conferencia_sge": {
+    "data": "2026-11-04",
+    "nota": "Catálogo enviado pelo usuário em 2026-11-03. O SGE (Sprint 36, ADR-058) só usa parâmetros conferidos em endereços copiados do navegador pelo usuário. Itens sem essa marca são referência, não verdade.",
+    "conferidos_por_endereco_real": [
+      "discipline_ids[]",
+      "subject_ids[]",
+      "examining_board_ids[]",
+      "exclude_nullified",
+      "exclude_outdated",
+      "my_questions=not_resolved",
+      "publication_year[]",
+      "per_page"
+    ],
+    "divergencias": [
+      {
+        "parametro_no_catalogo": "resolved=unresolved",
+        "endereco_real": "my_questions=not_resolved",
+        "decisao": "vale o endereço real"
+      }
+    ],
+    "nao_usado": "A raspagem ao vivo (--scrape, Playwright) do script original não foi trazida: a página passa por verificação anti-robô. O catálogo cresce pelos endereços que o usuário copia."
+  },
+  "metadata": {
+    "plataforma": "QConcursos",
+    "pagina_alvo": "https://www.qconcursos.com/questoes-de-concursos/questoes",
+    "data_extracao": "2026-11-03",
+    "formato_query_string": {
+      "array_syntax": "Chaves repetidas com sufixo [] (ou %5B%5D codificado na URL), ex.: ?discipline_ids[]=1&discipline_ids[]=2",
+      "boolean_syntax": "String literal 'true' quando ativo (omitido quando inativo), ex.: &exclude_nullified=true&has_professor_commentaries=true",
+      "autenticacao_conta_paga": "Links montados com query string carregam diretamente os filtros na sessão autenticada do assinante. Filtros pessoais (cadernos, simulados, anotações, status de resolução) e alguns filtros de exclusão exigem login ativo."
+    },
+    "exemplo_url_completa": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids[]=1&subject_ids[]=14625&examining_board_ids[]=2&scholarity_ids[]=3&modality_ids[]=1&difficulty[]=2&exclude_nullified=true&exclude_outdated=true&has_professor_commentaries=true&sort=newest&per_page=20&page=1"
+  },
+  "categorias_de_filtros": {
+    "1_filtros_principais": [
+      {
+        "id_interno": "palavra_chave",
+        "rotulo_interface": "Palavra-chave",
+        "parametro_url": "q",
+        "tipo_dado": "string",
+        "multipla_selecao": false,
+        "requer_autenticacao": true,
+        "descricao": "Busca textual no enunciado da questão ou pelo código identificador único da questão (ex.: Q4427689).",
+        "exemplos_valores": [
+          "direito constitucional",
+          "licitação",
+          "Q4427689"
+        ]
+      },
+      {
+        "id_interno": "disciplina",
+        "rotulo_interface": "Disciplina",
+        "parametro_url": "discipline_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "diretorio_referencia": "https://www.qconcursos.com/questoes-de-concursos/disciplinas",
+        "descricao": "Filtra pelas disciplinas cadastradas no QConcursos. Aceita múltiplos IDs numéricos.",
+        "valores_conhecidos_verificados": [
+          {
+            "id": 1,
+            "nome": "Português",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=1&scholarity_ids%5B%5D=2&subject_ids%5B%5D=14625"
+          },
+          {
+            "id": 2,
+            "nome": "Direito Administrativo",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=2&institute_ids%5B%5D=3716"
+          },
+          {
+            "id": 3,
+            "nome": "Direito Constitucional"
+          },
+          {
+            "id": 4,
+            "nome": "Raciocínio Lógico",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=4&has_professor_commentaries=true&job_ids%5B%5D=833"
+          },
+          {
+            "id": 9,
+            "nome": "Direito Penal"
+          },
+          {
+            "id": 13,
+            "nome": "Matemática",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=13&examining_board_ids%5B%5D=1703"
+          },
+          {
+            "id": 16,
+            "nome": "Inglês",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=16&has_commentaries=true&subject_ids%5B%5D=13873"
+          },
+          {
+            "id": 24,
+            "nome": "Conhecimentos Gerais"
+          },
+          {
+            "id": 42,
+            "nome": "Direito Internacional Público",
+            "url_verificada": "https://qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=42&exclude_nullified=true&exclude_outdated=true&has_commentaries=true&subject_ids%5B%5D=18987&subject_ids%5B%5D=18989"
+          },
+          {
+            "id": 46,
+            "nome": "Ciência da Computação / Inteligência Artificial",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=46&examining_board_ids%5B%5D=2&subject_ids%5B%5D=32211"
+          },
+          {
+            "id": 56,
+            "nome": "Atualidades",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=56&examining_board_ids%5B%5D=121"
+          },
+          {
+            "id": 96,
+            "nome": "Banco de Dados",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=96&examining_board_ids%5B%5D=63"
+          },
+          {
+            "id": 99,
+            "nome": "Tecnologia da Informação / Sistemas de Informação",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=99&examining_board_ids%5B%5D=2&modality_ids%5B%5D=2&page=128&sort=newest"
+          },
+          {
+            "id": 118,
+            "nome": "Contabilidade Geral / Administração Financeira",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=4&discipline_ids%5B%5D=118&has_professor_commentaries=true"
+          },
+          {
+            "id": 160,
+            "nome": "Programação",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=160&examining_board_ids%5B%5D=2&subject_ids%5B%5D=2753"
+          },
+          {
+            "id": 182,
+            "nome": "Pedagogia"
+          },
+          {
+            "id": 213,
+            "nome": "Administração de Recursos Materiais",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=213&examining_board_ids%5B%5D=276&has_professor_commentaries=true"
+          },
+          {
+            "id": 214,
+            "nome": "Direitos Humanos",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=214&examining_board_ids%5B%5D=1019&has_professor_commentaries=true"
+          },
+          {
+            "id": 550,
+            "nome": "Legislação Municipal / Específica",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=550&exam_ids%5B%5D=62610&page=2&subject_ids%5B%5D=14902"
+          }
+        ]
+      },
+      {
+        "id_interno": "assunto",
+        "rotulo_interface": "Assunto",
+        "parametro_url": "subject_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "dependencia": "discipline_ids[]",
+        "descricao": "Filtra por assuntos/tópicos específicos dentro de uma ou mais disciplinas selecionadas.",
+        "valores_conhecidos_verificados": [
+          {
+            "id": 2753,
+            "nome": "Python (em Programação)",
+            "discipline_id": 160,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=160&examining_board_ids%5B%5D=2&subject_ids%5B%5D=2753"
+          },
+          {
+            "id": 13873,
+            "nome": "Números / Numbers (em Inglês)",
+            "discipline_id": 16,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=16&has_commentaries=true&subject_ids%5B%5D=13873"
+          },
+          {
+            "id": 14625,
+            "nome": "Morfologia (em Português)",
+            "discipline_id": 1,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=1&scholarity_ids%5B%5D=2&subject_ids%5B%5D=14625"
+          },
+          {
+            "id": 15940,
+            "nome": "Fontes do Direito Administrativo / Administração Pública",
+            "discipline_id": 2,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?difficulty%5B%5D=2&discipline_ids%5B%5D=2&modality_ids%5B%5D=2&subject_ids%5B%5D=15940"
+          },
+          {
+            "id": 18987,
+            "nome": "Direito Internacional Público - Tópico 1",
+            "discipline_id": 42
+          },
+          {
+            "id": 18989,
+            "nome": "Direito Internacional Público - Tópico 2",
+            "discipline_id": 42
+          },
+          {
+            "id": 32211,
+            "nome": "Inteligência Artificial",
+            "discipline_id": 46,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=46&examining_board_ids%5B%5D=2&subject_ids%5B%5D=32211"
+          }
+        ]
+      },
+      {
+        "id_interno": "banca",
+        "rotulo_interface": "Banca",
+        "parametro_url": "examining_board_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "diretorio_referencia": "https://www.qconcursos.com/questoes-de-concursos/bancas",
+        "descricao": "Filtra pelas bancas organizadoras dos concursos.",
+        "valores_conhecidos_verificados": [
+          {
+            "id": 2,
+            "nome": "CESPE / CEBRASPE",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=160&examining_board_ids%5B%5D=2&subject_ids%5B%5D=2753"
+          },
+          {
+            "id": 5,
+            "nome": "CESGRANRIO",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=56&examining_board_ids%5B%5D=5&has_professor_commentaries=true"
+          },
+          {
+            "id": 63,
+            "nome": "FGV (Fundação Getúlio Vargas)",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=96&examining_board_ids%5B%5D=63"
+          },
+          {
+            "id": 121,
+            "nome": "OBJETIVA",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=56&examining_board_ids%5B%5D=121"
+          },
+          {
+            "id": 276,
+            "nome": "IADES",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=213&examining_board_ids%5B%5D=276&has_professor_commentaries=true"
+          },
+          {
+            "id": 367,
+            "nome": "Fundação La Salle",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=1&examining_board_ids%5B%5D=367&scholarity_ids%5B%5D=3"
+          },
+          {
+            "id": 379,
+            "nome": "INSTITUTO AOCP",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?examining_board_ids%5B%5D=379&page=405"
+          },
+          {
+            "id": 493,
+            "nome": "INSTITUTO MAIS",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?examining_board_ids%5B%5D=493"
+          },
+          {
+            "id": 1019,
+            "nome": "IDIB",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=214&examining_board_ids%5B%5D=1019&has_professor_commentaries=true"
+          },
+          {
+            "id": 1703,
+            "nome": "IDCAP",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?examining_board_ids%5B%5D=1703"
+          },
+          {
+            "id": 3682,
+            "nome": "Instituto Avalia",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?examining_board_ids%5B%5D=3682&page=80"
+          },
+          {
+            "id": 4024,
+            "nome": "ISET",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?examining_board_ids%5B%5D=4024"
+          }
+        ]
+      },
+      {
+        "id_interno": "instituicao",
+        "rotulo_interface": "Instituição",
+        "parametro_url": "institute_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "descricao": "Filtra pelo órgão ou instituição pública promotora do certame.",
+        "valores_conhecidos_verificados": [
+          {
+            "id": 29,
+            "nome": "CGU (Controladoria-Geral da União)",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_professor_commentaries=true&institute_ids%5B%5D=29"
+          },
+          {
+            "id": 186,
+            "nome": "Instituição ID 186",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_commentaries=true&has_professor_commentaries=true&institute_ids%5B%5D=186&page=26"
+          },
+          {
+            "id": 857,
+            "nome": "Instituição ID 857",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_commentaries=true&has_professor_commentaries=true&institute_ids%5B%5D=857&page=2"
+          },
+          {
+            "id": 3716,
+            "nome": "Prefeitura de Teresina",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=2&institute_ids%5B%5D=3716"
+          },
+          {
+            "id": 4073,
+            "nome": "Instituição ID 4073",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_commentaries=true&has_professor_commentaries=true&institute_ids%5B%5D=4073&page=2"
+          },
+          {
+            "id": 5712,
+            "nome": "Casa da Moeda",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?institute_ids%5B%5D=5712"
+          },
+          {
+            "id": 5727,
+            "nome": "Correios",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?institute_ids%5B%5D=5727"
+          },
+          {
+            "id": 5785,
+            "nome": "MPA (Ministério da Pesca e Aquicultura)",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=1&institute_ids%5B%5D=5785"
+          },
+          {
+            "id": 10263,
+            "nome": "Instituição ID 10263",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_commentaries=true&has_professor_commentaries=true&institute_ids%5B%5D=10263&page=4"
+          },
+          {
+            "id": 10567,
+            "nome": "IBHASES",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_commentaries=true&has_professor_commentaries=true&institute_ids%5B%5D=10567&page=15"
+          }
+        ]
+      },
+      {
+        "id_interno": "ano",
+        "rotulo_interface": "Ano",
+        "parametro_url": "publication_year[]",
+        "aliases_aceitos": [
+          "year_ids[]",
+          "years[]"
+        ],
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "descricao": "Filtra pelo ano de aplicação da prova (valores de 4 dígitos).",
+        "valores_aceitos": [
+          2026,
+          2025,
+          2024,
+          2023,
+          2022,
+          2021,
+          2020,
+          2019,
+          2018,
+          2017,
+          2016,
+          2015,
+          2014,
+          2013,
+          2012,
+          2011,
+          2010,
+          2009,
+          2008,
+          2007,
+          2006,
+          2005,
+          2004,
+          2003,
+          2002,
+          2001,
+          2000,
+          1999,
+          1998,
+          1997,
+          1996,
+          1995,
+          1994
+        ]
+      },
+      {
+        "id_interno": "prova",
+        "rotulo_interface": "Prova (Filtro direto por ID de prova)",
+        "parametro_url": "exam_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "diretorio_referencia": "https://www.qconcursos.com/questoes-de-concursos/provas",
+        "descricao": "Filtra questões pertencentes a uma ou mais provas específicas.",
+        "valores_conhecidos_verificados": [
+          {
+            "id": 62610,
+            "nome": "FGV - 2019 - Prefeitura de Salvador",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=550&exam_ids%5B%5D=62610&page=2&subject_ids%5B%5D=14902"
+          }
+        ]
+      }
+    ],
+    "2_filtros_avancados": [
+      {
+        "id_interno": "cargo",
+        "rotulo_interface": "Cargo",
+        "parametro_url": "job_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "diretorio_referencia": "https://www.qconcursos.com/questoes-de-concursos/cargos",
+        "descricao": "Filtra pelo cargo público da prova.",
+        "valores_conhecidos_verificados": [
+          {
+            "id": 43,
+            "nome": "Analista Judiciário - Área Judiciária",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=1&job_ids%5B%5D=43"
+          },
+          {
+            "id": 307,
+            "nome": "Cargo ID 307",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=13&has_professor_commentaries=true&job_ids%5B%5D=307"
+          },
+          {
+            "id": 833,
+            "nome": "Cargo ID 833",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=4&has_professor_commentaries=true&job_ids%5B%5D=833"
+          },
+          {
+            "id": 948,
+            "nome": "Auditor",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?job_ids%5B%5D=948&page=399"
+          },
+          {
+            "id": 1422,
+            "nome": "Professor - 1 ao 5 Ano Ensino Fundamental",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=13&job_ids%5B%5D=1422"
+          }
+        ]
+      },
+      {
+        "id_interno": "nivel_escolaridade",
+        "rotulo_interface": "Nível",
+        "parametro_url": "scholarity_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "descricao": "Filtra pelo nível de escolaridade exigido pelo cargo da prova.",
+        "valores_aceitos": [
+          {
+            "id": 1,
+            "rotulo": "Fundamental",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?scholarity_ids%5B%5D=1"
+          },
+          {
+            "id": 2,
+            "rotulo": "Médio",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=1&scholarity_ids%5B%5D=2&subject_ids%5B%5D=14625"
+          },
+          {
+            "id": 3,
+            "rotulo": "Superior",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?page=261&scholarity_ids%5B%5D=3"
+          }
+        ]
+      },
+      {
+        "id_interno": "area_formacao",
+        "rotulo_interface": "Área de Formação",
+        "parametro_url": "knowledge_area_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "descricao": "Filtra pela área de formação acadêmica exigida para o cargo.",
+        "ids_verificados_exemplo": [
+          {
+            "id": 2,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_commentaries=true&knowledge_area_ids%5B%5D=2"
+          },
+          {
+            "id": 13,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?examining_board_ids%5B%5D=2&knowledge_area_ids%5B%5D=13&page=838&scholarity_ids%5B%5D=3"
+          },
+          {
+            "id": 15,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_professor_commentaries=true&knowledge_area_ids%5B%5D=15"
+          },
+          {
+            "id": 26,
+            "nome": "Turismo / Hotelaria / Eventos",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_commentaries=true&knowledge_area_ids%5B%5D=26"
+          },
+          {
+            "id": 123,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_professor_commentaries=true&knowledge_area_ids%5B%5D=123"
+          }
+        ],
+        "opcoes_visiveis_interface": [
+          "Administração",
+          "Agrimensura",
+          "Agropecuária",
+          "Arqueologia",
+          "Arquitetura e Urbanismo",
+          "Arquivologia",
+          "Artes",
+          "Áudio e Vídeo",
+          "Automação",
+          "Biblioteconomia",
+          "Biologia",
+          "Biomedicina",
+          "Bioquímica",
+          "Biossegurança",
+          "Cartografia",
+          "Ciência e Tecnologia",
+          "Ciências",
+          "Ciências Atuariais",
+          "Ciências Contábeis",
+          "Ciências Humanas",
+          "Ciências Imobiliárias",
+          "Ciências Navais",
+          "Ciências Sociais",
+          "Comunicação Social",
+          "Construção Civil",
+          "Criminalística",
+          "Desenho",
+          "Design Gráfico",
+          "Direito",
+          "Economia",
+          "Educação Física",
+          "Eletricidade",
+          "Eletroeletrônica",
+          "Eletromecânica",
+          "Eletrônica",
+          "Eletrotécnica",
+          "Enfermagem",
+          "Engenharia",
+          "Engenharia Agrícola",
+          "Engenharia Agronômica (Agronomia)",
+          "Engenharia Civil",
+          "Engenharia Elétrica",
+          "Engenharia Eletrônica",
+          "Engenharia Mecânica",
+          "Engenharia Química",
+          "Enologia",
+          "Estatística",
+          "Farmácia",
+          "Filosofia",
+          "Física",
+          "Fisioterapia",
+          "Fonoaudiologia",
+          "Gastronomia",
+          "Geografia",
+          "Geologia",
+          "Hemoterapia",
+          "Hidrologia",
+          "História",
+          "Instrumentação Industrial",
+          "Letras",
+          "Libras",
+          "Logística",
+          "Marketing",
+          "Matemática",
+          "Mecânica",
+          "Mecatrônica",
+          "Medicina",
+          "Medicina Veterinária",
+          "Meio Ambiente",
+          "Metalurgia",
+          "Meteorologia",
+          "Metrologia",
+          "Mineração",
+          "Museologia",
+          "Música",
+          "Musicoterapia",
+          "Não definido",
+          "Nutrição",
+          "Oceanografia",
+          "Odontologia",
+          "Patologia Clínica",
+          "Pedagogia",
+          "Planejamento e Operação de Transportes",
+          "Produção Cultural",
+          "Prótese e Órtese",
+          "Psicologia",
+          "Psiquiatria",
+          "Química",
+          "Radiologia",
+          "Refrigeração e Climatização",
+          "Relações Internacionais",
+          "Saúde Pública",
+          "Secretariado",
+          "Segurança do Trabalho",
+          "Segurança e Transporte",
+          "Serviço Social",
+          "Serviços Gerais",
+          "Sistemas de Gás",
+          "Taquigrafia",
+          "Tecnologia da Informação",
+          "Tecnologia Educacional",
+          "Telecomunicações",
+          "Teologia",
+          "Terapia Ocupacional",
+          "Têxtil e Moda",
+          "Topografia",
+          "Turismo",
+          "Zoologia",
+          "Zootecnia"
+        ]
+      },
+      {
+        "id_interno": "area_atuacao",
+        "rotulo_interface": "Área de Atuação",
+        "parametro_url": "administrative_level_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "descricao": "Filtra pela carreira ou área de atuação do concurso/cargo.",
+        "ids_verificados_exemplo": [
+          {
+            "id": 1,
+            "nome": "Bancária / Administrativa",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=1&discipline_ids%5B%5D=56&has_professor_commentaries=true"
+          },
+          {
+            "id": 4,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=4&discipline_ids%5B%5D=118&has_professor_commentaries=true"
+          },
+          {
+            "id": 6,
+            "nome": "Policial",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=6"
+          },
+          {
+            "id": 8,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=8&discipline_ids%5B%5D=213&has_professor_commentaries=true"
+          },
+          {
+            "id": 9,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=9&has_professor_commentaries=true"
+          },
+          {
+            "id": 16,
+            "nome": "Vestibular",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=16&page=27"
+          },
+          {
+            "id": 18,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=18&discipline_ids%5B%5D=13&has_professor_commentaries=true"
+          },
+          {
+            "id": 19,
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=19&has_professor_commentaries=true"
+          },
+          {
+            "id": 26,
+            "nome": "Segurança Pública / Guarda Municipal",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?administrative_level_ids%5B%5D=26&has_professor_commentaries=true"
+          }
+        ],
+        "opcoes_visiveis_interface": [
+          "Administrativa",
+          "Advocacia Pública",
+          "Aeronáutica",
+          "Agência Reguladora",
+          "Bancária",
+          "Conselho Profissional",
+          "Controle e Gestão",
+          "Defensoria Pública",
+          "Educação",
+          "ENEM",
+          "Exército",
+          "Fiscal",
+          "Forças Armadas",
+          "Jurídica",
+          "Legislativa",
+          "Marinha",
+          "Ministério Público",
+          "OAB",
+          "Outras",
+          "Policial",
+          "Prefeitura",
+          "Saúde",
+          "Segurança Pública",
+          "Tribunal",
+          "Tribunal de Contas e Controladoria",
+          "Vestibular"
+        ]
+      },
+      {
+        "id_interno": "modalidade",
+        "rotulo_interface": "Modalidade",
+        "parametro_url": "modality_ids[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "descricao": "Filtra pelo formato da questão (Múltipla-Escolha ou Certo/Errado).",
+        "valores_aceitos": [
+          {
+            "id": 1,
+            "rotulo": "Múltipla-Escolha",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?modality_ids%5B%5D=1"
+          },
+          {
+            "id": 2,
+            "rotulo": "Certo ou Errado",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?difficulty%5B%5D=2&discipline_ids%5B%5D=2&modality_ids%5B%5D=2&subject_ids%5B%5D=15940"
+          }
+        ]
+      },
+      {
+        "id_interno": "dificuldade",
+        "rotulo_interface": "Dificuldade",
+        "parametro_url": "difficulty[]",
+        "tipo_dado": "array<integer>",
+        "multipla_selecao": true,
+        "requer_autenticacao": false,
+        "descricao": "Filtra pelo índice de dificuldade das questões (de 1 a 5).",
+        "valores_aceitos": [
+          {
+            "id": 1,
+            "rotulo": "Muito Fácil"
+          },
+          {
+            "id": 2,
+            "rotulo": "Fácil",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?difficulty%5B%5D=2&discipline_ids%5B%5D=2&modality_ids%5B%5D=2&subject_ids%5B%5D=15940"
+          },
+          {
+            "id": 3,
+            "rotulo": "Médio"
+          },
+          {
+            "id": 4,
+            "rotulo": "Difícil"
+          },
+          {
+            "id": 5,
+            "rotulo": "Muito Difícil"
+          }
+        ]
+      }
+    ],
+    "3_filtros_excluir_questoes": [
+      {
+        "id_interno": "excluir_meus_cadernos",
+        "rotulo_interface": "Dos meus cadernos",
+        "parametro_url": "exclude_my_notebooks",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": true,
+        "descricao": "Exclui questões que já estão salvas nos cadernos do usuário logado."
+      },
+      {
+        "id_interno": "excluir_meus_simulados",
+        "rotulo_interface": "Dos meus simulados",
+        "parametro_url": "exclude_my_simulations",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": true,
+        "descricao": "Exclui questões que já fazem parte dos simulados do usuário logado."
+      },
+      {
+        "id_interno": "excluir_ineditas",
+        "rotulo_interface": "Inéditas",
+        "parametro_url": "exclude_unpublished",
+        "aliases_aceitos": [
+          "exclude_custom"
+        ],
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": true,
+        "descricao": "Exclui questões inéditas criadas por professores do QConcursos."
+      },
+      {
+        "id_interno": "excluir_anuladas",
+        "rotulo_interface": "Anuladas",
+        "parametro_url": "exclude_nullified",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": false,
+        "url_verificada": "https://qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=42&exclude_nullified=true&exclude_outdated=true&has_commentaries=true&subject_ids%5B%5D=18987&subject_ids%5B%5D=18989",
+        "descricao": "Exclui questões anuladas oficialmente pelas bancas."
+      },
+      {
+        "id_interno": "excluir_desatualizadas",
+        "rotulo_interface": "Desatualizadas",
+        "parametro_url": "exclude_outdated",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": false,
+        "url_verificada": "https://qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=42&exclude_nullified=true&exclude_outdated=true&has_commentaries=true&subject_ids%5B%5D=18987&subject_ids%5B%5D=18989",
+        "descricao": "Exclui questões marcadas como desatualizadas (ex.: legislação revogada)."
+      }
+    ],
+    "4_filtros_questoes_com": [
+      {
+        "id_interno": "com_gabarito_comentado",
+        "rotulo_interface": "Gabarito Comentado",
+        "parametro_url": "has_professor_commentaries",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": false,
+        "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_professor_commentaries=true&institute_ids%5B%5D=29",
+        "descricao": "Filtra apenas questões que possuem gabarito comentado oficial por professores da plataforma."
+      },
+      {
+        "id_interno": "com_comentarios",
+        "rotulo_interface": "Comentários",
+        "parametro_url": "has_commentaries",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": false,
+        "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?has_commentaries=true&has_professor_commentaries=true&institute_ids%5B%5D=4073&page=2",
+        "descricao": "Filtra apenas questões que possuem comentários da comunidade/alunos."
+      },
+      {
+        "id_interno": "com_meus_comentarios",
+        "rotulo_interface": "Meus Comentários",
+        "parametro_url": "has_my_commentaries",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": true,
+        "descricao": "Filtra apenas questões comentadas pelo próprio usuário autenticado."
+      },
+      {
+        "id_interno": "com_aulas",
+        "rotulo_interface": "Aulas",
+        "parametro_url": "has_video_lessons",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": true,
+        "descricao": "Filtra apenas questões que possuem aulas em vídeo/texto vinculadas."
+      },
+      {
+        "id_interno": "com_minhas_anotacoes",
+        "rotulo_interface": "Minhas Anotações",
+        "parametro_url": "has_my_notes",
+        "tipo_dado": "boolean",
+        "valores_aceitos": [
+          "true"
+        ],
+        "requer_autenticacao": true,
+        "descricao": "Filtra apenas questões nas quais o usuário logado salvou anotações privadas."
+      }
+    ],
+    "5_filtros_status_resolucao_usuario": [
+      {
+        "id_interno": "status_resolucao",
+        "rotulo_interface": "Questões (Status de Resolução do Usuário)",
+        "parametro_url": "resolved",
+        "aliases_aceitos": [
+          "by_user",
+          "status"
+        ],
+        "tipo_dado": "string",
+        "requer_autenticacao": true,
+        "descricao": "Filtra pelo histórico de resolução da conta logada.",
+        "opcoes_interface": [
+          {
+            "rotulo": "Todas",
+            "valor": "all"
+          },
+          {
+            "rotulo": "Resolvi",
+            "valor": "resolved"
+          },
+          {
+            "rotulo": "Não resolvi",
+            "valor": "unresolved"
+          },
+          {
+            "rotulo": "Acertei",
+            "valor": "right"
+          },
+          {
+            "rotulo": "Errei",
+            "valor": "wrong"
+          }
+        ]
+      }
+    ],
+    "6_ordenacao_e_paginacao": [
+      {
+        "id_interno": "ordenacao",
+        "rotulo_interface": "Ordenar por",
+        "parametro_url": "sort",
+        "tipo_dado": "string",
+        "requer_autenticacao": false,
+        "descricao": "Define o critério de ordenação da listagem de questões.",
+        "valores_aceitos": [
+          {
+            "rotulo": "Data da prova - mais recentes",
+            "valor": "newest",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=99&examining_board_ids%5B%5D=2&modality_ids%5B%5D=2&page=128&sort=newest"
+          },
+          {
+            "rotulo": "Data da prova - mais antigas",
+            "valor": "oldest"
+          },
+          {
+            "rotulo": "Adicionadas recentemente",
+            "valor": "recent"
+          },
+          {
+            "rotulo": "Mais difíceis",
+            "valor": "hardest"
+          },
+          {
+            "rotulo": "Relevância das palavras-chave",
+            "valor": "relevance",
+            "url_verificada": "https://www.qconcursos.com/questoes-de-concursos/questoes?discipline_ids%5B%5D=96&modality_ids%5B%5D=1&page=705&sort=relevance"
+          },
+          {
+            "rotulo": "Gabarito Comentado",
+            "valor": "has_commentary"
+          }
+        ]
+      },
+      {
+        "id_interno": "pagina",
+        "rotulo_interface": "Página",
+        "parametro_url": "page",
+        "tipo_dado": "integer",
+        "requer_autenticacao": false,
+        "valor_padrao": 1,
+        "descricao": "Número da página de resultados (iniciando em 1)."
+      },
+      {
+        "id_interno": "por_pagina",
+        "rotulo_interface": "Por página",
+        "parametro_url": "per_page",
+        "tipo_dado": "integer",
+        "requer_autenticacao": false,
+        "valor_padrao": 5,
+        "valores_aceitos": [
+          5,
+          10,
+          15,
+          20
+        ],
+        "descricao": "Quantidade de questões exibidas por página."
+      }
+    ]
+  }
+}
